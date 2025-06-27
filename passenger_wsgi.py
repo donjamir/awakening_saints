@@ -2,7 +2,7 @@ import os
 import sys
 
 # Add your project directory to the sys.path
-sys.path.insert(0, '/home/ssebadduka/awakening_saints')
+sys.path.insert(0, '/home/ssebadduka/ecom')
 
 # Set the settings module
 os.environ['DJANGO_SETTINGS_MODULE'] = 'ecom.settings'
