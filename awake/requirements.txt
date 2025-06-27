@@ -31,7 +31,6 @@ cryptography
 cssselect2
 defusedxml
 distlib
-dj-database-url
 Django
 django-allauth
 django-appconf
@@ -128,8 +127,6 @@ pluggy
 prometheus_client
 prompt_toolkit
 propcache
-psycopg2
-psycopg2-binary
 pycodestyle
 pycparser
 pydyf
