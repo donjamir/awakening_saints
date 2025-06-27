@@ -1,0 +1,275 @@
+{% load static %}
+
+
+
+{% load static %}
+
+  <header id="site-header" class="fixed-top">
+    <div class="container">
+      <nav class="navbar navbar-expand-lg stroke">
+        <h1><a class="navbar-brand mr-lg-5" href="index.html">
+        <img src="{% static 'assets/images/logo.png' %}" alt="image" style="height: 55px; width: 55px;">
+            Awakening<span>Saints</span>
+          </a></h1>
+ 
+
+        <button class="navbar-toggler collapsed bg-gradient" type="button" data-bs-toggle="collapse"
+        data-bs-target="#navbarTogglerDemo02" aria-controls="navbarTogglerDemo02" aria-expanded="false"
+        aria-label="Toggle navigation">
+
+          <span class="navbar-toggler-icon fa icon-expand fa-bars"></span>
+          <span class="navbar-toggler-icon fa icon-close fa-times"></span>
+          </span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item active">
+                <a href="{% url 'sales:homeone' %}" class="nav-link">Home<span class="sr-only">(current)</span></a>
+            </li class="nav-item">
+
+
+
+            <!-- <li class="nav-item active"><a class="nav-link" href="{% url 'sales:books' %}">Home</a></li> -->
+                        <li class="nav-item submenu dropdown">
+                            <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                             aria-expanded="false">Shop</a>
+                            <ul class="dropdown-menu">
+                               <!-- <li class="nav-item"><a class="nav-link" href="{% url 'cart:checkout' %}">Product Checkout</a></li> -->
+                                <!-- <li class="nav-item"><a class="nav-link" href="{% url 'cart:cart_summary' %}">Shopping Cart</a></li> -->
+                                <li class="nav-item"><a class="nav-link" href="{% url 'cart:confirm' %}">Confirmation</a></li>
+                            </ul>
+                        </li>
+
+
+
+
+
+
+
+                             <li class="nav-item submenu dropdown">
+                            <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                             aria-expanded="false">Category</a>
+                            <ul class="dropdown-menu">
+                                {% for cat in categories %}
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="{{ cat.get_absolute_url }}">{{ cat.cat_name}}</a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                        <li class="nav-item submenu dropdown">
+                            <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                             aria-expanded="false">Pages</a>
+                            <ul class="dropdown-menu">
+                                <li class="nav-item"><a class="nav-link" href="{% url 'accounts:login' %}">Login</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{% url 'cart:track' %}">Tracking</a></li>
+                                <!-- <li class="nav-item"><a class="nav-link" href="elements.html">Elements</a></li> -->
+                            </ul>
+                        </li>
+
+
+
+
+            <li>
+                <a href="{% url 'sales:about' %}" class="nav-link">About</a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'sales:contact' %}" class="nav-link">Contact</a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'sales:services' %}" class="nav-link">Services</a>
+            </li>
+
+
+            
+            
+       
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarMoreDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              More
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="navbarMoreDropdown">
+              <li><a class="dropdown-item" href="{% url 'sales:donate' %}">Donate</a></li>
+              <li><a class="dropdown-item" href="{% url 'sales:orphans' %}">Orphans</a></li>
+              <li><a class="dropdown-item" href="{% url 'sales:books' %}">Books</a></li>
+              <li><a class="dropdown-item" href="videos.html">Videos</a></li>
+              <li><a class="dropdown-item" href="#">Dashboard</a></li>
+              <li><a class="dropdown-item" href="#">Logout</a></li>
+              <li><a class="dropdown-item" href="#">Sign Up</a></li>
+              <li><a class="dropdown-item" href="#">Login</a></li>
+            </ul>
+          </li>
+
+
+
+
+          </ul>
+
+
+           <ul class="nav navbar-nav navbar-right">
+                        <li class="nav-item">
+                            <a href="{% url 'cart:cart_summary' %}" class="cart">
+
+                                {% with total_qty=cart|length %}
+                                <div class="d-inline-flex" id="cart_qty">
+                                    {% if total_qty > 0 %}
+                                        {{ total_qty }}
+                                    {% else %}
+                                        0
+                                    {% endif %}
+                                </div>
+                                {% endwith %}
+                                <span class="ti-bag"></span>
+                            </a>
+                        </li>
+                        <!-- <li class="nav-item">
+                            <button class="search"><span class="lnr lnr-magnifier" id="search"></span></button>
+                        </li> -->
+
+                        <!-- <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                {{user.last_name}}
+                            </a>
+                        </li> -->
+
+                    </ul>
+
+        </div>
+
+      
+        <!-- toggle switch for light and dark theme -->
+        <!-- <div class="mobile-position">
+          <nav class="navigation">
+            <div class="theme-switch-wrapper">
+              <label class="theme-switch" for="checkbox">
+                <input type="checkbox" id="checkbox">
+                <div class="mode-container">
+                  <i class="gg-sun"></i>
+                  <i class="gg-moon"></i>
+                </div>
+              </label>
+            </div>
+          </nav>
+        </div> -->
+        <!-- //toggle switch for light and dark theme -->
+      </nav>
+    </div>
+  </header>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--<header class="header_area sticky-header">
+    <div class="main_menu">
+        <nav class="navbar navbar-expand-lg navbar-light main_box">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display --
+                <a class="navbar-brand logo_h" href="{% url 'sales:books' %}"><img src="{% static 'img/logo.png' %}" alt=""></a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                 aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <!-- Collect the nav links, forms, and other content for toggling --
+                <div class="collapse navbar-collapse offset" id="navbarSupportedContent">
+                    <ul class="nav navbar-nav menu_nav ml-auto">
+                        <li class="nav-item active"><a class="nav-link" href="{% url 'sales:books' %}">Home</a></li>
+                        <li class="nav-item submenu dropdown">
+                            <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                             aria-expanded="false">Shop</a>
+                            <ul class="dropdown-menu">
+                               <!-- <li class="nav-item"><a class="nav-link" href="{% url 'cart:checkout' %}">Product Checkout</a></li> -->
+                                <!-- <li class="nav-item"><a class="nav-link" href="{% url 'cart:cart_summary' %}">Shopping Cart</a></li> --
+                                <li class="nav-item"><a class="nav-link" href="{% url 'cart:confirm' %}">Confirmation</a></li>
+                            </ul>
+                        </li>
+                        <!-- <li class="nav-item submenu dropdown">
+                            <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                             aria-expanded="false">Blog</a>
+                            <ul class="dropdown-menu">
+                                <li class="nav-item"><a class="nav-link" href="{% url 'sales:blog' %}">Blog</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{% url 'sales:blog1' %}">Blog Details</a></li>
+                            </ul>
+                        </li> --
+
+                        <li class="nav-item submenu dropdown">
+                            <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                             aria-expanded="false">Category</a>
+                            <ul class="dropdown-menu">
+                                {% for cat in categories %}
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="{{ cat.get_absolute_url }}">{{ cat.cat_name}}</a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                        <li class="nav-item submenu dropdown">
+                            <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                             aria-expanded="false">Pages</a>
+                            <ul class="dropdown-menu">
+                                <li class="nav-item"><a class="nav-link" href="{% url 'accounts:login' %}">Login</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{% url 'cart:track' %}">Tracking</a></li>
+                                <!-- <li class="nav-item"><a class="nav-link" href="elements.html">Elements</a></li> --
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'sales:contact' %}">Contact</a></li>
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li class="nav-item">
+                            <a href="{% url 'cart:cart_summary' %}" class="cart">
+
+                                {% with total_qty=cart|length %}
+                                <div class="d-inline-flex" id="cart_qty">
+                                    {% if total_qty > 0 %}
+                                        {{ total_qty }}
+                                    {% else %}
+                                        0
+                                    {% endif %}
+                                </div>
+                                {% endwith %}
+                                <span class="ti-bag"></span>
+                            </a>
+                        </li>
+                        <!-- <li class="nav-item">
+                            <button class="search"><span class="lnr lnr-magnifier" id="search"></span></button>
+                        </li> -->
+
+                        <!-- <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                {{user.last_name}}
+                            </a>
+                        </li> --
+
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </div>
+    <!-- <div class="search_input" id="search_input_box">
+        <div class="container">
+            <form class="d-flex justify-content-between">
+                <input type="text" class="form-control" id="search_input" placeholder="Search Here">
+                <button type="submit" class="btn"></button>
+                <span class="lnr lnr-cross" id="close_search" title="Close Search"></span>
+            </form>
+        </div>
+    </div> 
+</header>-->

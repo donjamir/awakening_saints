@@ -1,0 +1,122 @@
+{% extends 'site/main/base.html' %}
+{% load static %}
+{% block content %}
+
+  <!-- about breadcrumb -->
+  <section class="w3l-about-breadcrumb text-left">
+    <div class="breadcrumb-bg breadcrumb-bg-about py-sm-5 py-4">
+      <div class="container">
+        <h2 class="title">Contact</h2>
+        <ul class="breadcrumbs-custom-path mt-2">
+          <li><a href="index.php">Home</a></li>
+          <li class="active"><span class="fa fa-arrow-right mx-2" aria-hidden="true"></span> Contact </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+  <!-- //about breadcrumb -->
+   <!-- /contact-->
+
+
+
+
+
+
+<div class="donation-form py-5" id="donate">
+    <div class="container py-lg-5 py-md-4">
+        <h3 class="hny-title mb-lg-5 mb-4">Contact</h3>
+        <!-- Include EmailJS SDK -->
+
+
+<!-- Contact Form -->
+<form id="donationForm">
+    <div class="main-input">
+        <div class="d-grid">
+            <input type="text" id="name" class="contact-input" placeholder="Name" required>
+            <input type="tel" id="phone" class="contact-input" placeholder="Phone number" required>
+        </div>
+        <div class="d-grid">
+            <input type="email" id="email" class="contact-input" placeholder="Email address" required>
+            <input type="text" id="location" class="contact-input" placeholder="Location" required>
+        </div>
+    </div>
+    <textarea rows="4" id="message" class="contact-textarea" placeholder="Message" required></textarea>
+    
+    <div class="text-right">
+        <button type="submit" class="btn btn-style btn-secondary btn-donate">Send Message</button>
+    </div>
+</form>
+
+
+    </div>
+</div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+   <script>
+        (function() {
+            emailjs.init("s48BMsVC2VrWDiqT4"); // Replace with your EmailJS Public Key
+        })();
+
+        document.getElementById("donationForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Prevent form from reloading the page
+            
+            // Collect form data
+            const serviceID = "Rgteyue_vu1ifeb"; // Replace with your EmailJS Service ID
+            const templateID = "x423rte_8ng4zqi"; // Replace with your EmailJS Template ID
+
+            const templateParams = {
+                name: document.getElementById("name").value,
+                email: document.getElementById("email").value,
+                phone: document.getElementById("phone").value,
+                location: document.getElementById("location").value,
+                message: document.getElementById("message").value
+            };
+
+            // Send email
+            emailjs.send(serviceID, templateID, templateParams)
+                .then(response => {
+                    alert("Message sent successfully!");
+                    document.getElementById("donationForm").reset();
+                })
+                .catch(error => {
+                    alert("Failed to send message. Please try again.");
+                    console.error("EmailJS Error:", error);
+                });
+        });
+    </script>
+
+<script>
+// Toggle credit card input fields visibility
+function toggleCreditCardFields() {
+    var creditCardFields = document.getElementById('creditCardFields');
+    if (document.getElementById('creditCardOption').checked) {
+        creditCardFields.style.display = 'block';
+    } else {
+        creditCardFields.style.display = 'none';
+    }
+}
+
+// Show custom amount input field if 'Other' amount is selected
+document.getElementById('donationAmount').addEventListener('change', function () {
+    var customAmountWrapper = document.getElementById('customAmountWrapper');
+    if (this.value === 'custom') {
+        customAmountWrapper.style.display = 'block';
+    } else {
+        customAmountWrapper.style.display = 'none';
+    }
+});
+</script>
+
+
+
+
+
+
+    <div class="maphny">
+    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.7487277725963!2d32.63414038477777!3d0.3384099631276664!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x177db9007db12f81%3A0x87c30f2eebf7fd99!2sKIREKA%20CHRISTIAN%20FELLOWSHIP%20PRAYER%20ALTAR!5e0!3m2!1sen!2sug!4v1736489527900!5m2!1sen!2sug" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+
+<!--//contact-->
+ 
+{% endblock %}

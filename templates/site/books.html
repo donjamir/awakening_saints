@@ -1,0 +1,2355 @@
+{% load static %}
+<!DOCTYPE html>
+
+<html lang="en" x-data>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ShopEase - Home</title>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="{% static 'assets/css/custom.css' %}">
+  <!-- <link rel="stylesheet" href="dark.css"> -->
+
+
+
+</head>
+
+
+<body class="bg-light"
+      x-data="{
+        activeTab: 'home',
+        loading: false,
+        switchTab(tab) {
+          this.loading = true;
+          setTimeout(() => {
+            this.activeTab = tab;
+            this.loading = false;
+            window.location.hash = tab;
+          }, 600); // simulate loading delay
+        }
+      }"
+      x-init="
+        const hash = window.location.hash.replace('#', '');
+        if (['home', 'about', 'contact', 'cart', 'wishlist', 'checkout'].includes(hash)) {
+          activeTab = hash;
+        }
+        $watch('activeTab', value => window.location.hash = value);
+      ">
+
+
+
+
+
+<div x-data="{ activeTab: 'home' }">
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fade-in" data-fade>
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="#">ShopEase</a>
+
+      <div class="d-flex align-items-center order-lg-2">
+
+
+
+<!-- Modals icons -->
+
+        <!-- Cart Icon -->
+        <!-- <li class="nav-item list-unstyled me-3" x-data="cartHandler()">
+          <a class="nav-link position-relative" href="#" id="cartIcon">
+            <i class="bi bi-cart fs-5"></i>
+            <span
+              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+              x-show="cart.length > 0"
+              x-text="cart.length"
+              style="font-size: 0.65rem;"
+            ></span>
+          </a>
+        </li> -->
+
+        <!-- Wishlist Icon -->
+        <li class="nav-item list-unstyled me-3" x-data="wishlistHandler()">
+          <a class="nav-link position-relative" href="#" id="wishlistIcon" @click.prevent="$refs.wishlistModal && new bootstrap.Modal($refs.wishlistModal).show()">
+            <i class="bi bi-bell fs-5"></i>
+            <span
+              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+              x-show="wishlist.length > 0"
+              x-text="wishlist.length"
+              style="font-size: 0.65rem;"
+            ></span>
+          </a>
+        </li>
+<!-- modal icons -->
+
+        <!-- Toggler button (only visible on small screens) -->
+        <button class="border-0 navbar-toggler list-unstyled me-3" id="navbarToggler">
+          <i class="bi bi-list fs-3"></i>
+        </button>
+      </div>
+
+      <div
+        class="collapse navbar-collapse justify-content-end"
+        id="navbarNav"
+        x-data="{ open: false, search: '' }"
+        @mouseleave="open = false"
+      >
+        <ul class="navbar-nav">
+
+          <li class="nav-item">
+            <a class="nav-link active" href="{% url 'home' %}">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" @click.prevent="activeTab = switchTab('home')">Books</a>
+          </li>
+
+          <li
+            class="nav-item dropdown"
+            x-data="{
+              open: false,
+              search: '',
+              loading: false,
+              categories: [
+                'Men', 'Women', 'Accessories', 'Shoes', 'Kids', 'Electronics',
+                'Home & Garden', 'Beauty', 'Sports', 'Outdoors', 'Toys', 'More Categories'
+              ],
+              filteredCategories() {
+                return this.categories.filter(c => c.toLowerCase().includes(this.search.toLowerCase()))
+              },
+              handleSearch() {
+                this.loading = true;
+                setTimeout(() => this.loading = false, 500); // fake loading delay
+              }
+            }"
+            x-init="
+              document.addEventListener('click', e => {
+                if (! $el.contains(e.target)) open = false;
+              })
+            "
+            style="position: relative;"
+          >
+            <a
+              class="nav-link"
+              href="#"
+              role="button"
+              :aria-expanded="open.toString()"
+              @click.prevent="open = !open"
+            >
+              Shop
+            </a>
+
+            <ul class="dropdown-menu" :class="{ show: open }" style="margin-top: 0.8rem;">
+              <!-- Search input -->
+              <li style="list-style: none; margin: 0; padding: 0;">
+                <input
+                  type="text"
+                  class="dropdown-search"
+                  placeholder="Search categories..."
+                  x-model="search"
+                  @input="handleSearch"
+                  @click.stop
+                  @keydown.stop
+                />
+              </li>
+
+              <!-- Scrollable list container -->
+              <div class="dropdown-scroll">
+                <!-- Show skeleton while loading -->
+                <template x-if="loading">
+                  <div>
+                    <template x-for="i in 6" :key="i">
+                      <div class="skeleton-item mb-2 rounded bg-light" style="height: 1.5rem;"></div>
+                    </template>
+                  </div>
+                </template>
+
+                <!-- Show filtered results after loading -->
+                <template x-if="!loading">
+                  <div>
+                    <template x-for="category in filteredCategories()" :key="category">
+                      <li>
+                        <a class="dropdown-item" href="#" x-text="category"></a>
+                      </li>
+                    </template>
+
+                    <li x-show="filteredCategories().length === 0">
+                      <a class="dropdown-item disabled" href="#">No categories found</a>
+                    </li>
+                  </div>
+                </template>
+              </div>
+            </ul>
+          </li>
+
+          <!-- Updated Tab Links -->
+          <li class="nav-item">
+            <a class="nav-link" href="#" @click.prevent="switchTab('about')">About Us</a>
+          <!-- </li>
+              <li class="nav-item">
+            <a class="nav-link" href="#" @click.prevent="switchTab('categorys')">Categories</a>
+          </li> -->
+       
+
+        <!-- <li class="nav-item">
+          <a class="nav-link" href="#" @click.prevent="activeTab = switchTab('cart')">Cart</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" @click.prevent="activeTab = switchTab('wishlist')">Wishlist</a>
+        </li> -->
+
+        <li class="nav-item">
+          <a class="nav-link" href="#" @click.prevent="activeTab = switchTab('details')">Details</a>
+        </li>
+
+        
+
+        </ul>
+        <div class="d-flex gap-3">
+
+          <li class="nav-item list-unstyled me-2">
+          <a class="nav-link position-relative" href="#" @click.prevent="activeTab = switchTab('profile')"><i class="bi bi-person fs-5"></i></a>
+        </li>
+
+                         <!-- Cart Icon -->
+      <li class="nav-item list-unstyled me-2">
+        <a class="nav-link position-relative" href="#" @click.prevent="switchTab('cart')">
+          <i class="bi bi-cart fs-5"></i>
+          <span
+            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+            x-data="cartHandler()"
+            x-show="cart.length > 0"
+            x-text="cart.length"
+            style="font-size: 0.65rem;"
+          ></span>
+        </a>
+      </li>
+                </div>
+      </div>
+    </div>
+  </nav>
+
+    <div x-show="loading" x-transition class="loader-overlay">
+      <div class="classic-spinner"></div>
+    </div>
+
+
+
+    <!-- Homepage content -->
+  <div x-show="activeTab === 'home'">
+    <header class="hero-image-section position-relative text-white text-center">
+      <img src="https://img.freepik.com/free-photo/smiling-african-business-people-having-meeting_1262-21068.jpg" 
+          class="w-100 hero-bg-img" alt="Hero Background Image">
+
+      <!-- Gradient overlay -->
+      <div class="image-gradient-overlay position-absolute top-0 start-0 w-100 h-100"></div>
+
+      <!-- Text overlay content -->
+      <div class="overlay-content position-absolute top-50 start-0 translate-middle-y px-4 px-md-5 text-start">
+        <div class="container">
+          <h1 class="display-4 fw-bold text-white">Discover the Latest Trends</h1>
+          <p class="lead text-white">Upgrade your style with our new arrivals.</p>
+          <a href="#featured-products" class="btn btn-light btn-lg mt-3">Shop Now</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Featured Products Section -->
+    <section id="featured-products" class="py-5 bg-light">
+
+        <!-- Slider -->
+  <div class="container py-5 fade-in" x-data="productCarousel()" x-init="initSwipe()" data-fade>
+    <!-- Arrows -->
+    <div class="d-flex justify-content-end mb-3">
+      <button class="btn btn-outline-secondary btn-sm me-2" @click="prev()" :disabled="currentIndex === 0">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      <button class="btn btn-outline-secondary btn-sm" @click="next()" :disabled="currentIndex >= maxIndex">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+
+    <!-- Slider -->
+    <div class="overflow-hidden" 
+        @touchstart="touchStart($event)" 
+        @touchmove="touchMove($event)" 
+        @touchend="touchEnd()"
+    >
+      <div class="d-flex transition-transform" x-ref="track"
+          :style="`transform: translateX(-${currentIndex * (100 / productsPerView)}%)`">
+
+            <template x-for="(product, idx) in products" :key="idx">
+              <div class="col px-2">
+                <div class="card product-card h-100 fade-in" data-fade>
+        <div class="product-image position-relative">
+          <img :src="product.image1" class="first w-100" />
+          <img :src="product.image2" class="second w-100" />
+
+          <!-- Gradient Overlay -->
+      <div class="hover-gradient position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-end pb-3">
+        <button class="btn btn-primary add-to-cart-btn" style="border-radius: 20px;"><i class="bi bi-cart"></i>&nbsp;Add to Cart</button>
+      </div>
+
+
+          <!-- Action Buttons (optional) -->
+          <div class="action-icons position-absolute end-0 bottom-0 p-2">
+            <a href="" data-bs-toggle="tooltip" title="View"><i class="bi bi-eye"></i></a>
+            <a href="" data-bs-toggle="tooltip" title="Wishlist"><i class="bi bi-heart"></i></a>
+          </div>
+        </div>
+
+        <div class="card-body text-center">
+          <h5 class="card-title" x-text="product.name"></h5>
+          <p class="card-text text-primary fw-bold">$<span x-text="product.price"></span></p>
+        </div>
+      </div>
+
+          </div>
+        </template>
+
+      </div>
+    </div>
+  </div>
+
+    </section>
+
+  <!-- Categories Section -->
+<section x-data="productSection()" x-init="loadBooks()" class="py-5">
+  <div class="container">
+    <h2 class="mb-4 text-center fw-bold">Shop by Category</h2>
+
+    <!-- Tabs -->
+    <ul class="nav nav-pills justify-content-center mb-4">
+      <template x-for="category in Object.keys(inventory)" :key="category">
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            :class="{ 'active': activeTab === category }"
+            @click="activeTab = category"
+            type="button"
+            x-text="category">
+          </button>
+        </li>
+      </template>
+    </ul>
+
+    <!-- Product Grid -->
+    <div class="row g-4">
+      <template x-for="(product, index) in inventory[activeTab]" :key="product.title + '-' + index">
+        <div class="col-12 col-md-3" x-data="{ show: false }" x-init="setTimeout(() => show = true, 100 * index)">
+          <div class="card custom-product-card h-100" :class="{ 'show': show }">
+            <div class="custom-product-image position-relative" x-data="{ hovered: false }" @mouseenter="hovered = true" @mouseleave="hovered = false">
+              <!-- Use the cover image as both image1 and image2 for hover effect fallback -->
+              <img :src="product.cover_image" class="first w-100" :style="{ opacity: hovered ? 0 : 1, position: 'relative', transition: 'opacity 0.3s' }" />
+              <img :src="product.cover_image" class="second w-100 position-absolute top-0 start-0" :style="{ opacity: hovered ? 1 : 0, transition: 'opacity 0.3s' }" />
+
+              <div class="custom-hover-gradient position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-end pb-3">
+                 <!-- In the book card template -->
+<button class="btn btn-primary" style="border-radius: 20px;" 
+        @click.prevent="switchTab('read', product.id)" type="button">
+    <i class="bi bi-book"></i> Read
+</button>
+
+                <!-- <button class="btn btn-primary" style="border-radius: 20px;"><i class="bi bi-book"></i> Read</button> -->
+              </div>
+
+              <div class="custom-action-icons position-absolute top-0 start-0 p-2"></div>
+            </div>
+
+            <div class="card-body text-center">
+              <h5 class="card-title" x-text="product.title"></h5>
+              <p class="card-text text-primary fw-bold">$<span x-text="product.price"></span></p>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+</section>
+
+
+
+  </div>
+
+
+<!-- About Us Tab -->
+<!-- Read Tab Content -->
+<div x-show="activeTab === 'read'">
+  <section class="container py-5">
+    <main class="reading-container" x-show="previewContent">
+      <div class="chapter-header">
+        <h2 class="chapter-title">
+          Chapter: <span x-text="currentChapter"></span>
+        </h2>
+        <p class="chapter-subtitle">Preview from uploaded file</p>
+      </div>
+
+      <div class="reading-content">
+        <!-- Replace this with either iframe or viewer -->
+        <iframe :src="previewContent.file_url" width="100%" height="600px" frameborder="0"></iframe>
+      </div>
+    </main>
+
+    <template x-if="!previewContent">
+      <p class="text-center text-muted">Loading preview…</p>
+    </template>
+  </section>
+</div>
+
+
+
+<!-- Shop Tab -->
+<div x-show="activeTab === 'books'" x-transition>
+
+
+     <!-- Intro -->
+    <header class="hero-image-section position-relative text-white text-center">
+      <img src="https://img.freepik.com/free-photo/smiling-african-business-people-having-meeting_1262-21068.jpg" 
+          class="w-100 hero-bg-img" alt="Hero Background Image">
+
+      <!-- Gradient overlay -->
+      <div class="image-gradient-overlay position-absolute top-0 start-0 w-100 h-100"></div>
+
+      <!-- Text overlay content -->
+      <div class="overlay-content position-absolute top-50 start-0 translate-middle-y px-4 px-md-5 text-start">
+        <div class="container">
+           <h2 class="display-5 fw-bold">About Us</h2>
+        </div>
+      </div>
+    </header>
+
+  <section class="container py-5">
+    
+  </section>
+</div>
+
+
+  
+  <!-- Cart Tab -->
+  <div x-show="activeTab === 'cart'" x-transition>
+    <header class="hero-image-section position-relative text-white text-center">
+      <img src="https://img.freepik.com/free-photo/smiling-african-business-people-having-meeting_1262-21068.jpg" 
+          class="w-100 hero-bg-img" alt="Hero Background Image">
+
+      <!-- Gradient overlay -->
+      <div class="image-gradient-overlay position-absolute top-0 start-0 w-100 h-100"></div>
+
+      <!-- Text overlay content -->
+      <div class="overlay-content position-absolute top-50 start-0 translate-middle-y px-4 px-md-5 text-start fade-in" data-fade>
+        <div class="container mt-5">
+           <h2 class="display-5 fw-bold fade-in" data-fade="">Shopping cart & Checkout</h2>
+        <p class="lead fade-in" data-fade>
+          ShopEase is your go-to online store for fashion, electronics, and home essentials. We curate affordable quality, deliver quickly, and treat every customer like a VIP.
+        </p>
+
+        </div>
+      </div>
+    </header>
+
+    <div x-data="cartHandler()" class="flex-grow-1 mt-6">
+        <section class="container pt-5">
+            <div class="">
+                <h1 class="cart-header">Cart & Checkout</h1>
+                
+                <div class="p-4">
+                    <!-- Loader -->
+                    <div class="loader-wrapper" x-show="loading">
+                        <div class="classic-spinner"></div>
+                    </div>
+
+                    <div x-show="!loading">
+                        <!-- Cart View -->
+                        <div x-show="activeTab === 'cart'">
+                            <template x-if="cart.length === 0">
+                                <div class="text-center py-5">
+                                    <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                                    <h4 class="mb-3">Your cart is empty</h4>
+                                    <p>Looks like you haven't added anything to your cart yet</p>
+                                    <button class="btn btn-primary mt-2" @click="goBackToCart()">Continue Shopping</button>
+                                </div>
+                            </template>
+
+                            <template x-if="cart.length > 0">
+                                <div class="row">
+                                  <div class="col-lg-8" style="max-height: 700px; overflow-y: auto;">
+                                      <div class="table-responsive">
+                                            <table class="cart-table table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>PRODUCT</th>
+                                                        <th>SIZE</th>
+                                                        <th>PRICE</th>
+                                                        <th>QUANTITY</th>
+                                                        <th>TOTAL</th>
+                                                        <th>ACTIONS</th>
+                                                    </tr>
+                                                </thead>
+                                                  <tbody>
+                                                    
+                                                         <template x-for="(item, index) in cart" :key="index">
+                                                        <tr class="product-row">
+                                                            <td>
+                                                                <div class="d-flex align-items-center">
+                                                                    <img :src="item.image" alt="Product" class="product-img">
+                                                                    <div>
+                                                                        <div class="product-title" x-text="item.name"></div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td> <div x-text="item.color +' | '+ item.size"></div></td>
+                                                            <td>
+                                                                $<span x-text="item.price.toFixed(2)"></span>
+                                                                <template x-if="item.discount">
+                                                                    <div class="discounted-price">($<span x-text="(item.price + item.discount).toFixed(2)"></span>)</div>
+                                                                </template>
+                                                            </td>
+                                                            <td>
+                                                                <input
+                                                                    type="number"
+                                                                    min="1"
+                                                                    class="quantity-input"
+                                                                    x-model.number="item.qty"
+                                                                    @change="updateTotal()"
+                                                                />
+                                                            </td>
+                                                            <td class="fw-bold">$<span x-text="(item.qty * item.price).toFixed(2)"></span></td>
+                                                            <td> <a href="#" class="remove-link" @click.prevent="removeItem(index)">
+                                                                                <i class="fas fa-trash-alt me-1"></i>
+                                                                            </a></td>
+                                                        </tr>
+                                                    </template>
+                                                  
+                                                  </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-lg-4">
+                                        <div class="order-summary">
+                                            <div class="summary-title">Order Summary</div>
+                                            
+                                            <div class="summary-item">
+                                                <span>Subtotal:</span>
+                                                <span>$<span x-text="subtotal.toFixed(2)"></span></span>
+                                            </div>
+                                            
+                                            <div class="summary-item">
+                                                <span>Shipping:</span>
+                                                <span></span>
+                                            </div>
+                                            
+                                            <div class="shipping-option">
+                                                <input type="radio" id="standard" name="shipping" value="4.99" x-model="shippingOption">
+                                                <label for="standard" class="shipping-label">Standard Delivery: $4.99</label>
+                                            </div>
+                                            
+                                            <div class="shipping-option">
+                                                <input type="radio" id="express" name="shipping" value="12.99" x-model="shippingOption">
+                                                <label for="express" class="shipping-label">Express Delivery: $12.99</label>
+                                            </div>
+                                            
+                                            <div class="shipping-option">
+                                                <input type="radio" id="free" name="shipping" value="0" x-model="shippingOption" :disabled="subtotal < 500">
+                                                <label for="free" class="shipping-label" :class="{'text-muted': subtotal < 500}">Free Shipping (Orders over $500)</label>
+                                            </div>
+                                            
+                                            <div class="summary-item">
+                                                <span>Discount:</span>
+                                                <span>$<span x-text="discount.toFixed(2)"></span></span>
+                                            </div>
+                                            
+                                            <div class="summary-item total-row">
+                                                <span>Total:</span>
+                                                <span :class="{'negative-total': grandTotal < 0}">
+                                                    $<span x-text="grandTotal.toFixed(2)"></span>
+                                                </span>
+                                            </div>
+                                            
+                                            <button class="btn btn-checkout" :disabled="cart.length === 0" @click="goToCheckout()">
+                                                Process to Checkout <i class="fas fa-arrow-right ms-2"></i>
+                                            </button>
+                                            
+                                            <button class="btn btn-continue" @click="continueShopping()">
+                                                Continue Shopping
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="payment-methods">
+                                            <div>We Accept</div>
+                                            <div class="payment-icons">
+                                                <i class="fab fa-cc-visa"></i>
+                                                <i class="fab fa-cc-mastercard"></i>
+                                                <i class="fab fa-cc-amex"></i>
+                                                <i class="fab fa-cc-paypal"></i>
+                                                <i class="fab fa-cc-apple-pay"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Checkout View -->
+                        <div x-show="activeTab === 'checkout'">
+                          <div class="row">
+                             <div class="col-lg-8" x-data="checkoutForm()" x-init="init()" id="checkout-component">
+                                <form id="checkoutForm" class="bg-light p-4 rounded" @submit.prevent="submitOrder">
+                                    <h4 class="mb-4">Checkout Information</h4>
+                                    <div class="row">
+                                        <!-- Full Name -->
+                                        <div class="mb-3 col-md-6">
+                                            <label class="form-label">Full Name</label>
+                                            <input type="text" class="form-control" :class="{'is-invalid': errors.fullName}" x-model="form.fullName" />
+                                            <div class="invalid-feedback" x-show="errors.fullName">Full Name is required</div>
+                                        </div>
+
+                                        <!-- Email -->
+                                        <div class="mb-3 col-md-6">
+                                            <label class="form-label">Email address</label>
+                                            <input type="email" class="form-control" :class="{'is-invalid': errors.email}" x-model="form.email" />
+                                            <div class="invalid-feedback" x-show="errors.email">Valid Email is required</div>
+                                        </div>
+
+                                        <!-- Shipping Address -->
+                                        <div class="mb-3 col-12">
+                                            <label class="form-label">Shipping Address</label>
+                                            <textarea class="form-control" rows="3" x-model="form.address" :class="{'is-invalid': errors.address}"></textarea>
+                                            <div class="invalid-feedback" x-show="errors.address">Address is required</div>
+                                        </div>
+
+                                        <!-- City -->
+                                        <div class="mb-3 col-md-6">
+                                            <label class="form-label">City</label>
+                                            <input type="text" class="form-control" x-model="form.city" :class="{'is-invalid': errors.city}" />
+                                            <div class="invalid-feedback" x-show="errors.city">City is required</div>
+                                        </div>
+
+                                        <!-- ZIP -->
+                                        <div class="mb-3 col-md-6">
+                                            <label class="form-label">ZIP Code</label>
+                                            <input type="text" class="form-control" x-model="form.zip" :class="{'is-invalid': errors.zip}" />
+                                            <div class="invalid-feedback" x-show="errors.zip">ZIP Code is required</div>
+                                        </div>
+
+                                        <!-- Payment Method -->
+                                        <div class="mb-3 col-md-6">
+                                            <label class="form-label">Payment Method</label>
+                                            <select class="form-select" x-model="form.paymentMethod" :class="{'is-invalid': errors.paymentMethod}">
+                                                <option value="">-- Select --</option>
+                                                <option value="credit">Credit Card</option>
+                                                <option value="paypal">PayPal</option>
+                                                <option value="mobile">Mobile Money</option>
+                                                <option value="bank">Bank Transfer</option>
+                                            </select>
+                                            <div class="invalid-feedback" x-show="errors.paymentMethod">Select a payment method</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Credit Card -->
+                                    <div class="row" x-show="form.paymentMethod === 'credit'" x-transition>
+                                        <div class="mb-3 col-md-6">
+                                            <label class="form-label">Card Number</label>
+                                            <input type="text" class="form-control" x-model="form.cardNumber" :class="{'is-invalid': errors.cardNumber}" />
+                                            <div class="invalid-feedback" x-show="errors.cardNumber">Card number is required</div>
+                                        </div>
+                                        <div class="mb-3 col-md-3">
+                                            <label class="form-label">Expiry</label>
+                                            <input type="text" class="form-control" x-model="form.expiry" :class="{'is-invalid': errors.expiry}" />
+                                            <div class="invalid-feedback" x-show="errors.expiry">Expiry is required</div>
+                                        </div>
+                                        <div class="mb-3 col-md-3">
+                                            <label class="form-label">CVV</label>
+                                            <input type="text" class="form-control" x-model="form.cvv" :class="{'is-invalid': errors.cvv}" />
+                                            <div class="invalid-feedback" x-show="errors.cvv">CVV is required</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- PayPal -->
+                                    <div class="row" x-show="form.paymentMethod === 'paypal'" x-transition>
+                                        <div class="mb-3 col-md-6">
+                                            <label class="form-label">PayPal Email</label>
+                                            <input type="email" class="form-control" x-model="form.paypalEmail" :class="{'is-invalid': errors.paypalEmail}" />
+                                            <div class="invalid-feedback" x-show="errors.paypalEmail">PayPal email is required</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Mobile Money -->
+                                    <div class="row" x-show="form.paymentMethod === 'mobile'" x-transition>
+                                        <div class="mb-3 col-md-6">
+                                            <label class="form-label">Mobile Money Number</label>
+                                            <input type="text" class="form-control" x-model="form.mobileNumber" :class="{'is-invalid': errors.mobileNumber}" />
+                                            <div class="invalid-feedback" x-show="errors.mobileNumber">Mobile number is required</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bank Transfer -->
+                                    <div class="row" x-show="form.paymentMethod === 'bank'" x-transition>
+                                        <div class="mb-3 col-md-6">
+                                            <label class="form-label">Account Name</label>
+                                            <input type="text" class="form-control" x-model="form.accountName" :class="{'is-invalid': errors.accountName}" />
+                                            <div class="invalid-feedback" x-show="errors.accountName">Account name required</div>
+                                        </div>
+                                        <div class="mb-3 col-md-6">
+                                            <label class="form-label">Account Number</label>
+                                            <input type="text" class="form-control" x-model="form.accountNumber" :class="{'is-invalid': errors.accountNumber}" />
+                                            <div class="invalid-feedback" x-show="errors.accountNumber">Account number required</div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                                
+                                <div class="col-lg-4">
+                                    <div class="order-summary">
+                                        <div class="summary-title">Order Summary</div>
+                                        
+                                        <template x-for="(item, index) in cart" :key="index">
+                                            <div class="summary-item">
+                                                <span x-text="item.name + ' (' + item.qty + ')'"></span>
+                                                <span>$<span x-text="(item.qty * item.price).toFixed(2)"></span></span>
+                                            </div>
+                                        </template>
+                                        
+                                        <div class="summary-item">
+                                            <span>Subtotal:</span>
+                                            <span>$<span x-text="subtotal.toFixed(2)"></span></span>
+                                        </div>
+                                        
+                                        <div class="summary-item">
+                                            <span>Shipping:</span>
+                                            <span>$<span x-text="parseFloat(shippingOption).toFixed(2)"></span></span>
+                                        </div>
+                                        
+                                        <div class="summary-item">
+                                            <span>Discount:</span>
+                                            <span>$<span x-text="discount.toFixed(2)"></span></span>
+                                        </div>
+                                        
+                                        <div class="summary-item total-row">
+                                            <span>Total:</span>
+                                            <span>$<span x-text="grandTotal.toFixed(2)"></span></span>
+                                        </div>
+                                                                  
+                                      <button
+                                          type="button"
+                                          class="btn btn-success w-100 py-3 mt-3"
+                                          @click="document.getElementById('checkout-component').dispatchEvent(new CustomEvent('trigger-submit'))"
+                                      >
+                                          <i class="fas fa-lock me-2"></i>Confirm & Pay
+                                      </button>
+
+                                       <button type="button" class="btn btn-secondary w-100 py-3 mt-3"@click="goBackToCart()">
+                                            <i class="fas fa-arrow-left me-2"></i>Back to Cart
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- <div class="d-flex justify-content-between mt-4">
+                                        <button type="button" class="btn btn-secondary" @click="goBackToCart()">
+                                            <i class="fas fa-arrow-left me-2"></i>Back to Cart
+                                        </button>
+                                    </div> -->
+                                </div>
+                          </div>
+                        </div>
+                    </div>
+            </div>
+        </section>
+    </div>
+  </div>
+
+<!-- Wishlist Tab -->
+<div x-show="activeTab === 'wishlist'" x-transition x-data="wishlistHandler()">
+  <header class="hero-image-section position-relative text-white text-center">
+      <img src="https://img.freepik.com/free-photo/smiling-african-business-people-having-meeting_1262-21068.jpg" 
+          class="w-100 hero-bg-img" alt="Hero Background Image">
+
+      <!-- Gradient overlay -->
+      <div class="image-gradient-overlay position-absolute top-0 start-0 w-100 h-100"></div>
+
+      <!-- Text overlay content -->
+      <div class="overlay-content position-absolute top-50 start-0 translate-middle-y px-4 px-md-5 text-start">
+        <div class="container">
+           <h2 class="display-5 fw-bold">WishList</h2>
+        <p class="lead">
+          ShopEase is your go-to online store for fashion, electronics, and home essentials. We curate affordable quality, deliver quickly, and treat every customer like a VIP.
+        </p>
+        </div>
+      </div>
+  </header>
+
+  <section class="container py-5">
+    <h2 class="fw-bold mb-4">Your Wishlist</h2>
+
+        <!-- Wishlist Items -->
+        <template x-if="!loading && wishlist.length === 0">
+          <p>Your wishlist is empty.</p>
+        </template>
+
+        <template x-if="!loading && wishlist.length > 0">
+          <div>
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="(item, index) in wishlist" :key="index">
+                    <tr>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <img :src="item.image" alt="Product" width="50" height="50" style="object-fit: cover; margin-right: 2rem;" class="me-2 rounded shadow-sm" />
+                        </div>
+                      </td>
+                      <td x-text="item.name"></td>
+                      <td>$<span x-text="item.price.toFixed(2)"></span></td>
+                      <td>
+                        <button class="btn btn-sm btn-danger" @click="removeItem(index)">
+                          <i class="bi bi-x"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </template>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4" x-show="wishlist.length > 0">
+      <template x-for="item in wishlist" :key="item.id">
+        <div class="col">
+          <div class="card h-100 shadow-sm">
+            <img :src="item.image" class="card-img-top" :alt="item.name">
+            <div class="card-body">
+              <h5 class="card-title" x-text="item.name"></h5>
+              <p class="card-text text-muted" x-text="item.price"></p>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+  </section>
+</div>
+
+<!--profile-->
+<div x-show="activeTab === 'profile'">
+    <header class="hero-image-section position-relative text-white text-center">
+        <img src="https://img.freepik.com/free-photo/smiling-african-business-people-having-meeting_1262-21068.jpg" 
+            class="w-100 hero-bg-img" alt="Hero Background Image">
+
+        <!-- Gradient overlay -->
+        <div class="image-gradient-overlay position-absolute top-0 start-0 w-100 h-100"></div>
+
+        <!-- Text overlay content -->
+        <div class="overlay-content position-absolute top-50 start-0 translate-middle-y px-4 px-md-5 text-start">
+          <div class="container">
+            <h2 class="display-5 fw-bold">WishList</h2>
+          <p class="lead">
+            ShopEase is your go-to online store for fashion, electronics, and home essentials. We curate affordable quality, deliver quickly, and treat every customer like a VIP.
+          </p>
+          </div>
+        </div>
+    </header>
+    <div class="account-container mt-5" x-data="accountDashboard()">
+
+          <!-- Card Modal -->
+          <div class="modal fade" id="cardModal" tabindex="-1" aria-labelledby="cardModalLabel" aria-hidden="true">
+              <div class="modal-dialog">
+                  <div class="modal-content"
+                      x-data="cardForm"
+                      x-init="init(); $watch('form.number', () => errors.number = null); $watch('form.expiry', () => errors.expiry = null); $watch('form.cvv', () => errors.cvv = null); $watch('form.name', () => errors.name = null);">
+                      
+                      <div class="modal-header">
+                          <h5 class="modal-title" id="cardModalLabel"
+                              x-text="Alpine.store('cards').editingIndex === null ? 'Add New Card' : 'Edit Card'"></h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+
+                      <div class="modal-body">
+                          <div class="mb-3">
+                              <label class="form-label">Card Number</label>
+                              <div class="input-group">
+                                  <input type="text" class="form-control"
+                                      :class="{'is-invalid': errors.number}"
+                                      placeholder="1234 5678 9012 3456"
+                                      x-model="form.number">
+                                  <span class="input-group-text"><i class="fab fa-cc-visa"></i></span>
+                                  <div class="invalid-feedback" x-show="errors.number" x-text="errors.number"></div>
+                              </div>
+                          </div>
+
+                          <div class="row">
+                              <div class="col-md-6 mb-3">
+                                  <label class="form-label">Expiration Date</label>
+                                  <input type="text" class="form-control"
+                                      :class="{'is-invalid': errors.expiry}"
+                                      placeholder="MM/YY"
+                                      x-model="form.expiry">
+                                  <div class="invalid-feedback" x-show="errors.expiry" x-text="errors.expiry"></div>
+                              </div>
+
+                              <div class="col-md-6 mb-3">
+                                  <label class="form-label">CVV</label>
+                                  <input type="text" class="form-control"
+                                      :class="{'is-invalid': errors.cvv}"
+                                      placeholder="123"
+                                      x-model="form.cvv">
+                                  <div class="invalid-feedback" x-show="errors.cvv" x-text="errors.cvv"></div>
+                              </div>
+                          </div>
+
+                          <div class="mb-3">
+                              <label class="form-label">Cardholder Name</label>
+                              <input type="text" class="form-control"
+                                  :class="{'is-invalid': errors.name}"
+                                  placeholder="Anderson Smith"
+                                  x-model="form.name">
+                              <div class="invalid-feedback" x-show="errors.name" x-text="errors.name"></div>
+                          </div>
+
+                          <div class="form-check mb-4">
+                              <input class="form-check-input" type="checkbox" id="setDefaultCard" x-model="form.isDefault">
+                              <label class="form-check-label" for="setDefaultCard">Set as default payment method</label>
+                          </div>
+                      </div>
+
+                      <div class="modal-footer">
+                          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                          <button class="btn btn-primary"
+                                  @click.prevent="if (save()) bootstrap.Modal.getInstance($root.closest('.modal')).hide()">
+                              Save
+                          </button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Order Details Modal -->
+          <div class="modal fade order-details-modal" id="orderDetailsModal" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-lg">
+                  <div class="modal-content">
+                      <div class="modal-header">
+                          <h5 class="modal-title">8.0.0TSTRAPMADE</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                          <div class="d-flex justify-content-center align-items-center mb-3">
+                              <span class="status-badge status-processing me-2">Processing</span>
+                              <span class="me-2">|</span>
+                              <span>Order ID: #ORD-2024-1278</span>
+                          </div>
+                          
+                          <!-- Delivery Estimate -->
+                          <div class="info-card text-center mb-4">
+                              <h5 class="mb-1">Estimated delivery</h5>
+                              <h4 class="mb-0">Feb 22, 2025</h4>
+                          </div>
+                          
+                          <!-- Order Information -->
+                          <div class="mb-4">
+                              <h5 class="section-title">Order Information</h5>
+                              <div class="info-card">
+                                  <div class="d-flex justify-content-between">
+                                      <div>
+                                          <h6 class="mb-1">Payment Method</h6>
+                                          <div class="fw-bold">Credit Card (**** 4559)</div>
+                                      </div>
+                                      <div>
+                                          <button class="btn btn-sm btn-outline-primary">
+                                              <i class="fas fa-print me-1"></i> Print Invoice
+                                          </button>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                          
+                      
+                          <!-- Items List -->
+                          <div class="mb-4">
+                              <h5 class="section-title" x-text="'No. of items: (' + (selectedOrder?.items?.length || 0) + ')'"></h5>
+
+                              <template x-if="selectedOrder && selectedOrder.items && selectedOrder.items.length">
+                                  <div>
+                                      <template x-for="(item, index) in selectedOrder.items" :key="index">
+                                          <div class="d-flex align-items-center mb-3 p-3 border rounded shadow-sm bg-light">
+                                              <div class="me-3 d-flex align-items-center justify-content-center bg-white border rounded" style="width: 50px; height: 50px;">
+                                                  <i class="fas fa-box text-muted fa-lg"></i>
+                                              </div>
+                                              <div>
+                                                  <h6 class="mb-1 fw-bold" x-text="item.name"></h6>
+                                                  <div class="text-muted" x-text="'Quantity: ' + item.quantity"></div>
+                                                  <div class="text-primary fw-semibold" x-text="item.price"></div>
+                                              </div>
+                                          </div>
+                                      </template>
+                                  </div>
+                              </template>
+
+                              <template x-if="selectedOrder && (!selectedOrder.items || selectedOrder.items.length === 0)">
+                                  <div class="alert alert-info">
+                                      <i class="fas fa-info-circle me-2"></i> No items found for this order.
+                                  </div>
+                              </template>
+                          </div>
+
+                          
+                          <!-- Price Details -->
+                          <div class="mb-4" x-show="selectedOrder">
+                              <h5 class="section-title">Price Details</h5>
+                              <div class="price-details p-3 bg-light border rounded shadow-sm">
+                                  <div class="d-flex justify-content-between mb-2">
+                                      <span>Subtotal:</span>
+                                      <span class="fw-bold" x-text="calculateSubtotal(selectedOrder.items)"></span>
+                                  </div>
+
+                                  <div class="d-flex justify-content-between mb-2">
+                                      <span>Delivery:</span>
+                                      <span class="fw-bold">$15.99</span>
+                                  </div>
+                                
+                                  <div class="d-flex justify-content-between border-top pt-2 mt-2 fw-bold text-primary">
+                                      <span>Total:</span>
+                                      <span x-text="selectedOrder.total"></span>
+                                  </div>
+                              </div>
+                          </div>
+
+                          
+                          <!-- Shipping Method -->
+                          <div class="mb-4">
+                              <h5 class="section-title">Shipping Method</h5>
+                              <div class="shipping-method">
+                                  <h6 class="fw-bold">Express Delivery (2-3 days)</h6>
+                              </div>
+                          </div>
+                          
+                      
+                          
+                          <button class="btn-print">
+                              <i class="fas fa-print me-2"></i> Print Order Details
+                          </button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Address Modal -->
+          <div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="true">
+              <div class="modal-dialog">
+                  <div class="modal-content"
+                      x-data="addressForm"
+                      x-init="init(); $watch('form.name', () => errors.name = null); $watch('form.address', () => errors.address = null);">
+                      
+                      <div class="modal-header">
+                          <h5 class="modal-title" id="addressModalLabel" x-text="Alpine.store('addresses').editingIndex === null ? 'Add New Address' : 'Edit Address'"></h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+
+                      <div class="modal-body">
+                          <div class="mb-3">
+                              <label class="form-label">Name</label>
+                              <input type="text"
+                                  class="form-control"
+                                  :class="{ 'is-invalid': errors.name }"
+                                  x-model="form.name">
+                              <div class="invalid-feedback" x-show="errors.name" x-text="errors.name"></div>
+                          </div>
+
+                          <div class="mb-3">
+                              <label class="form-label">Address</label>
+                              <textarea class="form-control"
+                                      :class="{ 'is-invalid': errors.address }"
+                                      x-model="form.address"></textarea>
+                              <div class="invalid-feedback" x-show="errors.address" x-text="errors.address"></div>
+                          </div>
+
+                          <div class="form-check">
+                              <input class="form-check-input" type="checkbox" x-model="form.primary" id="setPrimaryAddress">
+                              <label class="form-check-label" for="setPrimaryAddress">Set as Primary</label>
+                          </div>
+                      </div>
+
+                      <div class="modal-footer">
+                          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                          <button class="btn btn-primary"
+                                  @click.prevent="if (save()) bootstrap.Modal.getInstance($root.closest('.modal')).hide()">
+                              Save
+                          </button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+
+
+          <div class="row g-0">
+            <!-- Sidebar -->
+            <div x-data="{ sidebarOpen: window.innerWidth >= 992, activeTab: 'orders' }" class="container-fluid">
+
+            <!-- Mobile Menu Button -->
+            <button class="btn btn-primary d-lg-none w-100 mb-3 mt-3 z-3" @click="sidebarOpen = true">
+              <i class="fas fa-bars"></i>
+            </button>
+
+
+            <!-- Mobile Overlay -->
+            <div class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 z-2 d-lg-none" x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen = false"></div>
+
+            <div class="row">
+
+                <!-- Sidebar -->
+                <div class="col-lg-3" :class="sidebarOpen && window.innerWidth < 992 ? 'position-fixed top-0 mt-5 start-0 vh-100 bg-white z-3 p-4' : ''" x-show="sidebarOpen || window.innerWidth >= 992" @resize.window="sidebarOpen = window.innerWidth >= 992" x-transition>
+                <!-- Close Button (Mobile) -->
+                <button class="btn-close d-lg-none float-end mb-3 p-4" @click="sidebarOpen = false"></button>
+
+                <div class="account-sidebar">
+                    <div class="user-info mb-3">
+                    <h5>Anderson</h5>
+                    <div class="premium-badge d-inline-block">Premium Member</div>
+                    </div>
+
+                    <ul class="nav flex-column account-nav">
+                    <div class="nav-section">
+                                    <div class="nav-section-title">My Account</div>
+                                    <ul class="nav flex-column account-nav">
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#" 
+                                                :class="{ 'active': activeTab === 'orders' }"
+                                          @click.prevent="setTab('orders'); if (window.innerWidth < 992) sidebarOpen = false">
+                                                <i class="fas fa-shopping-bag"></i> My Orders
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#" 
+                                                :class="{ 'active': activeTab === 'wishlist' }"
+                                              @click.prevent="setTab('wishlist'); if (window.innerWidth < 992) sidebarOpen = false">
+                                                <i class="fas fa-heart"></i> Wishlist
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#" 
+                                                :class="{ 'active': activeTab === 'payment' }"
+                                          @click.prevent="setTab('payment'); if (window.innerWidth < 992) sidebarOpen = false">
+                                                <i class="fas fa-credit-card"></i> Payment Methods
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="nav-section">
+                                    <div class="nav-section-title">Profile</div>
+                                    <ul class="nav flex-column account-nav">
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#" 
+                                                :class="{ 'active': activeTab === 'reviews' }"
+                                                @click.prevent="setTab('reviews'); if (window.innerWidth < 992) sidebarOpen = false">
+                                                <i class="fas fa-star"></i> My Reviews
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#" 
+                                                :class="{ 'active': activeTab === 'addresses' }"
+                                                @click.prevent="setTab('addresses'); if (window.innerWidth < 992) sidebarOpen = false">
+                                                <i class="fas fa-map-marker-alt"></i> Addresses
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#" 
+                                                :class="{ 'active': activeTab === 'settings' }"
+                                                @click.prevent="setTab('settings'); if (window.innerWidth < 992) sidebarOpen = false">
+                                                <i class="fas fa-cog"></i> Account Settings
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="nav-section">
+                                    <div class="nav-section-title">Support</div>
+                                    <ul class="nav flex-column account-nav">
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#" 
+                                                :class="{ 'active': activeTab === 'help' }"
+                                                @click.prevent="setTab('help'); if (window.innerWidth < 992) sidebarOpen = false">
+                                                <i class="fas fa-question-circle"></i> Help Center
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#">
+                                                <i class="fas fa-sign-out-alt"></i> Log Out
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                    </ul>
+                </div>
+                </div>
+
+            <!-- Main Content -->
+                        <div class="col-lg-9">
+                            <div class="main-content">
+
+                                <!-- Loader overlay -->
+
+                              <!-- <div x-show="loading" x-transition class="loader-overlay">
+                                <div class="classic-spinner"></div>
+                              </div> -->
+
+                                <!-- Loader -->
+                                <div class="loader-wrapper" x-show="loading">
+                                    <div class="classic-spinner"></div>
+                                </div>
+
+                                <!-- Loader -->
+                                <!-- <div x-show="loading" class="text-center py-5" style="z-index: 1000;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div> -->
+
+                                <div x-show="!loading">
+                                    <!-- Orders Tab -->
+                                    <div x-show="activeTab === 'orders'">
+                                        <div class="page-header d-flex justify-content-between align-items-center">
+                                            <h3>Orders</h3>
+                                            <div class="d-flex">
+                                                <div class="input-group me-2" style="max-width: 300px;">
+                                                    <input type="text" class="form-control" placeholder="Search orders..." x-model="orderSearch">
+                                                    <button class="btn btn-outline-secondary" type="button">
+                                                        <i class="fas fa-search"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <template x-for="order in filteredOrders" :key="order.id">
+                                            <div class="order-card border rounded p-3 mb-3">
+                                                <div class="order-header d-flex justify-content-between">
+                                                <div class="order-id fw-bold" x-text="'Order ID: ' + order.id"></div>
+                                                <div class="order-date text-muted" x-text="order.date"></div>
+                                                </div>
+                                                <div class="order-body d-flex flex-row flex-sm-column justify-content-between mt-3">
+                                                <div class="order-row me-3">
+                                                    <div class="order-label">Status</div>
+                                                    <div class="order-value">
+                                                    <span class="status-badge"
+                                                            :class="{
+                                                            'status-processing': order.status === 'Processing',
+                                                            'status-skipped': order.status === 'Skipped',
+                                                            'status-delivered': order.status === 'Delivered',
+                                                            'status-cancelled': order.status === 'Cancelled'
+                                                            }"
+                                                            x-text="order.status"></span>
+                                                    </div>
+                                                </div>
+                                                <div class="order-row me-3">
+                                                    <div class="order-label">Items</div>
+                                                    <div class="order-value" x-text="order.goods + ' items'"></div>
+                                                </div>
+                                                <div class="order-row">
+                                                    <div class="order-label">Total</div>
+                                                    <div class="order-value fw-bold" x-text="order.total"></div>
+                                                </div>
+                                                </div>
+                                                <div class="order-footer mt-3 d-flex justify-content-end">
+                                                <button class="btn btn-outline-primary btn-sm"
+                                                        @click="selectedOrder = order"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#orderDetailsModal">
+                                                    View Details
+                                                </button>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                        
+                                        <div class="text-center py-4" x-show="filteredOrders.length === 0">
+                                            <i class="fas fa-search fa-2x text-muted mb-3"></i>
+                                            <h4>No orders found</h4>
+                                            <p class="text-muted">Try adjusting your search criteria</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Wishlist Tab -->
+                                    <div x-show="activeTab === 'wishlist'">
+                                        <div class="page-header d-flex justify-content-between align-items-center mb-4">
+                                            <h3>Wishlist</h3>
+                                        </div>
+
+                                        <template x-for="item in wishlist" :key="item.name">
+                                            <div class="card mb-3 shadow-sm">
+                                                <div class="card-body d-flex align-items-center">
+                                                    <!-- Image placeholder -->
+                                                    <div class="me-3">
+                                                        <div class="bg-light d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; border-radius: 0.5rem;">
+                                                            <i class="fas fa-image fa-2x text-muted"></i>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Item info -->
+                                                    <div class="flex-grow-1">
+                                                        <h5 class="mb-1" x-text="item.name"></h5>
+                                                        <div class="text-primary fw-bold mb-2" x-text="item.price"></div>
+                                                        
+                                                        <div class="d-flex">
+                                                            <button class="btn btn-outline-primary btn-sm me-2">
+                                                                <i class="fas fa-shopping-cart me-1"></i>
+                                                            </button>
+                                                            <button class="btn btn-outline-danger btn-sm">
+                                                                <i class="fas fa-trash me-1"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                        <div class="text-center py-4 text-muted" x-show="wishlist.length === 0">
+                                            <i class="fas fa-heart-broken fa-2x mb-2"></i>
+                                            <h5>Your wishlist is empty</h5>
+                                            <p>Browse products and add some favorites.</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Payment Methods Tab -->
+                                    <div x-show="activeTab === 'payment'" x-data>
+                                        <div class="page-header d-flex justify-content-between align-items-center">
+                                            <h3>Payment Methods</h3>
+                                            <div class="d-flex">
+                                                <button class="btn btn-primary"
+                                                        @click="$store.cards.openAddModal()"
+                                                        data-bs-toggle="modal" data-bs-target="#cardModal">
+                                                    <i class="fas fa-plus me-2"></i> Add
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Show this if there are no cards -->
+                                        <template x-if="$store.cards.cards.length === 0">
+                                            <div class="text-center py-5">
+                                                <i class="fas fa-credit-card fa-3x text-muted mb-3"></i>
+                                                <h4 class="mb-3">No Payment Methods</h4>
+                                                <p>You haven't added any cards yet.</p>
+                                                <!-- <button class="btn btn-primary mt-2"
+                                                        @click="$store.cards.openAddModal(); $nextTick(() => { new bootstrap.Modal(document.getElementById('cardModal')).show(); })">
+                                                    <i class="fas fa-plus me-2"></i> Add Card
+                                                </button> -->
+                                            </div>
+                                        </template>
+
+
+                                        <!-- Loop through cards if any -->
+                                        <template x-for="(card, index) in $store.cards.cards" :key="index">
+                                            <div class="payment-method-card border rounded p-3 mb-3"
+                                                :class="card.isDefault ? 'border-primary' : 'border-secondary'">
+                                                <template x-if="card.isDefault">
+                                                    <span class="badge bg-primary mb-2">Default</span>
+                                                </template>
+
+                                                <div class="fw-bold" x-text="card.type"></div>
+                                                <div class="text-muted" x-text="card.number"></div>
+                                                <div class="text-muted" x-text="'Expires ' + card.expiry"></div>
+
+                                                <div class="mt-2">
+                                                    <button class="btn btn-outline-primary btn-sm me-2"
+                                                            @click="$store.cards.openEditModal(index)"
+                                                            data-bs-toggle="modal" data-bs-target="#cardModal">
+                                                        <i class="fas fa-edit me-1"></i> 
+                                                    </button>
+
+                                                    <button class="btn btn-outline-danger btn-sm me-2"
+                                                            @click="$store.cards.remove(index)">
+                                                        <i class="fas fa-trash me-1"></i>
+                                                    </button>
+
+                                                    <template x-if="!card.isDefault">
+                                                        <button class="btn btn-outline-success btn-sm"
+                                                                @click="$store.cards.setDefault(index)">
+                                                            <i class="fas fa-check me-1"></i>
+                                                        </button>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                        <div class="alert alert-info mt-4">
+                                            <i class="fas fa-lock me-2"></i>
+                                            Your payment information is securely stored and encrypted.
+                                        </div>
+                                    </div>
+
+                                    <!-- Reviews Tab -->
+                                    <div x-show="activeTab === 'reviews'">
+                                        <div class="page-header">
+                                            <h3>My Reviews</h3>
+                                        </div>
+                                        
+                                        <!-- <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-circle me-2"></i>
+                                            You haven't written any reviews yet. Reviews you write will appear here.
+                                        </div> -->
+                                        
+                                        <div class="text-center py-5">
+                                            <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                                            <h4>No Reviews Found</h4>
+                                            <p class="text-muted">Start reviewing products you've purchased to help others make better decisions.</p>
+                                            <button class="btn btn-primary mt-2">
+                                                Write Your First Review
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Addresses Tab -->
+                                    <div x-show="activeTab === 'addresses'" x-data="addressesComponent">
+                                        <div class="page-header d-flex justify-content-between align-items-center">
+                                            <h3>Addresses</h3>
+                                            <div class="d-flex">
+                                                <button class="btn btn-primary" @click="$store.addresses.openAddModal()"
+                                                        data-bs-toggle="modal" data-bs-target="#addressModal">
+                                                    <i class="fas fa-plus me-2"></i> Add
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <template x-for="(address, index) in addresses" :key="address.name">
+                                            <div class="address-card">
+                                                <div class="d-flex justify-content-between">
+                                                    <h5 x-text="address.name"></h5>
+                                                    <div>
+                                                        <span class="badge bg-success" x-show="address.primary">Primary</span>
+                                                    </div>
+                                                </div>
+                                                <div class="text-muted mb-3" x-text="address.address"></div>
+                                                <div class="d-flex">
+                                                    <!-- Inside x-for loop, update Edit button -->
+                                                    <button class="btn btn-outline-primary me-2"
+                                                            @click="$store.addresses.openEditModal(index)"
+                                                            data-bs-toggle="modal" data-bs-target="#addressModal">
+                                                        <i class="fas fa-edit me-1"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-danger me-2" @click="removeAddress(index)">
+                                                        <i class="fas fa-trash me-1"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-success" x-show="!address.primary" @click="setPrimary(index)">
+                                                        <i class="fas fa-check me-1"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                        <div class="alert alert-info mt-4">
+                                            <i class="fas fa-truck me-2"></i>
+                                            Your primary address will be used as the default shipping address for all orders.
+                                        </div>
+                                    </div>
+
+                                    
+                                    <!-- Account Settings Tab -->
+                                    <div x-show="activeTab === 'settings'">
+                                        <div class="page-header">
+                                            <h3>Account Settings</h3>
+                                        </div>
+                                        
+                                        <div class="settings-card">
+                                            <h4>Personal Information</h4>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">First Name</label>
+                                                    <input type="text" class="form-control" value="Anderson">
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Last Name</label>
+                                                    <input type="text" class="form-control" value="Smith">
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Email Address</label>
+                                                    <input type="email" class="form-control" value="anderson@example.com">
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Phone Number</label>
+                                                    <input type="tel" class="form-control" value="+1 (555) 123-4567">
+                                                </div>
+                                                <div class="col-12">
+                                                    <button class="btn btn-primary">Update Information</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="settings-card">
+                                            <h4>Security</h4>
+                                            <div class="mb-4">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <div>
+                                                        <h5>Password</h5>
+                                                        <p class="text-muted">Last changed 3 months ago</p>
+                                                    </div>
+                                                    <button class="btn btn-outline-primary">Change Password</button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mb-4">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <div>
+                                                        <h5>Two-Factor Authentication</h5>
+                                                        <p class="text-muted">Add an extra layer of security to your account</p>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="twoFactorSwitch">
+                                                        <label class="form-check-label" for="twoFactorSwitch">Enable</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="settings-card">
+                                            <h4>Notification Preferences</h4>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" id="orderNotifications" checked>
+                                                <label class="form-check-label" for="orderNotifications">
+                                                    Order updates and shipping notifications
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" id="promoNotifications" checked>
+                                                <label class="form-check-label" for="promoNotifications">
+                                                    Promotions and special offers
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" id="productNotifications">
+                                                <label class="form-check-label" for="productNotifications">
+                                                    New product announcements
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="accountNotifications" checked>
+                                                <label class="form-check-label" for="accountNotifications">
+                                                    Account activity and security alerts
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Help Center Tab -->
+                                    <div x-show="activeTab === 'help'">
+                                        <div class="page-header">
+                                            <h3>Help Center</h3>
+                                        </div>
+                                        
+                                        <div class="alert alert-primary">
+                                            <div class="d-flex">
+                                                <div class="flex-grow-1">
+                                                    <h5><i class="fas fa-life-ring me-2"></i> Need help?</h5>
+                                                    <p class="mb-0">Our support team is available 24/7 to assist you with any questions or issues.</p>
+                                                </div>
+                                                <button class="btn btn-outline-primary align-self-center">Contact Support</button>
+                                            </div>
+                                        </div>
+                                        
+                                        <h4 class="mt-4 mb-3">Frequently Asked Questions</h4>
+                                        
+                                        <template x-for="(topic, index) in helpTopics" :key="index">
+                                            <div class="help-card">
+                                                <h5 x-text="topic.title"></h5>
+                                                <p class="text-muted" x-text="topic.content"></p>
+                                            </div>
+                                        </template>
+                                        
+                                        <div class="mt-4">
+                                            <h4 class="mb-3">Popular Help Topics</h4>
+                                            <div class="row">
+                                                <div class="col-md-4 mb-3">
+                                                    <div class="card h-100">
+                                                        <div class="card-body">
+                                                            <h5><i class="fas fa-shipping-fast me-2 text-primary"></i> Shipping Info</h5>
+                                                            <p class="text-muted">Learn about our shipping policies, delivery times, and tracking.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4 mb-3">
+                                                    <div class="card h-100">
+                                                        <div class="card-body">
+                                                            <h5><i class="fas fa-undo me-2 text-primary"></i> Returns & Refunds</h5>
+                                                            <p class="text-muted">Information on how to return items and get refunds.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4 mb-3">
+                                                    <div class="card h-100">
+                                                        <div class="card-body">
+                                                            <h5><i class="fas fa-lock me-2 text-primary"></i> Account Security</h5>
+                                                            <p class="text-muted">Tips to keep your account secure and private.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- details Tab -->
+  <div x-show="activeTab === 'details'" x-transition >
+
+    <header class="hero-image-section position-relative text-white text-center">
+      <img src="https://img.freepik.com/free-photo/smiling-african-business-people-having-meeting_1262-21068.jpg" 
+          class="w-100 hero-bg-img" alt="Hero Background Image">
+
+      <!-- Gradient overlay -->
+      <div class="image-gradient-overlay position-absolute top-0 start-0 w-100 h-100"></div>
+
+      <!-- Text overlay content -->
+      <div class="overlay-content position-absolute top-50 start-0 translate-middle-y px-4 px-md-5 text-start">
+        <div class="container">
+           <h2 class="display-5 fw-bold">Details</h2>
+        <p class="lead">
+          ShopEase is your go-to online store for fashion, electronics, and home essentials. We curate affordable quality, deliver quickly, and treat every customer like a VIP.
+        </p>
+        </div>
+      </div>
+    </header>
+
+    <section class="container py-5"  x-data="{
+    activeTab: 'description',
+    currentImage: 'https://m.media-amazon.com/images/I/61LtuGzXeaL._AC_SL1500_.jpg',
+    quantity: 1,
+    selectedColor: 'black',
+    selectedSize: 'M',
+    images: [
+        'https://m.media-amazon.com/images/I/61LtuGzXeaL._AC_SL1500_.jpg',
+        'https://via.placeholder.com/800x600/b0b0b0/333333?text=With+Case',
+        'https://m.media-amazon.com/images/I/61LtuGzXeaL._AC_SL1500_.jpg',
+        'https://via.placeholder.com/800x600/b0b0b0/333333?text=With+Case'
+    ],
+    sizes: [
+        { name: 'XS', inStock: false },
+        { name: 'S', inStock: true },
+        { name: 'M', inStock: true },
+        { name: 'L', inStock: true },
+        { name: 'XL', inStock: false }
+    ]
+    }">
+        <div class="row">
+            <!-- Product Images -->
+            <div class="col-lg-6 mb-4">
+                <div class="product-card-d h-100">
+                    <div class="product-image-d position-relative">
+                        <!-- <span class="product-badge">BESTSELLER</span>
+                        <span class="rating-badge">4.7 <i class="fas fa-star"></i></span> -->
+                        <img :src="currentImage" alt="Premium Wireless Headphones" class="img-fluid fade-in" data-fade>
+                    </div>
+                    <div class="thumbnails">
+                        <template x-for="(image, index) in images" :key="index">
+                            <div class="thumbnail" :class="{ 'active': currentImage === image }" 
+                                 @click="currentImage = image">
+                                <img :src="image.replace('800x600', '100x70')" alt="Thumbnail" class="img-fluid">
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Details -->
+            <div class="col-lg-6 mb-4">
+                <div class="product-card-d h-100 p-4">
+                    <h1 class="product-title-d">Premium Wireless Headphones</h1>
+                    <div class="product-brand">SoundMax Pro Series</div>
+                    
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="me-2">
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star-half-alt text-warning"></i>
+                        </div>
+                        <span class="text-muted">(142 reviews)</span>
+                    </div>
+                    
+                    <div class="price-container">
+                        <div class="current-price">$179.99</div>
+                        <!-- <div class="original-price">$229.99</div>
+                        <div class="discount-badge">Save 22%</div> -->
+                    </div>
+                    
+                    <p class="text-muted mb-4">
+                        Experience crystal-clear audio with our Premium Wireless Headphones. Featuring advanced noise cancellation technology, 40-hour battery life, and ultra-comfortable memory foam ear cushions.
+                    </p>
+                    
+                   
+
+                    <div class="quantity-selector">
+                        <h5 class="mb-0">Quantity:</h5>
+                        <div class="quantity-controls">
+                            <button class="quantity-btn" @click="quantity > 1 ? quantity-- : quantity">-</button>
+                            <div class="quantity-display" x-text="quantity"></div>
+                            <button class="quantity-btn" @click="quantity < 10 ? quantity++ : quantity">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn-cart pulse">
+                            <i class="bi bi-cart fs-5"></i>Add to Cart
+                        </button>
+                        <button class="btn-wishlist">
+                            Buy Now
+                        </button>
+                        
+                    </div>
+                    
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <div class="d-flex align-items-center text-muted">
+                            <i class="fas fa-shipping-fast me-2"></i>
+                            <span>Free Shipping</span>
+                        </div>
+                        <div class="d-flex align-items-center text-muted">
+                            <i class="fas fa-undo me-2"></i>
+                            <span>30-Day Returns</span>
+                        </div>
+                        <div class="d-flex align-items-center text-muted">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            <span>2-Year Warranty</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tabs Section -->
+        <div class="tabs-section">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <button class="nav-link" :class="{ 'active': activeTab === 'description' }" 
+                            @click="activeTab = 'description'">
+                        <i class="fas fa-file-alt me-2"></i>Description
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" :class="{ 'active': activeTab === 'specifications' }" 
+                            @click="activeTab = 'specifications'">
+                        <i class="fas fa-list me-2"></i>Specifications
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" :class="{ 'active': activeTab === 'reviews' }" 
+                            @click="activeTab = 'reviews'">
+                        <i class="fas fa-star me-2"></i>Reviews (142)
+                    </button>
+                </li>
+            </ul>
+            
+            <div class="tab-content">
+                <!-- Description Tab -->
+                <div x-show="activeTab === 'description'" class="fade-in" data-fade>
+                    <h4 class="mb-4">Experience Premium Sound Quality</h4>
+                    <p class="text-muted">
+                        Our Premium Wireless Headphones deliver exceptional audio quality with deep bass and crystal-clear highs. 
+                        The advanced noise cancellation technology blocks out ambient noise, allowing you to immerse yourself in your music or calls.
+                    </p>
+                    <p class="text-muted">
+                        Designed for comfort during extended use, the headphones feature memory foam ear cushions that conform to the shape of your ears, 
+                        and an adjustable headband for a perfect fit. The lightweight design ensures you can wear them all day without fatigue.
+                    </p>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex">
+                                <div class="me-3 text-primary">
+                                    <i class="fas fa-volume-up fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h5>Active Noise Cancellation</h5>
+                                    <p class="text-muted mb-0">Block out ambient noise for immersive listening</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex">
+                                <div class="me-3 text-primary">
+                                    <i class="fas fa-battery-full fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h5>40-Hour Battery Life</h5>
+                                    <p class="text-muted mb-0">Enjoy all-day listening on a single charge</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex">
+                                <div class="me-3 text-primary">
+                                    <i class="fas fa-microphone-alt fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h5>Crystal-Clear Calls</h5>
+                                    <p class="text-muted mb-0">Built-in microphone with voice assistant support</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex">
+                                <div class="me-3 text-primary">
+                                    <i class="fas fa-compress-arrows-alt fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h5>Foldable Design</h5>
+                                    <p class="text-muted mb-0">Compact storage for travel convenience</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Specifications Tab -->
+                <div x-show="activeTab === 'specifications'" class="fade-in" data-fade>
+                    <h4 class="mb-4">Technical Specifications</h4>
+                    <ul class="specs-list">
+                        <li>
+                            <span class="spec-name">Model</span>
+                            <span class="spec-value">SoundMax Pro X500</span>
+                        </li>
+                        <li>
+                            <span class="spec-name">Connectivity</span>
+                            <span class="spec-value">Bluetooth 5.2, 3.5mm Audio Jack</span>
+                        </li>
+                        <li>
+                            <span class="spec-name">Battery Life</span>
+                            <span class="spec-value">Up to 40 hours (ANC on), 50 hours (ANC off)</span>
+                        </li>
+                        <li>
+                            <span class="spec-name">Charging Time</span>
+                            <span class="spec-value">2 hours (USB-C fast charging)</span>
+                        </li>
+                        <li>
+                            <span class="spec-name">Noise Cancellation</span>
+                            <span class="spec-value">Hybrid Active Noise Cancellation</span>
+                        </li>
+                        <li>
+                            <span class="spec-name">Driver Size</span>
+                            <span class="spec-value">40mm dynamic drivers</span>
+                        </li>
+                        <li>
+                            <span class="spec-name">Frequency Response</span>
+                            <span class="spec-value">20Hz - 20kHz</span>
+                        </li>
+                        <li>
+                            <span class="spec-name">Weight</span>
+                            <span class="spec-value">254g (without cable)</span>
+                        </li>
+                        <li>
+                            <span class="spec-name">Water Resistance</span>
+                            <span class="spec-value">IPX4 (splash resistant)</span>
+                        </li>
+                        <li>
+                            <span class="spec-name">Included Accessories</span>
+                            <span class="spec-value">Carrying case, USB-C cable, 3.5mm audio cable</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Reviews Tab -->
+                <div x-show="activeTab === 'reviews'" class="fade-in" data-fade>
+                    <div class="row">
+                        <div class="col-lg-5 mb-4">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h4 class="mb-4">Customer Reviews</h4>
+                                    <div class="text-center mb-4">
+                                        <div class="display-1 fw-bold text-primary">4.7</div>
+                                        <div class="mb-2">
+                                            <i class="fas fa-star text-warning"></i>
+                                            <i class="fas fa-star text-warning"></i>
+                                            <i class="fas fa-star text-warning"></i>
+                                            <i class="fas fa-star text-warning"></i>
+                                            <i class="fas fa-star-half-alt text-warning"></i>
+                                        </div>
+                                        <div class="text-muted">Based on 142 reviews</div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="me-2">5 <i class="fas fa-star text-warning"></i></span>
+                                            <div class="progress flex-grow-1" style="height: 8px;">
+                                                <div class="progress-bar bg-warning" role="progressbar" style="width: 85%"></div>
+                                            </div>
+                                            <span class="ms-2 text-muted">121</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="me-2">4 <i class="fas fa-star text-warning"></i></span>
+                                            <div class="progress flex-grow-1" style="height: 8px;">
+                                                <div class="progress-bar bg-warning" role="progressbar" style="width: 10%"></div>
+                                            </div>
+                                            <span class="ms-2 text-muted">14</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="me-2">3 <i class="fas fa-star text-warning"></i></span>
+                                            <div class="progress flex-grow-1" style="height: 8px;">
+                                                <div class="progress-bar bg-warning" role="progressbar" style="width: 3%"></div>
+                                            </div>
+                                            <span class="ms-2 text-muted">4</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="me-2">2 <i class="fas fa-star text-warning"></i></span>
+                                            <div class="progress flex-grow-1" style="height: 8px;">
+                                                <div class="progress-bar bg-warning" role="progressbar" style="width: 1%"></div>
+                                            </div>
+                                            <span class="ms-2 text-muted">2</span>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <span class="me-2">1 <i class="fas fa-star text-warning"></i></span>
+                                            <div class="progress flex-grow-1" style="height: 8px;">
+                                                <div class="progress-bar bg-warning" role="progressbar" style="width: 1%"></div>
+                                            </div>
+                                            <span class="ms-2 text-muted">1</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <button class="btn btn-primary w-100">
+                                        <i class="fas fa-pen me-2"></i>Write a Review
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-7">
+                            <h5 class="mb-4">Recent Reviews</h5>
+                            
+                            <div class="review-card">
+                                <div class="review-header">
+                                    <div class="reviewer">Alex Johnson</div>
+                                    <div class="review-date">June 5, 2023</div>
+                                </div>
+                                <div class="review-stars">
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                </div>
+                                <div class="review-content text-muted">
+                                    These headphones are absolutely amazing! The sound quality is incredible and the noise cancellation works perfectly. I wore them on a 10-hour flight and they were comfortable the entire time.
+                                </div>
+                            </div>
+                            
+                            <div class="review-card">
+                                <div class="review-header">
+                                    <div class="reviewer">Maria Garcia</div>
+                                    <div class="review-date">May 28, 2023</div>
+                                </div>
+                                <div class="review-stars">
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star-half-alt text-warning"></i>
+                                </div>
+                                <div class="review-content text-muted">
+                                    Very comfortable and great sound quality. The noise cancellation is effective for office environments. My only minor complaint is that the ear cups could be a bit larger for people with bigger ears.
+                                </div>
+                            </div>
+                            
+                            <div class="review-card">
+                                <div class="review-header">
+                                    <div class="reviewer">David Wilson</div>
+                                    <div class="review-date">May 15, 2023</div>
+                                </div>
+                                <div class="review-stars">
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                </div>
+                                <div class="review-content text-muted">
+                                    The battery life is incredible! I've been using them for a week without charging. Sound quality is top-notch, especially for the price. Highly recommend!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </section>
+  </div>
+
+    <!-- Footer -->
+  <footer class="footer bg-light pt-5 border-top mt-5">
+    <div class="container">
+      <div class="row text-start text-muted small">
+
+        <!-- Customer Services -->
+        <div class="col-6 col-md-2 mb-4">
+          <h6 class="text-dark fw-bold">Customer Services</h6>
+          <ul class="list-unstyled">
+            <li><a href="#" class="text-muted text-decoration-none">Help Center</a></li>
+            <li><a href="#" class="text-muted text-decoration-none">Returns</a></li>
+            <li><a href="#" class="text-muted text-decoration-none">Shipping Info</a></li>
+            <li><a href="#" class="text-muted text-decoration-none">Track Orders</a></li>
+          </ul>
+        </div>
+
+        <!-- About Us -->
+        <div class="col-6 col-md-2 mb-4">
+          <h6 class="text-dark fw-bold">About ShopEase</h6>
+          <ul class="list-unstyled">
+            <li><a href="#" class="text-muted text-decoration-none">Our Story</a></li>
+            <li><a href="#" class="text-muted text-decoration-none">Careers</a></li>
+            <li><a href="#" class="text-muted text-decoration-none">Investor Relations</a></li>
+            <li><a href="#" class="text-muted text-decoration-none">Blog</a></li>
+          </ul>
+        </div>
+
+        <!-- Business -->
+        <div class="col-6 col-md-2 mb-4">
+          <h6 class="text-dark fw-bold">Business</h6>
+          <ul class="list-unstyled">
+            <li><a href="#" class="text-muted text-decoration-none">Sell on ShopEase</a></li>
+            <li><a href="#" class="text-muted text-decoration-none">Affiliate Program</a></li>
+            <li><a href="#" class="text-muted text-decoration-none">Supplier Center</a></li>
+          </ul>
+        </div>
+
+        <!-- Follow Us -->
+        <div class="col-6 col-md-2 mb-4">
+          <h6 class="text-dark fw-bold">Follow Us</h6>
+          <ul class="list-unstyled">
+            <li><a href="#" class="text-muted text-decoration-none">Facebook</a></li>
+            <li><a href="#" class="text-muted text-decoration-none">Instagram</a></li>
+            <li><a href="#" class="text-muted text-decoration-none">LinkedIn</a></li>
+          </ul>
+        </div>
+
+        <!-- App & Language -->
+        <!-- <div class="col-md-4 mb-4">
+          <h6 class="text-dark fw-bold">ShopEase App</h6>
+          <div class="d-flex align-items-center mb-3">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Apple_logo_black.svg/24px-Apple_logo_black.svg.png" class="me-2" alt="App Store">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Google_Play_Store_badge_EN.svg/120px-Google_Play_Store_badge_EN.svg.png" alt="Google Play" style="height: 40px;">
+          </div>
+          <div class="mb-2">
+            <label class="form-label small text-muted mb-1">Language & Currency</label>
+            <select class="form-select form-select-sm">
+              <option>English / USD</option>
+              <option>Français / EUR</option>
+              <option>中文 / CNY</option>
+            </select>
+          </div>
+        </div> -->
+      </div>
+
+      <!-- Trust Badges & Payments -->
+      <!-- <div class="row border-top pt-4">
+        <div class="col-md-6 mb-3 text-center text-md-start">
+          <p class="mb-2 text-muted small">We accept</p>
+          <img src="https://img.icons8.com/color/48/000000/visa.png" alt="Visa" width="40" class="me-2">
+          <img src="https://img.icons8.com/color/48/000000/mastercard.png" alt="MasterCard" width="40" class="me-2">
+          <img src="https://img.icons8.com/color/48/000000/paypal.png" alt="PayPal" width="40" class="me-2">
+          <img src="https://img.icons8.com/color/48/000000/discover.png" alt="Discover" width="40">
+        </div>
+
+        <div class="col-md-6 mb-3 text-center text-md-end">
+          <p class="mb-2 text-muted small">Shop with Confidence</p>
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Trust-badge.svg/64px-Trust-badge.svg.png" alt="Secure Shopping" height="32" class="me-2">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Alibaba_Trade_Assurance_logo.svg/64px-Alibaba_Trade_Assurance_logo.svg.png" alt="Trade Assurance" height="32">
+        </div>
+      </div> -->
+
+      <!-- Footer Bottom -->
+      <div class="row border-top pt-3 pb-2 mt-3 text-center text-muted small">
+        <div class="col-12 mb-2">
+          &copy; 2025 ShopEase. All rights reserved.
+        </div>
+        <div class="col-12">
+          <a href="#" class="text-muted text-decoration-none me-3">Privacy Policy</a>
+          <a href="#" class="text-muted text-decoration-none">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<!-- Wishlist Modal -->
+<div
+  class="modal fade"
+  id="wishlistModal"
+  tabindex="-1"
+  aria-labelledby="wishlistModalLabel"
+  aria-hidden="true"
+  x-data="wishlistHandler()">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5
+          class="modal-title"
+          id="wishlistModalLabel"
+        >
+          Wishlist
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+        <!-- Loader -->
+        <div class="classic-spinner" x-show="loading" style="display: none;"></div>
+
+        <!-- Wishlist Items -->
+        <template x-if="!loading && wishlist.length === 0">
+          <p>Your wishlist is empty.</p>
+        </template>
+
+        <template x-if="!loading && wishlist.length > 0">
+          <div style="max-height: 300px; overflow-y: auto;">
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Price</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="(item, index) in wishlist" :key="index">
+                    <tr>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <img :src="item.image" alt="Product" width="50" height="50" style="object-fit: cover; margin-right: 2rem;" class="me-2 rounded shadow-sm" />
+                          <span x-text="item.name"></span>
+                        </div>
+                      </td>
+                      <td x-text="item.name"></td>
+                      <td>$<span x-text="item.price.toFixed(2)"></span></td>
+                      <td>
+                        <button class="btn btn-sm btn-danger" @click="removeItem(index)">
+                          <i class="bi bi-x"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer justify-content-end">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- modals -->
+<script>
+  function themeToggler() {
+    return {
+      isDark: false,
+      init() {
+        const savedTheme = localStorage.getItem('theme');
+        this.isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        this.applyTheme();
+      },
+      toggleTheme() {
+        this.isDark = !this.isDark;
+        localStorage.setItem('theme', this.isDark ? 'dark' : 'light');
+        this.applyTheme();
+      },
+      applyTheme() {
+        if (this.isDark) {
+          document.documentElement.classList.add('dark-mode');
+        } else {
+          document.documentElement.classList.remove('dark-mode');
+        }
+      }
+    }
+  }
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const toggler = document.getElementById('navbarToggler');
+    const navCollapse = document.getElementById('navbarNav');
+    const navLinks = navCollapse.querySelectorAll('.nav-link');
+    let isOpen = false;
+
+    // Toggle navbar on small screens
+    toggler.addEventListener('click', function () {
+      navCollapse.classList.toggle('open');
+      isOpen = navCollapse.classList.contains('open');
+    });
+
+    // Collapse navbar when a nav-link is clicked (excluding dropdown toggles)
+    navLinks.forEach(link => {
+      link.addEventListener('click', function () {
+        // Exclude dropdown toggles
+        if (window.innerWidth < 992 && !link.closest('.dropdown')) {
+          navCollapse.classList.remove('open');
+          isOpen = false;
+        }
+      });
+    });
+
+    // Collapse if clicked outside (only on small screens)
+    document.addEventListener('click', function (e) {
+      const clickedInside = navCollapse.contains(e.target) || toggler.contains(e.target);
+      if (!clickedInside && window.innerWidth < 992 && isOpen) {
+        navCollapse.classList.remove('open');
+        isOpen = false;
+      }
+    });
+
+    // Reset if screen resized to large
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 992) {
+        navCollapse.classList.remove('open');
+        isOpen = false;
+      }
+    });
+  });
+</script>
+
+
+
+
+<!-- calling books through api url -->
+<!-- In your books.html file -->
+<script>
+document.addEventListener('alpine:init', () => {
+  Alpine.data('productSection', () => ({
+    activeTab: 'Books',
+    inventory: {},
+    previewContent: null,
+    currentChapter: '',
+    selectedBookId: null,
+
+    async loadBooks() {
+      try {
+        const response = await fetch('/api/books/');
+        const books = await response.json();
+        this.inventory['Books'] = books.map(book => ({
+          ...book,
+          image1: book.cover_image,
+          image2: book.cover_image,
+        }));
+      } catch (error) {
+        console.error('Failed to load books:', error);
+      }
+    },
+
+    async switchTab(tab, bookId = null) {
+      this.activeTab = tab;
+
+      if (tab === 'read' && bookId) {
+        this.selectedBookId = bookId;
+        this.previewContent = null;
+        this.currentChapter = '';
+        await this.loadPreview(bookId);
+      }
+    },
+
+    async loadPreview(bookId) {
+      try {
+        const response = await fetch(`/api/books/${bookId}/preview/`);
+        const preview = await response.json();
+        this.previewContent = {
+          file_url: `/media/${preview.file}`,
+          chapter_title: preview.chapter_title
+        };
+        this.currentChapter = preview.chapter_title;
+      } catch (error) {
+        console.error('Failed to load preview:', error);
+        this.previewContent = null;
+      }
+    }
+  }));
+});
+</script>
+
+<!-- calling books through api url -->
+
+
+<!-- <script>
+  const productSectionData = {
+  activeTab: 'Men',
+  inventory: {
+    'Men': [
+          { name: 'Leather Pouch', price: 79, image1: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'Leather Jacket', price: 179, image1: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'Sneakers', price: 99, image1: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'T-Shirt', price: 25, image1: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'Cap', price: 20, image1: 'https://images.unsplash.com/photo-1575428652377-a2d80e2277fc?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1591522810903-8b8a8b8b8b8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'Socks', price: 10, image1: 'https://images.openai.com/thumbnails/0fd34ff74c3843d7e12e104faa14de62.jpeg', image2: 'https://images.unsplash.com/photo-1589674781759-1ddc5f4d9b7d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'Blazer', price: 120, image1: 'https://images.unsplash.com/photo-1593030103066-0093718efeb9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'Jeans', price: 65, image1: 'https://images.unsplash.com/photo-1542272604-787c3835535d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1604176354204-9268737828e4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+
+          { name: 'Evening Dress', price: 89, image1: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1533929736458-ca588d08c8be?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'Handbag', price: 49, image1: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'High Heels', price: 69, image1: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'Top', price: 29, image1: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1529903384028-929ae4dcc8b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'Scarf', price: 15, image1: 'https://images.unsplash.com/photo-1611312449408-fcece27cdbb7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1584634731339-252c581abfc5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'Skirt', price: 35, image1: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1592310998348-e7a463b39aec?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'Coat', price: 95, image1: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'Boots', price: 75, image1: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+        
+          { name: 'Watch', price: 120, image1: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'Belt', price: 35, image1: 'https://images.unsplash.com/photo-1605733513597-a8f8341084e6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'Sunglasses', price: 45, image1: 'https://images.unsplash.com/photo-1577803645773-f96470509666?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'Bracelet', price: 25, image1: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'Hat', price: 20, image1: 'https://images.unsplash.com/photo-1575428652377-a2d80e2277fc?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1591946614720-90a587da4a36?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'Necklace', price: 55, image1: 'https://images.unsplash.com/photo-1580637250481-b78db3e6f84d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'Ring', price: 40, image1: 'https://images.unsplash.com/photo-1602173574767-37ac01994b2a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' },
+          { name: 'Earrings', price: 30, image1: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80', image2: 'https://images.unsplash.com/photo-1580637250481-b78db3e6f84d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' }
+        
+    ]
+  }
+};
+
+document.addEventListener('alpine:init', () => {
+  Alpine.data('productSection', () => ({
+    activeTab: productSectionData.activeTab,
+    inventory: productSectionData.inventory
+  }));
+});
+
+</script> -->
+
+
+
+
+
+
+<script src="{% static 'assets/js/cart.js' %}"></script>
+<script src="{% static 'assets/js/wishlist.js' %}"></script>
+<script src="{% static 'assets/js/nav.js' %}"></script>
+<script src="{% static 'assets/js/coura.js' %}"></script>
+<script src="{% static 'assets/js/checkout.js' %}"></script>
+<script src="{% static 'assets/js/orders.js' %}"></script>
+<script src="{% static 'assets/js/cards.js' %}"></script>
+<script src="{% static 'assets/js/address.js' %}"></script>
+<!-- <script src="assets/js/theme-change.js"></script> -->
+
+  <!-- Bootstrap Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Alpine.js & Bootstrap JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+

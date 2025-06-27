@@ -1,0 +1,277 @@
+<?php include("path.php"); ?>
+<?php include(ROOT_PATH . "/app/controllers/users.php");
+
+guestOnly();
+
+?>
+
+
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, shrink-to-fit=no">
+  <title>Login</title>
+  <!-- google fonts -->
+  <link href="//fonts.googleapis.com/css2?family=Poppins:wght@300;600;700&display=swap" rel="stylesheet">
+  <!-- google fonts -->
+  <!-- Template CSS -->
+  <link rel="stylesheet" href="assets/css/style-starter.css">
+  <!-- Template CSS -->
+
+      <!--fonts-->
+      <link rel="stylesheet" href="assets/css/fonts.css">
+
+<!--font awesome-->
+<link rel="stylesheet" href="assets/css/all.css">
+
+<!--custom style
+<link rel="stylesheet" href="assets/css/style.css">-->
+
+<link rel="shortcut icon" type="image/jpg" href="assets/images/logo.jpg">
+
+<!--Google Adsense-->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7868089733570941"
+crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/css/intlTelInput.css">
+
+</head>
+
+<body>
+  <!--header-->
+  <?php 
+     include(ROOT_PATH . "/app/include/header.php");
+  ?>
+  <!-- //header -->
+  <!-- about breadcrumb -->
+  <section class="w3l-about-breadcrumb text-left">
+    <div class="breadcrumb-bg breadcrumb-bg-about py-sm-5 py-4">
+      <div class="container">
+        <h2 class="title">Login</h2>
+        <ul class="breadcrumbs-custom-path mt-2">
+          <li><a href="#url">Home</a></li>
+          <li class="active"><span class="fa fa-arrow-right mx-2" aria-hidden="true"></span>Login</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+  <!-- //about breadcrumb -->
+   <!-- /contact-->
+
+   <div class="donation-form py-5" id="donate">
+    <div class="container py-lg-5 py-md-4">
+        <h3 class="hny-title mb-lg-5 mb-4">Login</h3>
+        <form action="login.php" method="POST">
+               <?php 
+                  include(ROOT_PATH . "/app/helpers/formErrors.php");
+               ?>
+            <div class="main-input">
+                <div class="d-grid">
+                    <input type="text" value="<?php echo $username; ?>" name="username" class="contact-input" placeholder="Username" required>
+                      
+                    <input type="password" value="<?php echo $password; ?>" name="password" class="contact-input" placeholder="password" required>
+                </div>
+            </div>
+            
+            
+            <div class="text-right">
+                <button type="submit" name="login-btn"  class="btn btn-style btn-secondary btn-donate donate-button">Login</button>
+                <p>Or <a href="register.php">Sign Up</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!--//contact-->
+ 
+    
+<?php 
+     include(ROOT_PATH . "/app/include/footer.php");
+  ?>
+
+<section class="w3l-footer-29-main w3l-copyright">
+    <!-- move top -->
+ 
+    <script>
+    // When the user scrolls down 20px from the top of the document, show the button
+    window.onscroll = function () {
+        scrollFunction()
+    };
+
+    function scrollFunction() {
+        if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+        document.getElementById("movetop").style.display = "block";
+        } else {
+        document.getElementById("movetop").style.display = "none";
+        }
+    }
+
+    // When the user clicks on the button, scroll to the top of the document
+    function topFunction() {
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+    }
+    </script>
+<!-- /move top -->
+</section>
+  <!-- //footer-29 block -->
+  <!-- disable body scroll which navbar is in active -->
+  <script>
+    $(function () {
+      $('.navbar-toggler').click(function () {
+        $('body').toggleClass('noscroll');
+      })
+    });
+  </script>
+  <!-- disable body scroll which navbar is in active -->
+
+  <!-- Template JavaScript -->
+  <script src="assets/js/jquery-3.3.1.min.js"></script>
+  <script src="assets/js/theme-change.js"></script>
+  <!--/MENU-JS-->
+  <script>
+    $(window).on("scroll", function () {
+      var scroll = $(window).scrollTop();
+
+      if (scroll >= 80) {
+        $("#site-header").addClass("nav-fixed");
+      } else {
+        $("#site-header").removeClass("nav-fixed");
+      }
+    });
+
+    //Main navigation Active Class Add Remove
+    $(".navbar-toggler").on("click", function () {
+      $("header").toggleClass("active");
+    });
+    $(document).on("ready", function () {
+      if ($(window).width() > 991) {
+        $("header").removeClass("active");
+      }
+      $(window).on("resize", function () {
+        if ($(window).width() > 991) {
+          $("header").removeClass("active");
+        }
+      });
+    });
+  </script>
+  <!--//MENU-JS-->
+
+  <script src="assets/js/bootstrap.min.js"></script>
+
+
+
+
+
+<script>
+    // Add click event to toggle the dropdown
+document.querySelectorAll('.nav-link-dropdown-toggle').forEach((dropdownToggle) => {
+    dropdownToggle.addEventListener('click', (event) => {
+        event.preventDefault();
+
+        // Get the corresponding dropdown menu
+        const dropdownMenu = dropdownToggle.nextElementSibling;
+
+        // Toggle display of the dropdown menu
+        const isVisible = dropdownMenu.style.display === 'block';
+        dropdownMenu.style.display = isVisible ? 'none' : 'block';
+
+        // Close other dropdowns (optional)
+        document.querySelectorAll('.dropdown-menu').forEach((menu) => {
+            if (menu !== dropdownMenu) {
+                menu.style.display = 'none';
+            }
+        });
+    });
+});
+
+// Optional: Close dropdowns when clicking outside
+document.addEventListener('click', (event) => {
+    if (!event.target.closest('.nav-item-dropdown')) {
+        document.querySelectorAll('.dropdown-menu').forEach((menu) => {
+            menu.style.display = 'none';
+        });
+    }
+});
+
+</script>
+
+
+<script>
+        document.querySelector('#currency').addEventListener('change', function () {
+        console.log('Selected currency:', this.value);
+        });
+    </script>
+
+    <script>
+            // Initialize the intl-tel-input plugin
+            $(document).ready(function() {
+                var input = document.querySelector("#phone");
+        
+                var iti = window.intlTelInput(input, {
+                    initialCountry: "UG", // Set default country to Uganda
+                    separateDialCode: true, // Show country dial code separately
+                    utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@17.0.8/build/js/utils.js", // Required for formatting
+                    preferredCountries: ["UG", "US", "GB"], // Optional: countries you want at the top of the list
+                });
+            });
+    </script>
+
+
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UT-F">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1, minimum-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+
+    <!--font awesome-->
+    <link rel="stylesheet" href="assets/css/fonts.css">
+
+     <!--font awesome-->
+    <link rel="stylesheet" href="assets/css/all.css">
+
+    <!--custom style
+    <link rel="stylesheet" href="assets/css/style.css">-->
+
+    <link rel="stylesheet" href="assets/css/style-starter.css">
+  
+    
+
+    <title>Login</title>
+</head>   
+
+
+
+
+
+
+
+
+
+
+  
+
+</body>
+</html> 

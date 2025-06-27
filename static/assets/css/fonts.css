@@ -1,0 +1,11 @@
+/*------Lora font-family--------*/
+@font-face{
+    font-family:Lora;
+    src:url(../fonts/Lora/Lora-VariableFont_wght.ttf);
+}
+
+/*------Candal font-family--------*/
+@font-face{
+    font-family:Candal;
+    src:url(../fonts/Candal/Candal-Regular.ttf);
+}

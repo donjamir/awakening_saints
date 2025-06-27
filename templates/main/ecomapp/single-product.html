@@ -1,0 +1,231 @@
+{% extends 'newbase.html' %}
+{% load static %}
+{% block content %}
+
+
+
+    <!-- Banner Area -->
+    <section class="banner-area">
+        <div class="container">
+            <h1>Product Details Page</h1>
+            <nav class="breadcrumb">
+                <a href="index.html">Home</a>
+                <span>&gt;</span>
+                <a href="single-product.html">product-details</a>
+            </nav>
+        </div>
+    </section>
+
+    <!-- Product Detail Area -->
+    <section class="product-detail-area">
+        <div class="container">
+            <div class="s_product_inner">
+                <div class="product-gallery">
+                    <div class="main-image">
+                        <img src="{{ product.product_image.url }}" alt="Premium Headphones" id="mainImage">
+                    </div>
+                    <!-- <div class="thumbnails">
+                        <div class="thumbnail active" data-image="https://images.unsplash.com/photo-1546868871-7041f2a55e12?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80">
+                            <img src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80" alt="Thumbnail 1">
+                        </div>
+                        <div class="thumbnail" data-image="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80">
+                            <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80" alt="Thumbnail 2">
+                        </div>
+                        <div class="thumbnail" data-image="https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80">
+                            <img src="https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80" alt="Thumbnail 3">
+                        </div>
+                    </div> -->
+                </div>
+                
+            <div class="product-info">
+				<div class="s_product_text">
+					<h3>{{ product.title }}</h3>
+					<span class="price">UGX {{ product.product_price }}</span>
+
+					<p>{{ product.description }}</p>
+
+					<div class="product_count">
+						<label for="sst">Quantity:</label>
+
+						<button
+							onclick="
+								var result = document.getElementById('sst');
+								var sst = parseInt(result.value) || 1;
+								result.value = sst + 1;
+								return false;
+							"
+							class="qty-btn" type="button"
+						>
+							<i class="fas fa-plus"></i>
+						</button>
+
+						<input
+							type="text" name="qty" id="sst" maxlength="12" value="1"
+							title="Quantity:" class="qty-input qty"
+						>
+
+						<button
+							onclick="
+								var result = document.getElementById('sst');
+								var sst = parseInt(result.value) || 1;
+								if (sst > 1) {
+									result.value = sst - 1;
+								}
+								return false;
+							"
+							class="qty-btn" type="button"
+						>
+							<i class="fas fa-minus"></i>
+						</button>
+					</div>
+
+					<div class="card_area">
+						<button
+							type="button"
+							class="add-button"
+							data-index="{{ product.id }}"
+						>
+							<i class="fas fa-shopping-cart"></i> Add to Cart
+						</button>
+					</div>
+				</div>
+			</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Product Tabs -->
+    <section class="product-tabs">
+        <div class="container">
+            <div class="tabs-header">
+                
+                <button class="tab-btn" data-tab="reviews">Reviews ( {{reviews.count}} )</button>
+            </div>
+            
+            <div class="tab-content">
+    
+                <div id="reviews" class="tab-pane active">
+                    <div class="reviews-container">
+                        
+					<div class="review-list">
+						{% for review in reviews %}
+						<div class="review-item">
+							<div class="review-header">
+								<div class="review-avatar">
+									<i class="fas fa-user"></i>
+								</div>
+								<div class="reviewer-info">
+									<h4>{{ review.user.get_full_name|default:review.user.last_name }}</h4>
+									<div class="review-stars">
+										{% for i in "12345" %}
+											{% if forloop.counter <= review.rating %}
+												<i class="fas fa-star"></i>
+											{% else %}
+												<i class="far fa-star"></i>
+											{% endif %}
+										{% endfor %}
+									</div>
+									<div class="review-date">{{ review.timestamp|date:"F j, Y" }}</div>
+								</div>
+							</div>
+							<p class="com">{{ review.comment }}</p>
+						</div>
+						{% endfor %}
+					</div>
+
+
+                        <!-- <div class="review-list">
+                            <div class="review-item">
+                                <div class="review-header">
+                                    <div class="review-avatar">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="reviewer-info">
+                                        <h4>Alex Johnson</h4>
+                                        <div class="review-stars">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                        </div>
+                                        <div class="review-date">October 15, 2023</div>
+                                    </div>
+                                </div>
+                                <p>These headphones are absolutely fantastic! The sound quality is incredible, and the noise cancellation works like a charm. Battery life is as advertised. The only minor issue is they can get a bit warm after several hours of use, but overall I'm very satisfied with my purchase.</p>
+                            </div>
+                            
+                            <div class="review-item">
+                                <div class="review-header">
+                                    <div class="review-avatar">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="reviewer-info">
+                                        <h4>Sarah Williams</h4>
+                                        <div class="review-stars">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                        </div>
+                                        <div class="review-date">September 28, 2023</div>
+                                    </div>
+                                </div>
+                                <p>I've been using these for my daily commute and they've been a game-changer. The noise cancellation blocks out train noise completely. Comfort is excellent - I can wear them for hours without discomfort. The sound profile is well-balanced with punchy bass and clear highs.</p>
+                            </div>
+                            
+                            <div class="review-item">
+                                <div class="review-header">
+                                    <div class="review-avatar">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="reviewer-info">
+                                        <h4>Michael Chen</h4>
+                                        <div class="review-stars">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="far fa-star"></i>
+                                        </div>
+                                        <div class="review-date">September 10, 2023</div>
+                                    </div>
+                                </div>
+                                <p>Great headphones overall. The build quality is premium and they feel very durable. Sound quality is excellent for both music and calls. The only reason I'm giving 4 stars instead of 5 is that the touch controls can be a bit sensitive sometimes, but that's a minor issue.</p>
+                            </div>
+                        </div> -->
+                    </div>
+                    
+                <div class="review-form">
+					<h3>Add a Review</h3>
+					<p>Your Rating:</p>
+					<div class="star-rating">
+						<i class="far fa-star" data-rating="1"></i>
+						<i class="far fa-star" data-rating="2"></i>
+						<i class="far fa-star" data-rating="3"></i>
+						<i class="far fa-star" data-rating="4"></i>
+						<i class="far fa-star" data-rating="5"></i>
+					</div>
+
+					<form id="reviewForm">
+						{% csrf_token %}
+						<input type="hidden" name="rating" id="rating" value="0" required>
+						<input type="hidden" name="book_id" value="{{ product.id }}">
+						
+						<div class="form-group">
+							<textarea class="form-control" name="comment" id="comment" placeholder="Your Review" required></textarea>
+						</div>
+						<div class="form-group">
+							<button type="submit" class="submit-btn">Submit Review</button>
+						</div>
+					</form>
+				</div>
+
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+{% endblock %}

@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details | Professional UI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="{% static 'assets/css/style-starter.css' %}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        	/* Only modify dropdown item layout, not the visibility */
+	.dropdown-menu li {
+		display: block;
+	}
+
+	.dropdown-item {
+		display: block;
+		width: 100%;
+	}
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        /* Banner Area */
+        .banner-area {
+            background: url("{% static 'assets/images/banner4.jpeg' %}") no-repeat center;
+            background-size: cover;
+            background-position: center;
+            padding: 80px 0;
+            color: white;
+            text-align: center;
+        }
+
+          .banner-area h1 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #0000ff;
+        }
+
+        .breadcrumb {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            background: none;
+        }
+
+        .breadcrumb a {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            transition: color 0.3s;
+            font-weight: 500;
+        }
+
+        .breadcrumb a:hover {
+            color: white;
+        }
+
+        .breadcrumb span {
+            margin: 0 10px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Product Detail Section */
+        .product-detail-area {
+            padding: 60px 0;
+        }
+
+        .s_product_inner {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            display: flex;
+            flex-wrap: wrap;
+            padding: 30px;
+        }
+
+        .product-gallery {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+        }
+
+        .main-image {
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .main-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .thumbnails {
+            display: flex;
+            gap: 10px;
+        }
+
+        .thumbnail {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .thumbnail:hover, .thumbnail.active {
+            border-color: #007bff;
+        }
+
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .product-info {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+        }
+
+        .s_product_text h3 {
+            font-size: 20px;
+            color: #343a40;
+            margin-bottom: 10px;
+        }
+
+        .s_product_text .price {
+            font-size: 32px;
+            font-weight: 700;
+            color: #007bff;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .product-meta {
+            margin-bottom: 25px;
+        }
+
+        .product-meta ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .product-meta li {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .product-meta li span:first-child {
+            font-weight: 500;
+            color: #495057;
+            min-width: 120px;
+        }
+
+        .product-meta li span:last-child {
+            color: #6c757d;
+        }
+
+        .s_product_text p {
+            color: #6c757d;
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+
+        .product_count {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .product_count label {
+            margin-right: 15px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .qty-input {
+            width: 60px;
+            height: 46px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            font-weight: 500;
+            font-size: 18px;
+            margin: 0 10px;
+        }
+
+        .qty-btn {
+            width: 46px;
+            height: 46px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+
+        .qty-btn:hover {
+            background: #0069d9;
+        }
+
+        .card_area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .add-button {
+            padding: 14px 32px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .add-button:hover {
+            background: #0069d9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+        }
+
+        .add-button i {
+            margin-right: 10px;
+        }
+
+        .icon_btn {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            border: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .icon_btn:hover {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        /* Product Tabs */
+        .product-tabs {
+            margin-top: 50px;
+        }
+
+        .tabs-header {
+            display: flex;
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 30px;
+        }
+
+        .tab-btn {
+            padding: 15px 30px;
+            background: transparent;
+            border: none;
+            font-size: 16px;
+            font-weight: 500;
+            color: #6c757d;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .tab-btn.active {
+            color: #007bff;
+        }
+
+        .tab-btn.active:after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #007bff;
+        }
+
+        .tab-content {
+            padding: 20px;
+        }
+
+
+
+        /* Reviews Section */
+        .reviews-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+
+        .reviews-summary {
+            flex: 1;
+            min-width: 300px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+        }
+
+        .overall-rating {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .overall-rating h2 {
+            font-size: 48px;
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+
+        .overall-rating .stars {
+            color: #ffc107;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .rating-distribution {
+            margin-bottom: 20px;
+        }
+
+        .rating-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .rating-label {
+            min-width: 80px;
+            font-weight: 500;
+        }
+
+        .bar-container {
+            flex: 1;
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 0 15px;
+        }
+
+        .bar {
+            height: 100%;
+            background: #007bff;
+            border-radius: 5px;
+        }
+
+        .review-list {
+            flex: 2;
+            min-width: 300px;
+        }
+
+        .review-item {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+
+        .review-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .review-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-right: 15px;
+            background: #f1f8ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #007bff;
+            font-size: 20px;
+        }
+
+        .reviewer-info h4 {
+            margin-bottom: 5px;
+            color: #343a40;
+            font-size: 14px;
+        }
+
+        .com {
+            font-size: 14px;
+        }
+
+        .review-stars {
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+
+        .review-date {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .review-form {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-top: 30px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+
+        .review-form h3 {
+            margin-bottom: 20px;
+            color: #343a40;
+        }
+
+        .star-rating {
+            margin-bottom: 20px;
+        }
+
+        .star-rating i {
+            font-size: 24px;
+            color: #e9ecef;
+            cursor: pointer;
+            margin-right: 5px;
+            transition: color 0.2s;
+        }
+
+        .star-rating i.active, 
+        .star-rating i:hover {
+            color: #ffc107;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            padding: 12px 30px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .submit-btn:hover {
+            background: #0069d9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .s_product_inner {
+                flex-direction: column;
+                padding: 20px;
+            }
+            
+            .product-gallery, 
+            .product-info {
+                padding: 10px;
+            }
+            
+            .card_area {
+                flex-wrap: wrap;
+            }
+            
+            .reviews-container {
+                flex-direction: column;
+            }
+            
+            .tabs-header {
+                flex-wrap: wrap;
+            }
+            
+            .tab-btn {
+                flex: 1;
+                min-width: 50%;
+                text-align: center;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .s_product_inner {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 9999;
+            font-weight: 500;
+            max-width: 350px;
+            transform: translateX(200%);
+            transition: transform 0.3s ease-out;
+        }
+
+        .notification.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .notification.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+             .qty-input {
+            width: 50px;
+            height: 40px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            font-weight: 500;
+            font-size: 16px;
+        }
+
+    </style>
+</head>
+<body>
+
+{% include 'navbar.html' %}
+
+{% block content %} {% endblock %}
+
+{% include 'footer.html' %}
+
+
+<!-- AJAX Functionality -->
+<script>
+    // AJAX Add to Cart on .add-button click
+    $(document).on('click', '.add-button', function (e) {
+        e.preventDefault();
+
+        // Get product ID from button's data-index attribute
+        const productID = $(this).data('index');
+
+        // Get quantity value from input #sst
+        const productQty = $('#sst').val();
+
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'cart:cart_add' %}",  // Django URL tag
+            data: {
+                product_id: productID,
+                productqty: productQty,
+                csrfmiddlewaretoken: "{{ csrf_token }}",
+                action: 'post'
+            },
+            success: function (json) {
+                // Update cart quantity display
+                document.getElementById("cart_qty").innerHTML = json.qty;
+                alert('Product added to cart!');
+            },
+            error: function (xhr, errmsg, err) {
+                console.error('Error:', errmsg);
+                alert('Error adding to cart.');
+            }
+        });
+    });
+</script>
+
+
+<script>
+document.querySelectorAll('.star-rating i').forEach(star => {
+    star.addEventListener('click', function () {
+        const rating = parseInt(this.dataset.rating);
+        document.getElementById('rating').value = rating;
+
+        const stars = this.parentElement.querySelectorAll('i');
+        stars.forEach((s, index) => {
+            s.classList.toggle('fas', index < rating);
+            s.classList.toggle('far', index >= rating);
+            s.classList.toggle('active', index < rating);
+        });
+    });
+});
+
+document.getElementById('reviewForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const rating = document.getElementById('rating').value;
+    const comment = document.getElementById('comment').value.trim();
+    const bookId = this.book_id.value;
+
+    if (parseInt(rating) < 1) {
+        alert("Please select a star rating.");
+        return;
+    }
+
+    fetch("{% url 'sales:add_review_ajax' %}", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": csrfToken,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            rating: rating,
+            comment: comment,
+            book_id: bookId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reset form and stars
+            this.reset();
+            document.getElementById('rating').value = 0;
+            document.querySelectorAll('.star-rating i').forEach(s => {
+                s.classList.remove('fas', 'active');
+                s.classList.add('far');
+            });
+
+            // Add review to the DOM
+            const reviewList = document.querySelector('.review-list');
+            const newReview = document.createElement('div');
+            newReview.classList.add('review-item');
+            newReview.innerHTML = `
+                <div class="review-header">
+                    <div class="review-avatar"><i class="fas fa-user"></i></div>
+                    <div class="reviewer-info">
+                        <h4>${escapeHTML(data.username)}</h4>
+                        <div class="review-stars">
+                            ${'<i class="fas fa-star"></i>'.repeat(data.rating)}
+                            ${'<i class="far fa-star"></i>'.repeat(5 - data.rating)}
+                        </div>
+                        <div class="review-date">Just now</div>
+                    </div>
+                </div>
+                <p>${escapeHTML(data.comment)}</p>
+            `;
+            reviewList.prepend(newReview);
+
+            // Show success notification
+            showNotification('Review submitted successfully!', 'success');
+
+            // Optional: Update review count
+            const reviewCount = document.getElementById('review-count');
+            if (reviewCount) reviewCount.textContent = parseInt(reviewCount.textContent) + 1;
+
+        } else {
+            alert("Error: " + data.error);
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("Something went wrong.");
+    });
+
+    // XSS protection
+    function escapeHTML(str) {
+        return str.replace(/[&<>"']/g, function (match) {
+            const escape = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;',
+            };
+            return escape[match];
+        });
+    }
+
+    // Notification function
+    function showNotification(message, type) {
+        // Remove old notifications if any
+        document.querySelectorAll('.notification').forEach(n => n.remove());
+
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.transform = 'translateX(0)';
+        }, 10);
+
+        setTimeout(() => {
+            notification.style.transform = 'translateX(200%)';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+});
+</script>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4"
+	 crossorigin="anonymous"></script>
+	<script src="{% static 'js/vendor/bootstrap.min.js' %}"></script>
+	<script src="{% static 'js/vendor/popper.js' %}"></script>
+	<script src="{% static 'js/jquery.ajaxchimp.min.js' %}"></script>
+	<script src="{% static 'js/jquery.nice-select.min.js' %}"></script>
+	<script src="{% static 'js/jquery.sticky.js' %}"></script>
+	<script src="{% static 'js/nouislider.min.js' %}"></script>
+	<script src="{% static 'js/countdown.js' %}"></script>
+	<script src="{% static 'js/jquery.magnific-popup.min.js' %}"></script>
+	<script src="{% static 'js/owl.carousel.min.js' %}"></script>
+	<!--gmaps Js-->
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjCGmQ0Uq4exrzdcL6rvxywDDOvfAu6eE"></script>
+	<script src="{% static 'js/gmaps.min.js' %}"></script>
+	<script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

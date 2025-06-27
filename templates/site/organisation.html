@@ -1,0 +1,408 @@
+{% extends 'site/main/base.html' %}
+{% load static %}
+{% block content %}
+  <!-- about breadcrumb -->
+  <section class="w3l-about-breadcrumb text-left">
+    <div class="breadcrumb-bg breadcrumb-bg-about py-sm-5 py-4">
+      <div class="container">
+        <h2 class="title">Support Orphans</h2>
+        <ul class="breadcrumbs-custom-path mt-2">
+          <li><a href="index.php">Home</a></li>
+          <li class="active"><span class="fa fa-arrow-right mx-2" aria-hidden="true"></span> Support Orphans </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+  <!-- //about breadcrumb -->
+   <!-- /contact-->
+
+
+
+
+
+<div class="donation-form py-5" id="donate">
+    <div class="container py-lg-5 py-md-4">
+        <h3 class="hny-title mb-lg-5 mb-4">Support Orphans</h3>
+        <form id="flutterwavePaymentForm">
+            <div class="main-input">
+                <div class="d-grid">
+                <input type="text" id="donor_name" name="donor_name" placeholder="Enter your name" class="contact-input"  required>
+                
+                <input type="email" id="donor_email" name="donor_email" placeholder="Enter your email" class="contact-input" required>
+                
+                </div>
+                <div class="d-grid">
+                <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" class="contact-input"  required>
+                <input type="number" id="donation_amount" name="donation_amount" placeholder="Enter donation amount" class="contact-input" required>
+                 
+                    <select id="currency" name="currency"  class="currency-dropdown contact-input" required>
+                    <option value="" disabled selected>Select Currency</option>
+                        
+                        <!-- Add more options as needed -->
+                    </select>
+                    
+                </div>
+            </div>
+            
+            <!--<div class="main-input" id="customAmountWrapper" style="display: none;"> 
+            
+                <input type="number" name="customAmount" id="customAmount" placeholder="Enter Custom Amount (UGX)" class="contact-input" min="1" />
+            </div> -->
+
+            <!-- Credit Card Option -->
+            <!--<div class="d-grid">
+                <label>
+                    <input type="radio" name="paymentMethod" value="creditCard" id="creditCardOption" onclick="toggleCreditCardFields()"> Pay with Credit Card
+                </label>
+            </div>-->
+
+            <div id="creditCardFields" style="display: none;">
+                <div class="d-grid">
+                    <input type="text" name="cardNumber" id="cardNumber" placeholder="Card Number" class="contact-input" />
+                    <input type="text" name="expiryDate" id="expiryDate" placeholder="Expiry Date (MM/YY)" class="contact-input" />
+                    <input type="text" name="cvv" id="cvv" placeholder="CVV" class="contact-input" />
+                </div>
+            </div>
+
+            <textarea id="donation_message" name="donation_message" rows="4" placeholder="Write a message"  class="contact-textarea" required></textarea>
+            
+            
+            <div class="text-right">
+                <button type="submit" class="btn btn-style btn-secondary btn-donate donate-button"  id="payNowButton">Proceed to Donate</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+
+<script>
+// Toggle credit card input fields visibility
+function toggleCreditCardFields() {
+    var creditCardFields = document.getElementById('creditCardFields');
+    if (document.getElementById('creditCardOption').checked) {
+        creditCardFields.style.display = 'block';
+    } else {
+        creditCardFields.style.display = 'none';
+    }
+}
+
+// Show custom amount input field if 'Other' amount is selected
+document.getElementById('donationAmount').addEventListener('change', function () {
+    var customAmountWrapper = document.getElementById('customAmountWrapper');
+    if (this.value === 'custom') {
+        customAmountWrapper.style.display = 'block';
+    } else {
+        customAmountWrapper.style.display = 'none';
+    }
+});
+</script>
+
+
+
+
+<!--//contact-->
+
+
+  <!-- <script src="assets/js/bootstrap.min.js"></script> -->
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+    const donationAmount = document.getElementById('donationAmount');
+    const customAmountWrapper = document.getElementById('customAmountWrapper');
+    const customAmount = document.getElementById('customAmount');
+    const donationModal = document.getElementById('donationModal');
+    const donationSummary = document.getElementById('donationSummary');
+
+    // Handle "Other" amount selection
+    donationAmount.addEventListener('change', () => {
+        if (donationAmount.value === 'custom') {
+            customAmountWrapper.style.display = 'block';
+            customAmount.setAttribute('required', 'required');
+        } else {
+            customAmountWrapper.style.display = 'none';
+            customAmount.removeAttribute('required');
+        }
+    });
+
+    // Open modal with donation summary
+    window.openDonationModal = function () {
+        const name = document.getElementById('donorName').value;
+        const amount = donationAmount.value === 'custom' ? customAmount.value : donationAmount.value;
+
+        if (!name || !amount || isNaN(amount) || amount <= 0) {
+            alert('Please provide valid details and donation amount.');
+            return;
+        }
+
+        donationSummary.textContent = `Thank you, ${name}! You are about to donate UGX ${amount}.`;
+        donationModal.style.display = 'block';
+    };
+
+    // Close modal
+    window.closeDonationModal = function () {
+        donationModal.style.display = 'none';
+    };
+
+    // Submit form
+    window.submitDonationForm = function () {
+        donationModal.style.display = 'none';
+        document.getElementById('donationForm').submit();
+    };
+});
+
+</script>
+
+
+<script>
+    // Add click event to toggle the dropdown
+document.querySelectorAll('.nav-link-dropdown-toggle').forEach((dropdownToggle) => {
+    dropdownToggle.addEventListener('click', (event) => {
+        event.preventDefault();
+
+        // Get the corresponding dropdown menu
+        const dropdownMenu = dropdownToggle.nextElementSibling;
+
+        // Toggle display of the dropdown menu
+        const isVisible = dropdownMenu.style.display === 'block';
+        dropdownMenu.style.display = isVisible ? 'none' : 'block';
+
+        // Close other dropdowns (optional)
+        document.querySelectorAll('.dropdown-menu').forEach((menu) => {
+            if (menu !== dropdownMenu) {
+                menu.style.display = 'none';
+            }
+        });
+    });
+});
+
+// Optional: Close dropdowns when clicking outside
+document.addEventListener('click', (event) => {
+    if (!event.target.closest('.nav-item-dropdown')) {
+        document.querySelectorAll('.dropdown-menu').forEach((menu) => {
+            menu.style.display = 'none';
+        });
+    }
+});
+
+</script>
+
+
+<script src="https://checkout.flutterwave.com/v3.js"></script>
+
+<script src="{% static 'assets/js/don.js' %}"></script>
+
+<script>
+        document.querySelector('#currency').addEventListener('change', function () {
+        console.log('Selected currency:', this.value);
+        });
+</script>
+
+
+
+    <script>
+            // Initialize the intl-tel-input plugin
+            $(document).ready(function() {
+                var input = document.querySelector("#phone");
+        
+                var iti = window.intlTelInput(input, {
+                    initialCountry: "UG", // Set default country to Uganda
+                    separateDialCode: true, // Show country dial code separately
+                    utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@17.0.8/build/js/utils.js", // Required for formatting
+                    preferredCountries: ["UG", "US", "GB"], // Optional: countries you want at the top of the list
+                });
+            });
+    </script>
+
+
+<script>
+    const currencies = [
+        { code: "AED", name: "United Arab Emirates Dirham" },
+        { code: "AFN", name: "Afghan Afghani" },
+        { code: "ALL", name: "Albanian Lek" },
+        { code: "AMD", name: "Armenian Dram" },
+        { code: "ANG", name: "Netherlands Antillean Guilder" },
+        { code: "AOA", name: "Angolan Kwanza" },
+        { code: "ARS", name: "Argentine Peso" },
+        { code: "AUD", name: "Australian Dollar" },
+        { code: "AWG", name: "Aruban Florin" },
+        { code: "AZN", name: "Azerbaijani Manat" },
+        { code: "BAM", name: "Bosnia-Herzegovina Convertible Mark" },
+        { code: "BBD", name: "Barbadian Dollar" },
+        { code: "BDT", name: "Bangladeshi Taka" },
+        { code: "BGN", name: "Bulgarian Lev" },
+        { code: "BHD", name: "Bahraini Dinar" },
+        { code: "BIF", name: "Burundian Franc" },
+        { code: "BMD", name: "Bermudian Dollar" },
+        { code: "BND", name: "Brunei Dollar" },
+        { code: "BOB", name: "Bolivian Boliviano" },
+        { code: "BRL", name: "Brazilian Real" },
+        { code: "BSD", name: "Bahamian Dollar" },
+        { code: "BTN", name: "Bhutanese Ngultrum" },
+        { code: "BWP", name: "Botswana Pula" },
+        { code: "BYN", name: "Belarusian Ruble" },
+        { code: "BZD", name: "Belize Dollar" },
+        { code: "CAD", name: "Canadian Dollar" },
+        { code: "CDF", name: "Congolese Franc" },
+        { code: "CHF", name: "Swiss Franc" },
+        { code: "CLP", name: "Chilean Peso" },
+        { code: "CNY", name: "Chinese Yuan" },
+        { code: "COP", name: "Colombian Peso" },
+        { code: "CRC", name: "Costa Rican Colón" },
+        { code: "CUP", name: "Cuban Peso" },
+        { code: "CVE", name: "Cape Verdean Escudo" },
+        { code: "CZK", name: "Czech Koruna" },
+        { code: "DJF", name: "Djiboutian Franc" },
+        { code: "DKK", name: "Danish Krone" },
+        { code: "DOP", name: "Dominican Peso" },
+        { code: "DZD", name: "Algerian Dinar" },
+        { code: "EGP", name: "Egyptian Pound" },
+        { code: "ERN", name: "Eritrean Nakfa" },
+        { code: "ETB", name: "Ethiopian Birr" },
+        { code: "EUR", name: "Euro" },
+        { code: "FJD", name: "Fijian Dollar" },
+        { code: "FKP", name: "Falkland Islands Pound" },
+        { code: "FOK", name: "Faroese Króna" },
+        { code: "GBP", name: "British Pound" },
+        { code: "GEL", name: "Georgian Lari" },
+        { code: "GGP", name: "Guernsey Pound" },
+        { code: "GHS", name: "Ghanaian Cedi" },
+        { code: "GIP", name: "Gibraltar Pound" },
+        { code: "GMD", name: "Gambian Dalasi" },
+        { code: "GNF", name: "Guinean Franc" },
+        { code: "GTQ", name: "Guatemalan Quetzal" },
+        { code: "GYD", name: "Guyanese Dollar" },
+        { code: "HKD", name: "Hong Kong Dollar" },
+        { code: "HNL", name: "Honduran Lempira" },
+        { code: "HRK", name: "Croatian Kuna" },
+        { code: "HTG", name: "Haitian Gourde" },
+        { code: "HUF", name: "Hungarian Forint" },
+        { code: "IDR", name: "Indonesian Rupiah" },
+        { code: "ILS", name: "Israeli New Shekel" },
+        { code: "IMP", name: "Isle of Man Pound" },
+        { code: "INR", name: "Indian Rupee" },
+        { code: "IQD", name: "Iraqi Dinar" },
+        { code: "IRR", name: "Iranian Rial" },
+        { code: "ISK", name: "Icelandic Króna" },
+        { code: "JMD", name: "Jamaican Dollar" },
+        { code: "JOD", name: "Jordanian Dinar" },
+        { code: "JPY", name: "Japanese Yen" },
+        { code: "KES", name: "Kenyan Shilling" },
+        { code: "KGS", name: "Kyrgyzstani Som" },
+        { code: "KHR", name: "Cambodian Riel" },
+        { code: "KID", name: "Kiribati Dollar" },
+        { code: "KRW", name: "South Korean Won" },
+        { code: "KWD", name: "Kuwaiti Dinar" },
+        { code: "KYD", name: "Cayman Islands Dollar" },
+        { code: "KZT", name: "Kazakhstani Tenge" },
+        { code: "LAK", name: "Lao Kip" },
+        { code: "LBP", name: "Lebanese Pound" },
+        { code: "LKR", name: "Sri Lankan Rupee" },
+        { code: "LRD", name: "Liberian Dollar" },
+        { code: "LSL", name: "Lesotho Loti" },
+        { code: "LYD", name: "Libyan Dinar" },
+        { code: "MAD", name: "Moroccan Dirham" },
+        { code: "MDL", name: "Moldovan Leu" },
+        { code: "MGA", name: "Malagasy Ariary" },
+        { code: "MKD", name: "Macedonian Denar" },
+        { code: "MMK", name: "Myanmar Kyat" },
+        { code: "MNT", name: "Mongolian Tögrög" },
+        { code: "MOP", name: "Macanese Pataca" },
+        { code: "MRU", name: "Mauritanian Ouguiya" },
+        { code: "MUR", name: "Mauritian Rupee" },
+        { code: "MVR", name: "Maldivian Rufiyaa" },
+        { code: "MWK", name: "Malawian Kwacha" },
+        { code: "MXN", name: "Mexican Peso" },
+        { code: "MYR", name: "Malaysian Ringgit" },
+        { code: "MZN", name: "Mozambican Metical" },
+        { code: "NAD", name: "Namibian Dollar" },
+        { code: "NGN", name: "Nigerian Naira" },
+        { code: "NIO", name: "Nicaraguan Córdoba" },
+        { code: "NOK", name: "Norwegian Krone" },
+        { code: "NPR", name: "Nepalese Rupee" },
+        { code: "NZD", name: "New Zealand Dollar" },
+        { code: "OMR", name: "Omani Rial" },
+        { code: "PAB", name: "Panamanian Balboa" },
+        { code: "PEN", name: "Peruvian Sol" },
+        { code: "PGK", name: "Papua New Guinean Kina" },
+        { code: "PHP", name: "Philippine Peso" },
+        { code: "PKR", name: "Pakistani Rupee" },
+        { code: "PLN", name: "Polish Złoty" },
+        { code: "PYG", name: "Paraguayan Guaraní" },
+        { code: "QAR", name: "Qatari Riyal" },
+        { code: "RON", name: "Romanian Leu" },
+        { code: "RSD", name: "Serbian Dinar" },
+        { code: "RUB", name: "Russian Ruble" },
+        { code: "RWF", name: "Rwandan Franc" },
+        { code: "SAR", name: "Saudi Riyal" },
+        { code: "SBD", name: "Solomon Islands Dollar" },
+        { code: "SCR", name: "Seychellois Rupee" },
+        { code: "SDG", name: "Sudanese Pound" },
+        { code: "SEK", name: "Swedish Krona" },
+        { code: "SGD", name: "Singapore Dollar" },
+        { code: "SHP", name: "Saint Helena Pound" },
+        { code: "SLL", name: "Sierra Leonean Leone" },
+        { code: "SOS", name: "Somali Shilling" },
+        { code: "SRD", name: "Surinamese Dollar" },
+        { code: "SSP", name: "South Sudanese Pound" },
+        { code: "STN", name: "São Tomé and Príncipe Dobra" },
+        { code: "SYP", name: "Syrian Pound" },
+        { code: "SZL", name: "Eswatini Lilangeni" },
+        { code: "THB", name: "Thai Baht" },
+        { code: "TJS", name: "Tajikistani Somoni" },
+        { code: "TMT", name: "Turkmenistani Manat" },
+        { code: "TND", name: "Tunisian Dinar" },
+        { code: "TOP", name: "Tongan Paʻanga" },
+        { code: "TRY", name: "Turkish Lira" },
+        { code: "TTD", name: "Trinidad and Tobago Dollar" },
+        { code: "TVD", name: "Tuvaluan Dollar" },
+        { code: "TZS", name: "Tanzanian Shilling" },
+        { code: "UAH", name: "Ukrainian Hryvnia" },
+        { code: "UGX", name: "Ugandan Shilling" },
+        { code: "USD", name: "United States Dollar" },
+        { code: "UYU", name: "Uruguayan Peso" },
+        { code: "UZS", name: "Uzbekistani Soʻm" },
+        { code: "VES", name: "Venezuelan Bolívar" },
+        { code: "VND", name: "Vietnamese Đồng" },
+        { code: "VUV", name: "Vanuatu Vatu" },
+        { code: "WST", name: "Samoan Tālā" },
+        { code: "XAF", name: "Central African CFA Franc" },
+        { code: "XCD", name: "East Caribbean Dollar" },
+        { code: "XDR", name: "Special Drawing Rights" },
+        { code: "XOF", name: "West African CFA Franc" },
+        { code: "XPF", name: "CFP Franc" },
+        { code: "YER", name: "Yemeni Rial" },
+        { code: "ZAR", name: "South African Rand" },
+        { code: "ZMW", name: "Zambian Kwacha" },
+        { code: "ZWL", name: "Zimbabwean Dollar" }
+    ];
+
+    // Populate the select dropdown with currency options
+    const select = document.getElementById("currency");
+    currencies.forEach(({ code, name }) => {
+        const option = document.createElement("option");
+        option.value = code;
+        option.textContent = `${code} - ${name}`;
+        select.appendChild(option);
+    });
+
+    // Set the default value to Uganda Shilling (UGX)
+    select.value = "UGX";
+
+    // Initialize Select2 on the currency dropdown
+    $(document).ready(function() {
+        $('.currency-dropdown').select2({
+            placeholder: "Select a currency",
+            allowClear: true // Optionally allows clearing the selection
+        });
+    });
+</script>
+{% endblock %}
+
+
+
+
+
+
+

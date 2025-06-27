@@ -1,0 +1,360 @@
+
+<?php 
+    include("path.php");
+?>
+
+<?php 
+   include(ROOT_PATH . "/app/database/db.php");
+  
+   $trending_videos_and_audios = getTrendingVideosAndAudios();
+   $topics = selectAll("topics");
+   $view_video_or_audio = selectOneAudioOrVideo($_GET["m_id"]);
+   $page = isset($_GET['page'])?$_GET['page']:1;
+
+   if (isset($_GET["media-search-term"])) {
+   	$videos_and_audios = searchVideosAndAudios($_GET["media-search-term"]);
+   }
+
+   elseif (isset($_GET["t_id"])) {
+   	$videos_and_audios = getVideosAndAudiosByTopicId($_GET["t_id"]);
+   }
+
+   else
+
+   {
+   	$videos_and_audios = getVideosAndAudios();
+   }
+
+?>
+
+
+<!--
+Author: W3layouts
+Author URL: http://w3layouts.com
+-->
+<!doctype html>
+<html lang="zxx">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, shrink-to-fit=no">
+  <title>Agricfarm an Agriculture Category Bootstrap Responsive Template | Contact :: W3layouts</title>
+  <!-- google fonts -->
+  <link href="//fonts.googleapis.com/css2?family=Poppins:wght@300;600;700&display=swap" rel="stylesheet">
+  <!-- google fonts -->
+  <!-- Template CSS -->
+  <link rel="stylesheet" href="assets/css/style-starter.css">
+  <!-- Template CSS -->
+
+  <link rel="stylesheet" href="assets/css/fonts.css">
+<!--font awesome-->
+<link rel="stylesheet" href="assets/css/all.css">
+
+<link rel="stylesheet" href="assets/css/test.css">
+
+</head>
+
+<body>
+  <!--header-->
+  <?php include(ROOT_PATH . "/app/include/header.php");?>
+  <!-- //header -->
+  <!-- about breadcrumb -->
+  <section class="w3l-about-breadcrumb text-left">
+    <div class="breadcrumb-bg breadcrumb-bg-about py-sm-5 py-4">
+      <div class="container">
+        <h2 class="title">Videos</h2>
+        <ul class="breadcrumbs-custom-path mt-2">
+          <li><a href="#url">Home</a></li>
+          <li class="active"><span class="fa fa-arrow-right mx-2" aria-hidden="true"></span> Videos </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+  <!-- //about breadcrumb -->
+
+
+
+  <div class="page-wrapper">
+  <div class="media-content-container">
+    <div class="main-content">
+        <h1 class="section-title">SPIRITUAL AWAKENING VIDEOS AND AUDIOS</h1>
+<br>
+
+        <div class="media-list">
+            <?php foreach (array_slice($videos_and_audios, ($page - 1)) as $values): ?>
+                <div class="media-card">
+                    <div class="media-header">
+                        <h4 class="media-title"><?php echo $values['tittle']; ?></h4>
+                    </div>
+                    <div class="media-body">
+                        <?php if ($values['media'] === "audio"): ?>
+                            <div class="audio-player-section">
+                                <img src="<?php echo BASE_URL . "/assets/images/" . $values["image"]; ?>" alt="Audio Thumbnail" class="media-thumbnail">
+                                <audio class="audio-player" controls>
+                                    <source src="<?php echo BASE_URL . "/assets/audios/" . $values["file"]; ?>" type="audio/mpeg">
+                                </audio>
+                            </div>
+                        <?php else: ?>
+                            <div class="video-player-section">
+                                <video class="video-player" controls>
+                                    <source src="<?php echo BASE_URL . "/assets/videos/" . $values["file"]; ?>" type="video/mp4">
+                                </video>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="media-info">
+                        <p><strong>By:</strong> <?php echo $values['username']; ?></p>
+                        <p><strong>Topic:</strong> <?php echo $values['name']; ?></p>
+                        <p><strong>Comments:</strong> <a href="<?php echo BASE_URL . "media_comments.php?comment_id=" . $values["id"]; ?>">Click here</a></p>
+                        <p><strong>Date:</strong> <?php echo date("F j, Y", strtotime($values["created_at"])); ?></p>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+
+                 
+    </div>
+
+    <!--<div class="sidebar">
+        <div class="sidebar-section trending-media-section">
+            <h2 class="sidebar-title">Trending Media</h2>
+            <ul class="sidebar-list">
+                <?php foreach ($trending_videos_and_audios as $values): ?>
+                    <li><a href="<?php echo BASE_URL . "/videos.php?m_id=" . $values["id"]; ?>"><?php echo $values['tittle']; ?></a></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+
+        <div class="sidebar-section search-section">
+            <h2 class="sidebar-title">Search</h2>
+            <form action="" method="get" class="search-form">
+                <input type="hidden" name="m_id" value="<?php echo $_GET["m_id"]; ?>">
+                <input type="text" name="media-search-term" class="search-input" placeholder="Search...">
+            </form>
+        </div>
+
+        <div class="sidebar-section topics-section">
+            <h2 class="sidebar-title">Topics</h2>
+            <ul class="sidebar-list">
+                <?php foreach ($topics as $topic): ?>
+                    <li>
+                        <a href="videos.php?m_id=<?php echo $_GET["m_id"]; ?>&t_id=<?php echo $topic["id"]; ?>"><?php echo $topic["name"]; ?></a>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    </div>-->
+</div>
+
+</div>
+
+
+
+
+<script>
+// Toggle credit card input fields visibility
+function toggleCreditCardFields() {
+    var creditCardFields = document.getElementById('creditCardFields');
+    if (document.getElementById('creditCardOption').checked) {
+        creditCardFields.style.display = 'block';
+    } else {
+        creditCardFields.style.display = 'none';
+    }
+}
+
+// Show custom amount input field if 'Other' amount is selected
+document.getElementById('donationAmount').addEventListener('change', function () {
+    var customAmountWrapper = document.getElementById('customAmountWrapper');
+    if (this.value === 'custom') {
+        customAmountWrapper.style.display = 'block';
+    } else {
+        customAmountWrapper.style.display = 'none';
+    }
+});
+</script>
+
+
+
+<!--//contact-->
+ 
+    
+
+
+<?php include(ROOT_PATH . "/app/include/footer.php");?>
+
+<!-- move top -->
+
+<script>
+  // When the user scrolls down 20px from the top of the document, show the button
+  window.onscroll = function () {
+    scrollFunction()
+  };
+
+  function scrollFunction() {
+    if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+      document.getElementById("movetop").style.display = "block";
+    } else {
+      document.getElementById("movetop").style.display = "none";
+    }
+  }
+
+  // When the user clicks on the button, scroll to the top of the document
+  function topFunction() {
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+  }
+</script>
+<!-- /move top -->
+</section>
+  <!-- //footer-29 block -->
+  <!-- disable body scroll which navbar is in active -->
+  <script>
+    $(function () {
+      $('.navbar-toggler').click(function () {
+        $('body').toggleClass('noscroll');
+      })
+    });
+  </script>
+  <!-- disable body scroll which navbar is in active -->
+
+  <!-- Template JavaScript -->
+  <script src="assets/js/jquery-3.3.1.min.js"></script>
+  <script src="assets/js/theme-change.js"></script>
+  <!--/MENU-JS-->
+  <script>
+    $(window).on("scroll", function () {
+      var scroll = $(window).scrollTop();
+
+      if (scroll >= 80) {
+        $("#site-header").addClass("nav-fixed");
+      } else {
+        $("#site-header").removeClass("nav-fixed");
+      }
+    });
+
+    //Main navigation Active Class Add Remove
+    $(".navbar-toggler").on("click", function () {
+      $("header").toggleClass("active");
+    });
+    $(document).on("ready", function () {
+      if ($(window).width() > 991) {
+        $("header").removeClass("active");
+      }
+      $(window).on("resize", function () {
+        if ($(window).width() > 991) {
+          $("header").removeClass("active");
+        }
+      });
+    });
+  </script>
+  <!--//MENU-JS-->
+
+  <script src="assets/js/bootstrap.min.js"></script>
+
+  <!--<script>
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const donationAmount = document.getElementById('donationAmount');
+        const customAmountWrapper = document.getElementById('customAmountWrapper');
+        const customAmount = document.getElementById('customAmount');
+
+        donationAmount.addEventListener('change', () => {
+            if (donationAmount.value === 'custom') {
+                customAmountWrapper.style.display = 'block';
+                customAmount.setAttribute('required', 'required');
+            } else {
+                customAmountWrapper.style.display = 'none';
+                customAmount.removeAttribute('required');
+            }
+        });
+    });
+
+
+  </script>-->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+    const donationAmount = document.getElementById('donationAmount');
+    const customAmountWrapper = document.getElementById('customAmountWrapper');
+    const customAmount = document.getElementById('customAmount');
+    const donationModal = document.getElementById('donationModal');
+    const donationSummary = document.getElementById('donationSummary');
+
+    // Handle "Other" amount selection
+    donationAmount.addEventListener('change', () => {
+        if (donationAmount.value === 'custom') {
+            customAmountWrapper.style.display = 'block';
+            customAmount.setAttribute('required', 'required');
+        } else {
+            customAmountWrapper.style.display = 'none';
+            customAmount.removeAttribute('required');
+        }
+    });
+
+    // Open modal with donation summary
+    window.openDonationModal = function () {
+        const name = document.getElementById('donorName').value;
+        const amount = donationAmount.value === 'custom' ? customAmount.value : donationAmount.value;
+
+        if (!name || !amount || isNaN(amount) || amount <= 0) {
+            alert('Please provide valid details and donation amount.');
+            return;
+        }
+
+        donationSummary.textContent = `Thank you, ${name}! You are about to donate UGX ${amount}.`;
+        donationModal.style.display = 'block';
+    };
+
+    // Close modal
+    window.closeDonationModal = function () {
+        donationModal.style.display = 'none';
+    };
+
+    // Submit form
+    window.submitDonationForm = function () {
+        donationModal.style.display = 'none';
+        document.getElementById('donationForm').submit();
+    };
+});
+
+</script>
+
+
+<script>
+    // Add click event to toggle the dropdown
+document.querySelectorAll('.nav-link-dropdown-toggle').forEach((dropdownToggle) => {
+    dropdownToggle.addEventListener('click', (event) => {
+        event.preventDefault();
+
+        // Get the corresponding dropdown menu
+        const dropdownMenu = dropdownToggle.nextElementSibling;
+
+        // Toggle display of the dropdown menu
+        const isVisible = dropdownMenu.style.display === 'block';
+        dropdownMenu.style.display = isVisible ? 'none' : 'block';
+
+        // Close other dropdowns (optional)
+        document.querySelectorAll('.dropdown-menu').forEach((menu) => {
+            if (menu !== dropdownMenu) {
+                menu.style.display = 'none';
+            }
+        });
+    });
+});
+
+// Optional: Close dropdowns when clicking outside
+document.addEventListener('click', (event) => {
+    if (!event.target.closest('.nav-item-dropdown')) {
+        document.querySelectorAll('.dropdown-menu').forEach((menu) => {
+            menu.style.display = 'none';
+        });
+    }
+});
+
+</script>
+
+
+
+</body>
+
+</html>

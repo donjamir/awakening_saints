@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookReader - Enjoy Your Book</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <style>
+        :root {
+            --reading-bg: #f9f6f0;
+            --reading-text: #333;
+            --accent: #5d4037;
+            --accent-light: #8d6e63;
+            --highlight: #d7ccc8;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            background: var(--reading-bg);
+            color: var(--reading-text);
+            line-height: 1.8;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+        
+        .reading-header {
+            background: white;
+            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .book-info {
+            max-width: 60%;
+        }
+        
+        .book-title {
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 1.2rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .book-author {
+            font-size: 0.9rem;
+            color: #6c757d;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .reading-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .control-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border: 1px solid #e0e0e0;
+            color: #555;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .control-btn:hover {
+            background: #f5f5f5;
+            color: var(--accent);
+        }
+        
+        .reading-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 2rem 1.5rem;
+        }
+        
+        .chapter-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px dashed #d7ccc8;
+        }
+        
+        .chapter-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+        
+        .chapter-subtitle {
+            font-size: 1.2rem;
+            color: var(--accent-light);
+            font-style: italic;
+        }
+        
+        .reading-content {
+            font-size: 1.15rem;
+            line-height: 1.9;
+            text-align: justify;
+        }
+        
+        .reading-content p {
+            margin-bottom: 1.5rem;
+            text-indent: 1.5em;
+        }
+        
+        .reading-content p:first-child::first-letter {
+            font-size: 3.5rem;
+            font-weight: bold;
+            float: left;
+            line-height: 0.8;
+            margin-right: 0.1em;
+            color: var(--accent);
+        }
+        
+        .reading-footer {
+            background: white;
+            padding: 1rem;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+        }
+        
+        .progress-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 45%;
+        }
+        
+        .navigation-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+        }
+        
+        .nav-btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-prev {
+            background: white;
+            border: 1px solid #e0e0e0;
+            color: #555;
+        }
+        
+        .btn-prev:hover {
+            background: #f5f5f5;
+            color: var(--accent);
+        }
+        
+        .btn-next {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .btn-next:hover {
+            background: var(--accent-light);
+        }
+        
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -350px;
+            width: 320px;
+            height: 100%;
+            background: white;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            transition: right 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .settings-panel.active {
+            right: 0;
+        }
+        
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .settings-title {
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 1.3rem;
+        }
+        
+        .close-settings {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #777;
+            cursor: pointer;
+        }
+        
+        .setting-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .setting-title {
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            color: #444;
+        }
+        
+        .theme-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.8rem;
+        }
+        
+        .theme-option {
+            height: 80px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .theme-option:hover, .theme-option.active {
+            border-color: var(--accent);
+        }
+        
+        .theme-sepia {
+            background: #f9f6f0;
+        }
+        
+        .theme-white {
+            background: #ffffff;
+        }
+        
+        .theme-dark {
+            background: #1a1a1a;
+        }
+        
+        .theme-night {
+            background: #0d1b2a;
+        }
+        
+        .theme-nature {
+            background: #e8f5e9;
+        }
+        
+        .theme-paper {
+            background: #fffde7;
+        }
+        
+        .font-options {
+            display: flex;
+            gap: 0.8rem;
+        }
+        
+        .font-option {
+            flex: 1;
+            padding: 0.8rem;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .font-option:hover, .font-option.active {
+            border-color: var(--accent);
+            background: rgba(93, 64, 55, 0.05);
+        }
+        
+        .font-option .font-example {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .font-small .font-example {
+            font-size: 0.95rem;
+        }
+        
+        .font-medium .font-example {
+            font-size: 1.1rem;
+        }
+        
+        .font-large .font-example {
+            font-size: 1.25rem;
+        }
+        
+        .font-xlarge .font-example {
+            font-size: 1.4rem;
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+        
+        /* Theme classes */
+        .theme-sepia {
+            --reading-bg: #f9f6f0;
+            --reading-text: #333;
+        }
+        
+        .theme-white {
+            --reading-bg: #ffffff;
+            --reading-text: #333;
+        }
+        
+        .theme-dark {
+            --reading-bg: #1a1a1a;
+            --reading-text: #e6e6e6;
+        }
+        
+        .theme-night {
+            --reading-bg: #0d1b2a;
+            --reading-text: #e0e1dd;
+        }
+        
+        .theme-nature {
+            --reading-bg: #e8f5e9;
+            --reading-text: #1b5e20;
+        }
+        
+        .theme-paper {
+            --reading-bg: #fffde7;
+            --reading-text: #5d4037;
+        }
+        
+        /* Font size classes */
+        .font-small .reading-content {
+            font-size: 1rem;
+        }
+        
+        .font-medium .reading-content {
+            font-size: 1.15rem;
+        }
+        
+        .font-large .reading-content {
+            font-size: 1.3rem;
+        }
+        
+        .font-xlarge .reading-content {
+            font-size: 1.45rem;
+        }
+        
+        @media (max-width: 768px) {
+            .reading-container {
+                padding: 1.5rem 1rem;
+            }
+            
+            .chapter-title {
+                font-size: 1.5rem;
+            }
+            
+            .chapter-subtitle {
+                font-size: 1rem;
+            }
+            
+            .settings-panel {
+                width: 280px;
+            }
+            
+            .theme-options {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body x-data="{
+    settingsOpen: false,
+    fontSize: 'medium',
+    theme: 'sepia',
+    currentChapter: 1,
+    totalChapters: 15,
+    progress: 45,
+    
+    openSettings() {
+        this.settingsOpen = true;
+    },
+    
+    closeSettings() {
+        this.settingsOpen = false;
+    },
+    
+    setFontSize(size) {
+        this.fontSize = size;
+    },
+    
+    setTheme(themeName) {
+        this.theme = themeName;
+    },
+    
+    nextChapter() {
+        if (this.currentChapter < this.totalChapters) {
+            this.currentChapter++;
+            this.progress = Math.min(this.progress + 7, 100);
+        }
+    },
+    
+    prevChapter() {
+        if (this.currentChapter > 1) {
+            this.currentChapter--;
+            this.progress = Math.max(this.progress - 7, 0);
+        }
+    }
+}" :class="[fontSize, 'theme-' + theme]">
+    <!-- Settings overlay -->
+    <div class="overlay" :class="{ 'active': settingsOpen }" @click="closeSettings"></div>
+    
+    <!-- Settings panel -->
+    <div class="settings-panel" :class="{ 'active': settingsOpen }">
+        <div class="settings-header">
+            <h3 class="settings-title">Reading Settings</h3>
+            <button class="close-settings" @click="closeSettings">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="setting-group">
+            <h4 class="setting-title">Theme</h4>
+            <div class="theme-options">
+                <div class="theme-option theme-sepia" :class="{ 'active': theme === 'sepia' }" @click="setTheme('sepia')"></div>
+                <div class="theme-option theme-white" :class="{ 'active': theme === 'white' }" @click="setTheme('white')"></div>
+                <div class="theme-option theme-dark" :class="{ 'active': theme === 'dark' }" @click="setTheme('dark')"></div>
+                <div class="theme-option theme-night" :class="{ 'active': theme === 'night' }" @click="setTheme('night')"></div>
+                <div class="theme-option theme-nature" :class="{ 'active': theme === 'nature' }" @click="setTheme('nature')"></div>
+                <div class="theme-option theme-paper" :class="{ 'active': theme === 'paper' }" @click="setTheme('paper')"></div>
+            </div>
+        </div>
+        
+        <div class="setting-group">
+            <h4 class="setting-title">Text Size</h4>
+            <div class="font-options">
+                <div class="font-option font-small" :class="{ 'active': fontSize === 'small' }" @click="setFontSize('small')">
+                    <div class="font-example">Aa</div>
+                    <div>Small</div>
+                </div>
+                <div class="font-option font-medium" :class="{ 'active': fontSize === 'medium' }" @click="setFontSize('medium')">
+                    <div class="font-example">Aa</div>
+                    <div>Medium</div>
+                </div>
+                <div class="font-option font-large" :class="{ 'active': fontSize === 'large' }" @click="setFontSize('large')">
+                    <div class="font-example">Aa</div>
+                    <div>Large</div>
+                </div>
+                <div class="font-option font-xlarge" :class="{ 'active': fontSize === 'xlarge' }" @click="setFontSize('xlarge')">
+                    <div class="font-example">Aa</div>
+                    <div>X-Large</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="setting-group">
+            <h4 class="setting-title">Line Spacing</h4>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary flex-fill">Compact</button>
+                <button class="btn btn-outline-primary flex-fill">Standard</button>
+                <button class="btn btn-outline-secondary flex-fill">Wide</button>
+            </div>
+        </div>
+        
+        <div class="setting-group">
+            <h4 class="setting-title">Font Family</h4>
+            <div class="d-flex flex-column gap-2">
+                <button class="btn btn-outline-primary">Serif</button>
+                <button class="btn btn-outline-secondary">Sans Serif</button>
+                <button class="btn btn-outline-secondary">Monospace</button>
+            </div>
+        </div>
+        
+        <div class="setting-group">
+            <h4 class="setting-title">Bookmarks</h4>
+            <div class="alert alert-info">
+                <i class="fas fa-bookmark me-2"></i>
+                Page 143 - Chapter 7
+            </div>
+            <div class="alert alert-light">
+                <i class="fas fa-bookmark me-2"></i>
+                Page 56 - Chapter 3
+            </div>
+        </div>
+    </div>
+    
+    <!-- Reading Header -->
+    <header class="reading-header">
+        <div class="book-info">
+            <h1 class="book-title">The Silent Forest</h1>
+            <p class="book-author">by Maya Johnson</p>
+        </div>
+        
+        <div class="reading-controls">
+            <button class="control-btn" title="Table of Contents">
+                <i class="fas fa-list"></i>
+            </button>
+            <button class="control-btn" title="Bookmark">
+                <i class="fas fa-bookmark"></i>
+            </button>
+            <button class="control-btn" title="Search">
+                <i class="fas fa-search"></i>
+            </button>
+            <button class="control-btn" title="Settings" @click="openSettings">
+                <i class="fas fa-cog"></i>
+            </button>
+        </div>
+    </header>
+    
+    <!-- Reading Content -->
+    <main class="reading-container">
+        <div class="chapter-header">
+            <h2 class="chapter-title">Chapter <span x-text="currentChapter"></span>: The Journey Begins</h2>
+            <p class="chapter-subtitle">Into the unknown depths of the ancient woods</p>
+        </div>
+        
+        <div class="reading-content">
+            <p>The forest was silent in a way that only ancient woods can be. Sunlight filtered through the dense canopy, creating patterns on the moss-covered ground that seemed almost intentional. Elena paused, her breath forming small clouds in the crisp morning air. She had been walking for hours, but the map showed she was only halfway to her destination.</p>
+            
+            <p>In her backpack, she carried the artifact - a small, intricately carved stone that seemed to hum with a quiet energy. It had been in her family for generations, passed down with stories of its power and the responsibility that came with it. Now, it was her turn to fulfill that ancient promise.</p>
+            
+            <p>A twig snapped somewhere to her left. Elena froze, her hand instinctively moving to the knife at her belt. The forest had been empty of human life for days, but she knew the creatures that dwelled here were not always friendly. She waited, barely breathing, listening for any further sound.</p>
+            
+            <p>When nothing happened after several minutes, she relaxed slightly and continued her journey. The path was becoming steeper now, winding up the mountainside. According to her grandfather's journal, the temple was hidden near the peak, accessible only to those who knew the secret path.</p>
+            
+            <p>As she climbed, Elena thought about her grandfather's last words to her. "Trust the stone," he had whispered, his voice weak but urgent. "When the time comes, it will guide you." She had nodded, not fully understanding, but now she felt the stone's warmth against her back, almost as if it was reassuring her.</p>
+            
+            <p>The sun was beginning to set when Elena finally reached the clearing. Before her stood the temple, its stone walls covered in vines and moss, looking as though it had grown from the mountain itself. The entrance was a simple archway, dark and foreboding.</p>
+            
+            <p>She took a deep breath and stepped inside. The air was cool and still, heavy with the scent of earth and time. As her eyes adjusted to the dim light, she saw that the walls were covered in carvings similar to those on her stone. At the far end of the chamber stood a pedestal, clearly designed to hold an object of importance.</p>
+            
+            <p>Elena approached slowly, her footsteps echoing in the vast space. She removed her backpack and carefully took out the stone. It seemed to glow with a soft light as she held it, illuminating the carvings on the walls, which began to shimmer as if alive.</p>
+            
+            <p>As she placed the stone on the pedestal, the entire temple began to hum with energy. The carvings on the walls glowed brighter, and a beam of light shot from the stone to the ceiling, revealing a map of stars that Elena recognized from her grandfather's stories.</p>
+            
+            <p>She had done it. She had returned the stone to its rightful place. But as she watched the star map form above her, she realized this was not the end of her journey - it was only the beginning.</p>
+        </div>
+    </main>
+    
+    <!-- Reading Footer -->
+    <footer class="reading-footer">
+        <div class="progress-container">
+            <div class="progress-info">
+                <span>Chapter <span x-text="currentChapter"></span> of <span x-text="totalChapters"></span></span>
+                <span><span x-text="progress"></span>% complete</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" :style="'width: ' + progress + '%'"></div>
+            </div>
+            
+            <div class="navigation-controls">
+                <button class="nav-btn btn-prev" @click="prevChapter">
+                    <i class="fas fa-arrow-left"></i>
+                    Previous Chapter
+                </button>
+                <button class="nav-btn btn-next" @click="nextChapter">
+                    Next Chapter
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

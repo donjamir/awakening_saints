@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="eng">
+{% load static %}
+<head>
+ 
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, shrink-to-fit=no">
+  <title>Awakening Saints</title>
+
+  <link href="//fonts.googleapis.com/css2?family=Poppins:wght@300;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="{% static 'assets/css/style-starter.css' %}">
+ 
+  <link rel="shortcut icon" type="image/jpg" href="{% static 'assets/images/logo.jpg' %}">
+
+  <link href="//fonts.googleapis.com/css2?family=Poppins:wght@300;600;700&display=swap" rel="stylesheet">
+  <!-- google fonts -->
+  
+     <!--fonts-->
+<link rel="stylesheet" href="{% static 'assets/css/fonts.css' %}">
+<!--font awesome-->
+<link rel="stylesheet" href="{% static 'assets/css/all.css' %}">
+</head>
+
+<style>
+  /* Only modify dropdown item layout, not the visibility */
+  .dropdown-menu li {
+    display: block;
+  }
+
+  .dropdown-item {
+    display: block;
+    width: 100%;
+  }
+</style>
+
+
+
+<body>
+<!--header-->
+{% include 'site/main/nav.html' %}
+<!-- //header -->
+
+{% block content %} {% endblock %}
+
+<!-- footer -->  
+{% include 'site/main/footer.html' %}
+<!-- //footer -->
+
+
+  <!-- move top -->
+ 
+
+  <script>
+    // When the user scrolls down 20px from the top of the document, show the button
+    window.onscroll = function () {
+      scrollFunction()
+    };
+
+    function scrollFunction() {
+      if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+        document.getElementById("movetop").style.display = "block";
+      } else {
+        document.getElementById("movetop").style.display = "none";
+      }
+    }
+
+    // When the user clicks on the button, scroll to the top of the document
+    function topFunction() {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }
+  </script>
+  <!-- /move top -->
+</section>
+
+
+
+
+<script src="{% static 'assets/js/cart.js' %}"></script>
+<script src="{% static 'assets/js/wishlist.js' %}"></script>
+<script src="{% static 'assets/js/nav.js' %}"></script>
+<script src="{% static 'assets/js/coura.js' %}"></script>
+<script src="{% static 'assets/js/checkout.js' %}"></script>
+<script src="{% static 'assets/js/orders.js' %}"></script>
+<script src="{% static 'assets/js/cards.js' %}"></script>
+<script src="{% static 'assets/js/address.js' %}"></script>
+<!-- <script src="assets/js/theme-change.js"></script> -->
+
+  <!-- Bootstrap Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Alpine.js & Bootstrap JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+
+
+
+
+  <!-- disable body scroll which navbar is in active -->
+  <script>
+    $(function () {
+      $('.navbar-toggler').click(function () {
+        $('body').toggleClass('noscroll');
+      })
+    });
+  </script>
+  <!-- disable body scroll which navbar is in active -->
+
+  <!-- Template JavaScript -->
+  <script src="{% static 'assets/js/jquery-3.3.1.min.js' %}"></script>
+  <script src="{% static 'assets/js/theme-change.js' %}"></script>
+  <script src="{% static 'assets/js/owl.carousel.js' %}"></script>
+ 
+
+
+
+  <!-- script for banner slider-->
+  <script>
+    $(document).ready(function () {
+      $('.owl-one').owlCarousel({
+        loop: true,
+        margin: 0,
+        nav: false,
+        responsiveClass: true,
+        autoplay: true,
+        autoplayTimeout: 5000,
+        autoplaySpeed: 1000,
+        autoplayHoverPause: false,
+        responsive: {
+          0: {
+            items: 1,
+            nav: false
+          },
+          480: {
+            items: 1,
+            nav: false
+          },
+          667: {
+            items: 1,
+            nav: true
+          },
+          1000: {
+            items: 1,
+            nav: true
+          }
+        }
+      })
+    })
+  </script>
+  <!-- //script -->
+  <!-- script for tesimonials carousel slider -->
+  <script>
+    $(document).ready(function () {
+      $("#owl-demo1").owlCarousel({
+        loop: true,
+        margin: 20,
+        nav: false,
+        responsiveClass: true,
+        responsive: {
+          0: {
+            items: 1,
+            nav: false
+          },
+          736: {
+            items: 2,
+            nav: false
+          },
+          1000: {
+            items: 3,
+            nav: false,
+            loop: true
+          }
+        }
+      })
+    })
+  </script>
+  <!-- //script for tesimonials carousel slider -->
+  <!-- stats number counter-->
+  <script src="{% static 'assets/js/jquery.waypoints.min.js' %}"></script>
+  <script src="{% static 'assets/js/jquery.countup.js' %}"></script>
+ 
+  <script>
+    $('.counter').countUp();
+  </script>
+  <!-- //stats number counter -->
+  <!--/MENU-JS-->
+  <script>
+    $(window).on("scroll", function () {
+      var scroll = $(window).scrollTop();
+
+      if (scroll >= 80) {
+        $("#site-header").addClass("nav-fixed");
+      } else {
+        $("#site-header").removeClass("nav-fixed");
+      }
+    });
+
+    //Main navigation Active Class Add Remove
+    $(".navbar-toggler").on("click", function () {
+      $("header").toggleClass("active");
+    });
+    $(document).on("ready", function () {
+      if ($(window).width() > 991) {
+        $("header").removeClass("active");
+      }
+      $(window).on("resize", function () {
+        if ($(window).width() > 991) {
+          $("header").removeClass("active");
+        }
+      });
+    });
+  </script>
+  <!--//MENU-JS-->
+  <!-- Bootstrap 5 Bundle (includes Popper) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- <script src="{% static 'assets/js/bootstrap.min.js' %}"></script> -->
+
+</body>
+
+</html>
