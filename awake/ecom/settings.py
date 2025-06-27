@@ -24,7 +24,7 @@ INSTALLED_APPS = [
     'ecomapp.apps.EcomappConfig',
     'useraccounts.apps.UseraccountsConfig',
     'basketapp.apps.BasketappConfig',
-    'adminpanel.apps.AdminpanelConfig',
+
 ]
 
 MIDDLEWARE = [
