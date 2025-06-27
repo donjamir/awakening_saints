@@ -1,10 +1,7 @@
-import os
 import sys
+import os
 
-# Add your project directory to the sys.path
-sys.path.insert(0, '/home/ssebadduka/ecom')
-
-# Set the settings module
+sys.path.insert(0, '/home/ssebadduka/awakening_saints')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'ecom.settings'
 
 from django.core.wsgi import get_wsgi_application
