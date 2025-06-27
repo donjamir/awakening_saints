@@ -8,7 +8,7 @@ SECRET_KEY = 'django-insecure-ev28k=ir#vah2v)!-*t65t!+b#j(xnk24fv88!nkoemy)#0ag1
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['awakeningsaint.org', '*']
 
 
 INSTALLED_APPS = [
