@@ -110,12 +110,12 @@
 
             <div class="summary-item">
                 <span>Subtotal:</span>
-                <span>UGX<span x-text="subtotal.toFixed(2)"></span></span>
+                <span>UGX<span x-text="subtotal.toFixed(0)"></span></span>
             </div>
 
             <div class="summary-item total-row">
                 <span>Total:</span>
-                <span>UGX<span x-text="grandTotal.toFixed(2)"></span></span>
+                <span>UGX<span x-text="subtotal.toFixed(0)"></span></span>
             </div>
 
             <!-- Confirm & Pay button triggers the custom event -->
