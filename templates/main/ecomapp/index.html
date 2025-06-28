@@ -1,0 +1,463 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+
+<style>
+	  
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+		
+
+        .hero {
+            background: linear-gradient(rgba(44, 62, 80, 0.8), rgba(44, 62, 80, 0.9)), url('{% static "assets/images/banner4.jpeg" %}') center/cover;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+			margin-top: 6rem;
+            margin-bottom: 40px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero h2 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+			color: #fff;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+			color: #fff;
+            margin-bottom: 25px;
+        }
+
+        .btn {
+            background: #ff6b6b;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: #ff5252;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .filters {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+		  .category-link {
+        margin-right: 12px;
+        cursor: pointer;
+        text-decoration: none;
+        color: #007bff;
+    }
+
+    .category-link.active {
+        font-weight: bold;
+        color: #e74c3c;
+    }
+
+        .filter-group select {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+            font-size: 1rem;
+        }
+
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .book-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .book-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .book-image {
+            height: 300px;
+            background-color: #eef2f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .book-image img {
+            max-height: 100%;
+            max-width: 100%;
+            object-fit: cover;
+        }
+
+        .book-info {
+            padding: 20px;
+        }
+
+        .book-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .book-author {
+            color: #7f8c8d;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+
+        .book-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .book-rating {
+            color: #f39c12;
+            margin-bottom: 15px;
+        }
+
+        .book-actions {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .add-to-cart {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+
+        .add-to-cart:hover {
+            background: #2980b9;
+        }
+
+        .wishlist {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .wishlist:hover {
+            transform: scale(1.2);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            gap: 8px;
+        }
+
+        .pagination button {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 5px;
+            background: white;
+            color: #2c3e50;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .pagination button:hover {
+            background: #3498db;
+            color: #000;
+        }
+
+        .pagination button.active {
+            background: #2c3e50;
+            color: white;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .items-per-page {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .search-bar {
+                width: 100%;
+            }
+            
+            .filters {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .hero h2 {
+                font-size: 2rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+        }
+</style>
+
+
+
+    
+
+    <div class="container">
+        <div class="hero">
+            <h2>Discover Your Next Favorite Book</h2>
+            <p>Explore our curated collection of bestselling books across all genres. Find your perfect read today!</p>
+            <!-- <a href="#" class="btn">Browse All Books</a> -->
+        </div>
+
+        <div class="filters">
+			<div class="dropdown">
+				<a class="add-to-cart dropdown-toggle" href="#" role="button" id="categoryDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+					Topics
+				</a>
+
+				<ul class="dropdown-menu" aria-labelledby="categoryDropdown" id="category-links">
+					<!-- JS will insert <a> links here -->
+				</ul>
+			</div>
+
+			<div class="items-per-page">
+				<span>Items per page:</span>
+				<select id="items-per-page">
+					<option value="8" selected>8</option>
+					<option value="12">12</option>
+					<option value="16">16</option>
+					<option value="20">20</option>
+				</select>
+        	</div>
+
+        </div>
+
+        
+
+        <div class="books-grid" id="books-container">
+            <!-- Books will be generated by JavaScript -->
+        </div>
+
+        <div class="pagination" id="pagination">
+            <!-- Pagination will be generated by JavaScript -->
+        </div>
+    </div>
+
+
+
+
+<script>
+    const categories = {{ categories_json|safe }};
+    const books = {{ products_json|safe }};
+
+    const booksContainer = document.getElementById('books-container');
+    const paginationContainer = document.getElementById('pagination');
+    const itemsPerPageSelect = document.getElementById('items-per-page');
+    const categoryLinksContainer = document.getElementById('category-links');
+
+    let currentPage = 1;
+    let itemsPerPage = parseInt(itemsPerPageSelect.value) || 12;
+    let filteredBooks = books;
+
+    function populateCategoryLinks() {
+        // All categories
+        const allItem = document.createElement('li');
+        allItem.innerHTML = `<a class="dropdown-item category-link" href="#" data-slug="">All Categories</a>`;
+        categoryLinksContainer.appendChild(allItem);
+
+        categories.forEach(cat => {
+            const item = document.createElement('li');
+            item.innerHTML = `<a class="dropdown-item category-link" href="#" data-slug="${cat.slug}">${cat.name}</a>`;
+            categoryLinksContainer.appendChild(item);
+        });
+    }
+
+    function generateBookCard(book) {
+        return `
+            <div class="book-card">
+                <div class="book-image">
+                    <img src="${book.image}" alt="${book.title}" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <div class="book-info">
+                    <h3 class="book-title">${book.title}</h3>
+                    <div class="book-price">$${book.price.toFixed(2)}</div>
+                    <div class="book-actions">
+                        <a href="/book-preview/${book.slug}/" class="add-to-cart">Read</a>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderBooks() {
+        booksContainer.innerHTML = '';
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, filteredBooks.length);
+        const booksToRender = filteredBooks.slice(startIndex, endIndex);
+
+        if (booksToRender.length === 0) {
+            booksContainer.innerHTML = '<p>No books found in this category.</p>';
+        } else {
+            booksToRender.forEach(book => {
+                booksContainer.innerHTML += generateBookCard(book);
+            });
+        }
+
+        renderPagination();
+    }
+
+    function renderPagination() {
+        paginationContainer.innerHTML = '';
+        const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
+        if (totalPages <= 1) return;
+
+        const prevButton = document.createElement('button');
+        prevButton.innerHTML = '<i class="fas fa-chevron-left"></i>';
+        prevButton.disabled = currentPage === 1;
+        prevButton.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderBooks();
+            }
+        });
+        paginationContainer.appendChild(prevButton);
+
+        const maxButtons = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+        let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+        if (endPage - startPage < maxButtons - 1) {
+            startPage = Math.max(1, endPage - maxButtons + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const pageButton = document.createElement('button');
+            pageButton.textContent = i;
+            pageButton.classList.toggle('active', i === currentPage);
+            pageButton.addEventListener('click', () => {
+                currentPage = i;
+                renderBooks();
+            });
+            paginationContainer.appendChild(pageButton);
+        }
+
+        const nextButton = document.createElement('button');
+        nextButton.innerHTML = '<i class="fas fa-chevron-right"></i>';
+        nextButton.disabled = currentPage === totalPages;
+        nextButton.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderBooks();
+            }
+        });
+        paginationContainer.appendChild(nextButton);
+    }
+
+    function setupCategoryFiltering() {
+        document.addEventListener('click', function (e) {
+            const link = e.target.closest('.category-link');
+            if (link) {
+                e.preventDefault();
+                const selectedSlug = link.dataset.slug;
+                currentPage = 1;
+
+                filteredBooks = selectedSlug
+                    ? books.filter(book => book.category_slug === selectedSlug)
+                    : books;
+
+                renderBooks();
+            }
+        });
+    }
+
+    itemsPerPageSelect.addEventListener('change', () => {
+        itemsPerPage = parseInt(itemsPerPageSelect.value) || 12;
+        currentPage = 1;
+        renderBooks();
+    });
+
+    function init() {
+        populateCategoryLinks();
+        setupCategoryFiltering();
+        renderBooks();
+    }
+
+    init();
+</script>
+
+
+
+
+
+
+
+
+
+{% endblock %}

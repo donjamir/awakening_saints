@@ -1,0 +1,89 @@
+{% load static %}
+
+
+
+{% load static %}
+
+  <header id="site-header" class="fixed-top">
+    <div class="container">
+      <nav class="navbar navbar-expand-lg stroke">
+        <h1><a class="navbar-brand mr-lg-5" href="index.html">
+        <img src="{% static 'assets/images/logo.png' %}" alt="image" style="height: 55px; width: 55px;">
+            Awakening<span>Saints</span>
+          </a></h1>
+ 
+
+        <button class="navbar-toggler collapsed bg-gradient" type="button" data-bs-toggle="collapse"
+        data-bs-target="#navbarTogglerDemo02" aria-controls="navbarTogglerDemo02" aria-expanded="false"
+        aria-label="Toggle navigation">
+
+          <span class="navbar-toggler-icon fa icon-expand fa-bars"></span>
+          <span class="navbar-toggler-icon fa icon-close fa-times"></span>
+          </span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item active">
+                <a href="{% url 'sales:homeone' %}" class="nav-link">Home<span class="sr-only">(current)</span></a>
+            </li class="nav-item">
+
+                        
+            <li>
+                <a href="{% url 'sales:about' %}" class="nav-link">About</a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'sales:contact' %}" class="nav-link">Contact</a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'sales:services' %}" class="nav-link">Services</a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'sales:books' %}" class="nav-link">Books</a>
+            </li>
+
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarMoreDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              More
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="navbarMoreDropdown">
+              <li><a class="dropdown-item" href="{% url 'sales:donate' %}">Donate</a></li>
+              <li><a class="dropdown-item" href="{% url 'sales:orphans' %}">Orphans</a></li>
+              <li><a class="dropdown-item" href="videos.html">Videos</a></li>
+              <li><a class="dropdown-item" href="{% url 'accounts:login' %}">Login</a></li>
+              <li><a class="dropdown-item" href="{% url 'cart:track' %}">Tracking</a></li>
+              <li><a class="dropdown-item" href="{% url 'cart:confirm' %}">Confirmation</a></li>
+              <!-- <li><a class="dropdown-item" href="#">Dashboard</a></li>
+              <li><a class="dropdown-item" href="#">Logout</a></li>
+              <li><a class="dropdown-item" href="#">Sign Up</a></li>
+              <li><a class="dropdown-item" href="#">Login</a></li> -->
+            </ul>
+          </li>
+
+          </ul>
+
+
+           <ul class="nav navbar-nav navbar-right">
+
+                <li class="nav-item">
+                    <a href="{% url 'cart:cart_summary' %}" class="nav-link">
+                        <div class="position-relative d-inline-block">
+                            <i class="fas fa-shopping-cart fa-lg"></i>
+                            <span id="cart_qty" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white" data-initial-total="{{ cart|length }}">
+                                {{ cart|length }}
+                            </span>
+                        </div>
+                    </a>
+                </li>
+
+            </ul>
+        </div>
+
+      </nav>
+    </div>
+  </header>
+
+
