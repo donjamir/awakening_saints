@@ -75,7 +75,6 @@ django-silk
 django-simple-history
 django-storages
 django-taggit
-django-tenants
 django-timezone-field
 django-two-factor-auth
 django-widget-tweaks
@@ -128,8 +127,6 @@ pluggy
 prometheus_client
 prompt_toolkit
 propcache
-psycopg2
-psycopg2-binary
 pycodestyle
 pycparser
 pydyf
