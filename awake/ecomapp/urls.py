@@ -11,6 +11,7 @@ urlpatterns = [
     path('services/', views.services, name='services'),
     path('donate/', views.donate, name='donate'),
     path('media/', views.media, name='media'),
+    path('add-comment/', views.add_comment, name='add_comment'),
     path('orphans/', views.orphans, name='orphans'),
     path('books/', views.books, name='books'),
 

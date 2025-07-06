@@ -3,14 +3,17 @@ from .models import *
 from django.contrib.auth.forms import (AuthenticationForm)
 
 
-class UserLoginForm(AuthenticationForm):
-   email = forms.EmailField(max_length=100, help_text='Required', error_messages={'required':'Please enter a valid email address'}, 
-                            widget=forms.EmailInput(attrs={'class':'form-control', 'placeholder' : 'Enter Email'}))
-   password = forms.CharField(label='Password', widget=forms.PasswordInput(attrs={'class':'form-control', 'placeholder' : 'Enter passsword'}))
-
-   class Meta:
-      model = UserBase
-      fields = ('email')
+class UserLoginForm(forms.Form):
+    email = forms.EmailField(
+        max_length=100,
+        help_text='Required',
+        error_messages={'required': 'Please enter a valid email address'},
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Enter Email'})
+    )
+    password = forms.CharField(
+        label='Password',
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Enter Password'})
+    )
 
 class RegistartionForm(forms.ModelForm):
     first_name = forms.CharField(label='First name', min_length=4, max_length=50, help_text='Required')

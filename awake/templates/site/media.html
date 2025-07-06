@@ -1,360 +1,1046 @@
-
-<?php 
-    include("path.php");
-?>
-
-<?php 
-   include(ROOT_PATH . "/app/database/db.php");
-  
-   $trending_videos_and_audios = getTrendingVideosAndAudios();
-   $topics = selectAll("topics");
-   $view_video_or_audio = selectOneAudioOrVideo($_GET["m_id"]);
-   $page = isset($_GET['page'])?$_GET['page']:1;
-
-   if (isset($_GET["media-search-term"])) {
-   	$videos_and_audios = searchVideosAndAudios($_GET["media-search-term"]);
-   }
-
-   elseif (isset($_GET["t_id"])) {
-   	$videos_and_audios = getVideosAndAudiosByTopicId($_GET["t_id"]);
-   }
-
-   else
-
-   {
-   	$videos_and_audios = getVideosAndAudios();
-   }
-
-?>
-
-
-<!--
-Author: W3layouts
-Author URL: http://w3layouts.com
--->
-<!doctype html>
-<html lang="zxx">
-
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <!-- Required meta tags -->
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, shrink-to-fit=no">
-  <title>Agricfarm an Agriculture Category Bootstrap Responsive Template | Contact :: W3layouts</title>
-  <!-- google fonts -->
-  <link href="//fonts.googleapis.com/css2?family=Poppins:wght@300;600;700&display=swap" rel="stylesheet">
-  <!-- google fonts -->
-  <!-- Template CSS -->
-  <link rel="stylesheet" href="assets/css/style-starter.css">
-  <!-- Template CSS -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Media Gallery</title>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: #f5f5f5;
+            --audio-player-bg: linear-gradient(to right, #4a5568, #2d3748);
+            --audio-color: #3b82f6;
+            --video-color: #3b82f6;
+            --text-color: #10b981;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            color: white;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .media-card {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 16px;
+        }
+        
+        .media-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tab-button {
+            transition: all 0.3s ease;
+            min-width: 120px;
+            text-align: center;
+        }
+        
+        .tab-button.active {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 100;
+        }
+        
+        .modal-content {
+            width: 95%;
+            max-width: 800px;
+            max-height: 95vh;
+            border-radius: 16px;
+            overflow: auto;
+            background: #f5f5f5;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
 
-  <link rel="stylesheet" href="assets/css/fonts.css">
-<!--font awesome-->
-<link rel="stylesheet" href="assets/css/all.css">
+        .modal-content {
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .modal-content::-webkit-scrollbar {
+            width: 3px;
+        }
+        
+        .audio-player {
+            background: var(--audio-player-bg);
+            border-radius: 12px;
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        .progress {
+            height: 100%;
+            background: var(--audio-color);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        .video-player .progress {
+            background: var(--video-color);
+        }
+        
+        .volume-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .volume-level {
+            height: 100%;
+            background: #000;
+            border-radius: 4px;
+        }
+        
+        .play-btn {
+            transition: all 0.2s ease;
+        }
+        
+        .play-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .comment-card {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        
 
-<link rel="stylesheet" href="assets/css/test.css">
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .scrollable-comments {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .scrollable-comments::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .modal-scrollable {
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .modal-scrollable::-webkit-scrollbar {
+            width: 2px;
+        }
+        
+        .modal-scrollable::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        .modal-scrollable::-webkit-scrollbar-thumb {
+            
+            border-radius: 10px;
+        }
+        
+        .fixed-play-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+        }
+        
+        .ta-button {
+            min-width: 100px;
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            background: var(--audio-color);
+        }
 
+        .wave-bar {
+            animation: wave 1.2s infinite ease-in-out;
+            transform-origin: bottom;
+        }
+        
+        @keyframes wave {
+            0%, 40%, 100% { transform: scaleY(0.4); }
+            20% { transform: scaleY(1.0); }
+        }
+        
+        /* Text Sermon Styles */
+        .text-content {
+            color: #f5f5f5;
+            line-height: 1.6;
+            max-height: 300px;
+            overflow: hidden;
+            position: relative;
+            transition: max-height 0.3s ease;
+        }
+        
+        .text-content.expanded {
+            max-height: none;
+        }
+        
+        .read-more-btn {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            padding: 20px 0 10px;
+            background: linear-gradient(to top, rgba(30, 41, 59, 0.9), transparent);
+            cursor: pointer;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+        
+        .text-modal-content {
+            max-height: 70vh;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #333;
+            border-radius: 8px;
+            line-height: 1.8;
+        }
+        
+        .text-modal-content h3 {
+            color: #1e293b;
+            border-bottom: 2px solid var(--text-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .sermon-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 15px;
+        }
+        
+        .scripture-reference {
+            font-style: italic;
+            color: var(--text-color);
+            margin: 15px 0;
+            padding-left: 15px;
+            border-left: 3px solid var(--text-color);
+        }
+        
+        /* Pagination Styles */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .pagination-btn {
+            padding: 8px 20px;
+            background: var(--text-color);
+            color: white;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .pagination-btn:hover {
+            background: #0d8a5f;
+        }
+        
+        .pagination-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+        }
+        
+        .page-indicator {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        .sermon-page-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+        
+        .sermon-page-content p {
+            margin-bottom: 1.2rem;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .modal-content {
+                width: 100%;
+                max-height: 100vh;
+                border-radius: 0;
+            }
+            
+            .modal-scrollable {
+                max-height: calc(100vh - 60px);
+            }
+            
+            .tab-button {
+                min-width: 100px;
+                padding: 10px 16px;
+                font-size: 0.9rem;
+            }
+            
+            .media-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .player-controls {
+                flex-wrap: wrap;
+            }
+            
+            .control-group {
+                width: 100%;
+                justify-content: center;
+                margin-top: 12px;
+            }
+            
+            .video-player-container {
+                height: 240px;
+            }
+            
+            .comment-form {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .comment-form .user-select {
+                width: 100%;
+            }
+            
+            .comment-form button {
+                width: 100%;
+            }
+            
+            .text-content {
+                max-height: 200px;
+            }
+            
+            .pagination-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .pagination-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        
+        @media (min-width: 641px) and (max-width: 768px) {
+            .media-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .video-player-container {
+            position: relative;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+        }
+        
+        .video-player-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .video-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+            padding: 16px;
+            z-index: 10;
+        }
+    </style>
 </head>
-
 <body>
-  <!--header-->
-  <?php include(ROOT_PATH . "/app/include/header.php");?>
-  <!-- //header -->
-  <!-- about breadcrumb -->
-  <section class="w3l-about-breadcrumb text-left">
-    <div class="breadcrumb-bg breadcrumb-bg-about py-sm-5 py-4">
-      <div class="container">
-        <h2 class="title">Videos</h2>
-        <ul class="breadcrumbs-custom-path mt-2">
-          <li><a href="#url">Home</a></li>
-          <li class="active"><span class="fa fa-arrow-right mx-2" aria-hidden="true"></span> Videos </li>
-        </ul>
-      </div>
-    </div>
-  </section>
-  <!-- //about breadcrumb -->
 
+   <header id="site-header" class="fixed top-0 w-full bg-white text-black shadow z-50">
+        <div class="container mx-auto px-4">
+            <nav class="flex items-center justify-between flex-wrap py-4" x-data="{ open: false }">
+            <!-- Logo -->
+            <div class="flex items-center flex-shrink-0 text-black mr-6">
+                <a class="flex items-center text-2xl font-bold" href="{% url 'sales:homeone' %}">
+                <img src="{% static 'assets/images/logo.png' %}" alt="Logo" class="h-12 w-12 mr-2">
+                Awakening<span class="text-blue-500 ml-1">Saints</span>
+                </a>
+            </div>
 
+            <!-- Mobile Toggle Button -->
+            <div class="block lg:hidden">
+                <button @click="open = !open"
+                        class="text-black focus:outline-none"
+                        aria-label="Toggle navigation">
+                <i :class="open ? 'fa fa-times' : 'fa fa-bars'" class="text-2xl"></i>
+                </button>
+            </div>
 
-  <div class="page-wrapper">
-  <div class="media-content-container">
-    <div class="main-content">
-        <h1 class="section-title">SPIRITUAL AWAKENING VIDEOS AND AUDIOS</h1>
-<br>
+            <!-- Navigation Links -->
+            <div :class="open ? 'block' : 'hidden'" class="w-full lg:flex lg:items-center lg:w-auto">
+                <ul class="pt-4 lg:pt-0 lg:flex lg:space-x-6 text-base font-medium">
+                <li><a href="{% url 'sales:homeone' %}" class="block py-2 hover:text-blue-500">Home</a></li>
+                <li><a href="{% url 'sales:about' %}" class="block py-2 hover:text-blue-500">About</a></li>
+                <li><a href="{% url 'sales:contact' %}" class="block py-2 hover:text-blue-500">Contact</a></li>
+                <li><a href="{% url 'sales:services' %}" class="block py-2 hover:text-blue-500">Services</a></li>
+                <li><a href="{% url 'sales:books' %}" class="block py-2 hover:text-blue-500">Books</a></li>
 
-        <div class="media-list">
-            <?php foreach (array_slice($videos_and_audios, ($page - 1)) as $values): ?>
-                <div class="media-card">
-                    <div class="media-header">
-                        <h4 class="media-title"><?php echo $values['tittle']; ?></h4>
-                    </div>
-                    <div class="media-body">
-                        <?php if ($values['media'] === "audio"): ?>
-                            <div class="audio-player-section">
-                                <img src="<?php echo BASE_URL . "/assets/images/" . $values["image"]; ?>" alt="Audio Thumbnail" class="media-thumbnail">
-                                <audio class="audio-player" controls>
-                                    <source src="<?php echo BASE_URL . "/assets/audios/" . $values["file"]; ?>" type="audio/mpeg">
-                                </audio>
+                <!-- Dropdown -->
+                <li class="relative group">
+                    <a href="#" class="block py-2 hover:text-yellow-500 flex items-center">
+                    More <i class="ml-1 fa fa-caret-down"></i>
+                    </a>
+                    <ul class="absolute left-0 mt-2 bg-white text-black rounded shadow-lg w-40 hidden group-hover:block z-50">
+                    <li><a class="block px-4 py-2 hover:bg-gray-100" href="{% url 'sales:donate' %}">Donate</a></li>
+                    <li><a class="block px-4 py-2 hover:bg-gray-100" href="{% url 'sales:orphans' %}">Orphans</a></li>
+                    <li><a class="block px-4 py-2 hover:bg-gray-100" href="{% url 'sales:media' %}">Videos</a></li>
+                    </ul>
+                </li>
+                </ul>
+            </div>
+            </nav>
+        </div>
+    </header>
+
+   <div x-data="mediaGallery()" class="container min-h-screen py-6 px-4 sm:px-6 mx-auto" style="margin-top: 5rem;">
+
+        <!-- Header -->
+        <header class="text-center mb-8" style="background-color: transparent;">
+            <h1 class="text-3xl md:text-4xl font-bold mb-3 text-black">Sermons Library</h1>
+            <p class="text-black max-w-2xl mx-auto mb-5">Explore our collection of sermons in audio, video, and text formats</p>
+        </header>
+
+        <!-- Tab Navigation -->
+        <div class="flex justify-center mb-8">
+            <div class="flex flex-wrap gap-2 bg-gray-800 bg-opacity-50 rounded-xl p-1">
+                <button 
+                    @click="activeTab = 'audio'"
+                    :class="{'bg-blue-600': activeTab === 'audio'}"
+                    class="tab-button px-5 py-2.5 rounded-lg font-medium transition-all"
+                >
+                    <i class="fas fa-music mr-2"></i> Audio
+                </button>
+                <button 
+                    @click="activeTab = 'video'"
+                    :class="{'bg-blue-600': activeTab === 'video'}"
+                    class="tab-button px-5 py-2.5 rounded-lg font-medium transition-all"
+                >
+                    <i class="fas fa-video mr-2"></i> Video
+                </button>
+                <button 
+                    @click="activeTab = 'text'"
+                    :class="{'bg-green-600': activeTab === 'text'}"
+                    class="tab-button px-5 py-2.5 rounded-lg font-medium transition-all"
+                >
+                    <i class="fas fa-book-open mr-2"></i> Text
+                </button>
+            </div>
+        </div>
+
+        <!-- Audio Content -->
+        <div x-show="activeTab === 'audio'" class="fade-in">
+            <h2 class="text-xl text-blue-400 font-semibold mb-4 ml-2 flex items-center">
+                <i class="fas fa-headphones-alt mr-3 text-blue-400"></i> Audio Sermons
+            </h2>
+            <div class="media-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <template x-for="(audio, index) in audioContent">
+                    <div class="media-card cursor-pointer" @click="openModal(audio)">
+                        <div class="p-4 audio-player flex items-center">
+                            <div class="mr-3">
+                                <div class="w-14 h-14 rounded-full bg-blue-900 flex items-center justify-center">
+                                    <i class="fas fa-play text-lg text-blue-300"></i>
+                                </div>
                             </div>
-                        <?php else: ?>
-                            <div class="video-player-section">
-                                <video class="video-player" controls>
-                                    <source src="<?php echo BASE_URL . "/assets/videos/" . $values["file"]; ?>" type="video/mp4">
-                                </video>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-semibold truncate" x-text="audio.title"></h3>
+                                <p class="text-gray-300 text-sm truncate" x-text="audio.artist"></p>
                             </div>
-                        <?php endif; ?>
+                        </div>
+                        <div class="p-3">
+                            <div class="flex justify-between text-xs text-gray-400 mb-2">
+                                <span x-text="audio.duration"></span>
+                                <span x-text="audio.date"></span>
+                            </div>
+                            <div class="flex justify-between items-center mt-3">
+                                <div class="flex items-center">
+                                    <i class="fas fa-comment-alt text-gray-400 mr-1.5 text-sm"></i>
+                                    <span class="text-xs text-gray-300" x-text="audio.comments.length"></span>
+                                </div>
+                                <div class="text-xs bg-blue-900 bg-opacity-50 px-2 py-1 rounded">
+                                    <i class="fas fa-headphones mr-1"></i> Audio
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="media-info">
-                        <p><strong>By:</strong> <?php echo $values['username']; ?></p>
-                        <p><strong>Topic:</strong> <?php echo $values['name']; ?></p>
-                        <p><strong>Comments:</strong> <a href="<?php echo BASE_URL . "media_comments.php?comment_id=" . $values["id"]; ?>">Click here</a></p>
-                        <p><strong>Date:</strong> <?php echo date("F j, Y", strtotime($values["created_at"])); ?></p>
+                </template>
+            </div>
+        </div>
+
+        <!-- Video Content -->
+        <div x-show="activeTab === 'video'" class="fade-in">
+            <h2 class="text-xl text-blue-400 font-semibold mb-4 ml-2 flex items-center">
+                <i class="fas fa-film mr-3 text-blue-400"></i> Video Sermons
+            </h2>
+            <div class="media-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <template x-for="(video, index) in videoContent">
+                    <div class="media-card cursor-pointer" @click="openModal(video)">
+                        <div class="relative">
+                            <div class="h-40 bg-gray-700 flex items-center justify-center">
+                                <img :src="video.thumbnail" alt="Thumbnail" class="w-full h-full object-cover opacity-80">
+                                <div class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
+                                    <i class="fas fa-play-circle text-4xl text-blue-500"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-3">
+                            <h3 class="font-semibold mb-1 truncate" x-text="video.title"></h3>
+                            <div class="flex justify-between text-xs text-gray-400 mb-3">
+                                <span x-text="video.duration"></span>
+                                <span x-text="video.date"></span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <i class="fas fa-comment-alt text-gray-400 mr-1.5 text-sm"></i>
+                                    <span class="text-xs text-gray-300" x-text="video.comments.length"></span>
+                                </div>
+                                <div class="text-xs bg-blue-900 bg-opacity-50 px-2 py-1 rounded">
+                                    <i class="fas fa-video mr-1"></i> Video
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Text Sermons Content -->
+        <div x-show="activeTab === 'text'" class="fade-in">
+            <h2 class="text-xl text-green-400 font-semibold mb-4 ml-2 flex items-center">
+                <i class="fas fa-book mr-3 text-green-400"></i> Text Sermons
+            </h2>
+            <div class="media-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <template x-for="(text, index) in textContent">
+                    <div class="media-card" @click="openModal(text)">
+                        <div class="p-4">
+                            <h3 class="font-semibold text-lg mb-2" x-text="text.title"></h3>
+                            <div class="sermon-meta">
+                                <span x-text="text.preacher"></span>
+                                <span x-text="text.date"></span>
+                            </div>
+                            <div class="text-content" :class="{ 'expanded': text.expanded }">
+                                <p class="mb-3" x-text="text.excerpt"></p>
+                                <div class="read-more-btn" @click="text.expanded = !text.expanded">
+                                    <!-- <span x-text="text.expanded ? 'Show Less' : 'Read Full Sermon'"></span> -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-3">
+                            <div class="flex justify-between items-center mt-3">
+                                <div class="flex items-center">
+                                    <i class="fas fa-comment-alt text-gray-400 mr-1.5 text-sm"></i>
+                                    <span class="text-xs text-gray-300" x-text="text.comments.length"></span>
+                                </div>
+                                <button class="text-xs bg-green-700 bg-opacity-50 px-2 py-1 rounded hover:bg-green-600">
+                                    <i class="fas fa-book mr-1"></i> Read & Discuss
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <div x-show="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 modal-overlay"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0">
+            <div class="modal-content">
+                <div class="p-4 sm:p-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-xl text-black font-bold truncate mr-2" x-text="currentMedia.title"></h3>
+                        <button @click="closeModal" class="text-gray-400 hover:text-white text-xl">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Scrollable content area -->
+                    <div class="modal-scrollable">
+
+                        
+
+                        <div class="mb-5">
+                             <!-- Media Info -->
+                        <div class="bg-gray-300 rounded-lg p-4 mb-6">
+                            <!-- Meta Information -->
+                            <div class="sermon-meta text-sm text-gray-600 mb-1">
+                                <span> Preacher: <strong x-text="currentMedia.artist || currentMedia.preacher || 'Unknown'"></strong></span>
+                                <span class="ml-4" x-text="currentMedia.date"></span>
+                            </div>
+
+                            <!-- Scripture reference -->
+                            <div class="scripture-reference italic text-sm text-blue-700 mb-4" x-text="currentMedia.scripture"></div>
+
+                            <h4 class="font-semibold text-black mb-2 flex items-center">
+                                <i class="fas fa-info-circle mr-2"></i> Verse
+                            </h4>
+                            <p class="text-black text-sm" x-text="currentMedia.description"></p>
+                        </div>
+                            <!-- Audio Player -->
+                            <template x-if="currentMedia.type === 'audio'">
+                                <div class="audio-player p-4 sm:p-5 rounded-xl">
+                                    <div class="flex items-center mb-4">
+                                        <div class="mr-3">
+                                            <div class="w-16 h-16 rounded-full bg-blue-900 flex items-center justify-center">
+                                                <i class="fas fa-music text-2xl text-blue-300"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <h3 class="font-semibold text-lg truncate" x-text="currentMedia.title"></h3>
+                                            <p class="text-blue-300 text-sm truncate" x-text="currentMedia.artist"></p>
+                                        </div>
+                                    </div>
+                                    
+                                    <audio 
+                                        x-ref="audioPlayer"
+                                        :src="currentMedia.src" 
+                                        @timeupdate="updateAudioProgress"
+                                        @ended="handleAudioEnded"
+                                    ></audio>
+                                    
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="text-gray-300 text-sm" x-text="formatTime(currentTime)"></span>
+                                        <div class="progress-bar flex-1 mx-3" @click="seekAudio">
+                                            <div class="progress" :style="`width: ${progress}%`"></div>
+                                        </div>
+                                        <span class="text-gray-300 text-sm" x-text="currentMedia.duration"></span>
+                                    </div>
+                                    
+                                    <div class="player-controls flex justify-between items-center mt-4">
+                                        <div class="flex items-center">
+                                            <button class="text-gray-300 hover:text-white mr-4" @click="skipBackward">
+                                                <i class="fas fa-step-backward text-xl"></i>
+                                            </button>
+                                            <button class="play-btn w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center hover:bg-blue-500"
+                                                    @click="togglePlay">
+                                                <i class="fas" :class="isPlaying ? 'fa-pause' : 'fa-play'"></i>
+                                            </button>
+                                            <button class="text-gray-300 hover:text-white ml-4" @click="skipForward">
+                                                <i class="fas fa-step-forward text-xl"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="control-group flex items-center">
+                                            <i class="fas fa-volume-up text-gray-300 mr-2 text-sm"></i>
+                                            <div class="volume-bar w-20 sm:w-24 mr-2" @click="setVolume">
+                                                <div class="volume-level" :style="`width: ${volume * 100}%`"></div>
+                                            </div>
+                                            <span class="text-gray-300 text-xs" x-text="`${Math.round(volume * 100)}%`"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            
+                            <!-- Video Player -->
+                            <template x-if="currentMedia.type === 'video'">
+                                <div>
+                                    <div class="video-player-container rounded-xl overflow-hidden bg-black">
+                                        <video 
+                                            x-ref="videoPlayer"
+                                            :src="currentMedia.src"
+                                            @timeupdate="updateVideoProgress"
+                                            @ended="handleVideoEnded"
+                                            playsinline
+                                        ></video>
+                                        <div class="video-overlay">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-gray-300 text-sm" x-text="formatTime(currentTime)"></span>
+                                                <div class="progress-bar flex-1 mx-3" @click="seekVideo">
+                                                    <div class="progress" :style="`width: ${progress}%`"></div>
+                                                </div>
+                                                <span class="text-gray-300 text-sm" x-text="currentMedia.duration"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="player-controls flex justify-between items-center mt-4">
+                                        <div class="flex items-center">
+                                            <button class="text-gray-600 hover:text-black mr-4" @click="skipBackward">
+                                                <i class="fas fa-step-backward text-xl"></i>
+                                            </button>
+                                            <button class="play-btn w-12 h-12 rounded-full bg-purple-600 flex items-center justify-center hover:bg-purple-500"
+                                                    @click="togglePlay">
+                                                <i class="fas" :class="isPlaying ? 'fa-pause' : 'fa-play'"></i>
+                                            </button>
+                                            <button class="text-gray-600 hover:text-black ml-4" @click="skipForward">
+                                                <i class="fas fa-step-forward text-xl"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="control-group flex items-center">
+                                            <button class="text-gray-600 hover:text-black mr-4" @click="toggleMute">
+                                                <i class="fas text-xl" :class="isMuted ? 'fa-volume-mute' : 'fa-volume-up'"></i>
+                                            </button>
+                                            <div class="volume-bar w-20 sm:w-24 mr-2" @click="setVolume">
+                                                <div class="volume-level" :style="`width: ${volume * 100}%`"></div>
+                                            </div>
+                                            <span class="text-gray-900 text-xs" x-text="`${Math.round(volume * 100)}%`"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            
+                            <!-- Text Sermon Content -->
+                           <template x-if="currentMedia.type === 'text'">
+                                <div class="text-modal-content">
+                                    <!-- Title -->
+                                    <!-- <h3 class="text-lg font-semibold mb-2" x-text="currentMedia.title"></h3> -->
+
+                                  <!-- Sermon Page Content -->
+                                  <div class="sermon-page-content prose max-w-full mb-4 text-justify text-left" x-html="currentMedia.pages[currentMedia.currentPage] || 'No content available.'"></div>
+
+                                    <!-- Pagination Controls -->
+                                    <!-- <div class="pagination-container flex justify-between items-center">
+                                        <button 
+                                            @click="prevPage()" 
+                                            :disabled="currentMedia.currentPage === 0"
+                                            class="pagination-btn bg-gray-200 px-3 py-1 rounded disabled:opacity-50"
+                                        >
+                                            <i class="fas fa-arrow-left mr-2"></i> Previous
+                                        </button>
+
+                                        <span class="page-indicator text-sm">
+                                            Page <span x-text="currentMedia.currentPage + 1"></span> of 
+                                            <span x-text="currentMedia.pages.length || 1"></span>
+                                        </span>
+
+                                        <button 
+                                            @click="nextPage()" 
+                                            :disabled="currentMedia.currentPage >= currentMedia.pages.length - 1"
+                                            class="pagination-btn bg-gray-200 px-3 py-1 rounded disabled:opacity-50"
+                                        >
+                                            Next <i class="fas fa-arrow-right ml-2"></i>
+                                        </button>
+                                    </div> -->
+                                </div>
+                            </template>
+
+                        </div>
+                        
+                       
+                        
+                        <!-- Comment Section -->
+                        <div class="mt-4">
+                            <h4 class="font-semibold text-black mb-3 flex items-center">
+                                <i class="fas fa-comments mr-2"></i> Comments
+                                <span class="text-black ml-2" x-text="'(' + currentMedia.comments.length + ')'"></span>
+                            </h4>
+                            
+                            <div class="scrollable-comments mb-5 max-h-80">
+                                <template x-for="(comment, index) in currentMedia.comments">
+                                    <div class="comment-card bg-gray rounded-lg p-3 mb-3">
+                                        <div class="flex items-start">
+                                            <div class="bg-gray-700 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+                                                <i class="fas fa-user text-gray-400 text-sm"></i>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex justify-between items-center mb-1">
+                                                    <span class="font-medium text-black text-sm" x-text="comment.username"></span>
+                                                    <span class="font-medium text-black text-sm" x-text="comment.email"></span>
+                                                    <span class="text-xs text-black" x-text="comment.timestamp"></span>
+                                                </div>
+                                                <p class="text-black text-sm" x-text="comment.text"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                                
+                                <div x-show="currentMedia.comments.length === 0" class="text-center py-4 text-gray-400">
+                                    <i class="fas fa-comment-slash text-xl mb-2"></i>
+                                    <p class="text-sm">No comments yet. Be the first to comment!</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gray-300 rounded-lg p-4">
+                                <h5 class="font-medium mb-2 text-black text-sm">Add a comment</h5>
+                                <form @submit.prevent="addComment">
+                                    <textarea 
+                                        x-model="newComment" 
+                                        placeholder="Write your comment here..." 
+                                        class="w-full bg-gray-300 rounded-lg p-3 text-black mb-3 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+                                        rows="2"
+                                        required
+                                    ></textarea>
+                                    <div class="comment-form flex justify-between items-center">
+                                        <div class="user-select flex items-center w-full sm:w-auto">
+                                            <!-- User selection removed for simplicity -->
+                                        </div>
+                                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap ml-2">
+                                            <i class="fas fa-paper-plane mr-2"></i> Post
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            <?php endforeach; ?>
+            </div>
         </div>
-
-                 
     </div>
 
-    <!--<div class="sidebar">
-        <div class="sidebar-section trending-media-section">
-            <h2 class="sidebar-title">Trending Media</h2>
-            <ul class="sidebar-list">
-                <?php foreach ($trending_videos_and_audios as $values): ?>
-                    <li><a href="<?php echo BASE_URL . "/videos.php?m_id=" . $values["id"]; ?>"><?php echo $values['tittle']; ?></a></li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-
-        <div class="sidebar-section search-section">
-            <h2 class="sidebar-title">Search</h2>
-            <form action="" method="get" class="search-form">
-                <input type="hidden" name="m_id" value="<?php echo $_GET["m_id"]; ?>">
-                <input type="text" name="media-search-term" class="search-input" placeholder="Search...">
-            </form>
-        </div>
-
-        <div class="sidebar-section topics-section">
-            <h2 class="sidebar-title">Topics</h2>
-            <ul class="sidebar-list">
-                <?php foreach ($topics as $topic): ?>
-                    <li>
-                        <a href="videos.php?m_id=<?php echo $_GET["m_id"]; ?>&t_id=<?php echo $topic["id"]; ?>"><?php echo $topic["name"]; ?></a>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-    </div>-->
-</div>
-
-</div>
-
-
-
-
-<script>
-// Toggle credit card input fields visibility
-function toggleCreditCardFields() {
-    var creditCardFields = document.getElementById('creditCardFields');
-    if (document.getElementById('creditCardOption').checked) {
-        creditCardFields.style.display = 'block';
-    } else {
-        creditCardFields.style.display = 'none';
-    }
-}
-
-// Show custom amount input field if 'Other' amount is selected
-document.getElementById('donationAmount').addEventListener('change', function () {
-    var customAmountWrapper = document.getElementById('customAmountWrapper');
-    if (this.value === 'custom') {
-        customAmountWrapper.style.display = 'block';
-    } else {
-        customAmountWrapper.style.display = 'none';
-    }
-});
+    <section class="bg-black text-gray-400">
+        <!-- Footer content remains the same -->
+    </section>
+    <script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.store('csrf', {
+            token: '{{ csrf_token }}'
+        });
+    });
 </script>
 
 
+    <script>
+        function mediaGallery() {
+            return {
+                activeTab: 'audio',
+                isModalOpen: false,
+                isPlaying: false,
+                isMuted: false,
+                currentTime: 0,
+                progress: 0,
+                volume: 0.8,
+                currentMedia: {},
+                newComment: '',
+                currentUser: 'Alex Johnson',
+                
+                audioContent: {{ audio_json|safe }},
+                videoContent: {{ video_json|safe }},
 
-<!--//contact-->
- 
-    
+                // Text content with pagination
+                textContent: {{ text_json|safe }},
 
+                openModal(media) {
+                    // Create a deep copy to avoid modifying the original data
+                    this.currentMedia = JSON.parse(JSON.stringify(media));
+                    this.isModalOpen = true;
+                    this.$nextTick(() => {
+                        if (media.type === 'audio') {
+                            this.$refs.audioPlayer.volume = this.volume;
+                        } else if (media.type === 'video') {
+                            this.$refs.videoPlayer.volume = this.volume;
+                            this.$refs.videoPlayer.muted = this.isMuted;
+                        }
+                    });
+                },
+                
+                closeModal() {
+                    this.isModalOpen = false;
+                    this.isPlaying = false;
+                    this.currentTime = 0;
+                    this.progress = 0;
+                    this.newComment = '';
+                    
+                    if (this.$refs.audioPlayer) {
+                        this.$refs.audioPlayer.pause();
+                    }
+                    
+                    if (this.$refs.videoPlayer) {
+                        this.$refs.videoPlayer.pause();
+                    }
+                },
+                
+                togglePlay() {
+                    if (this.currentMedia.type === 'audio') {
+                        if (this.$refs.audioPlayer.paused) {
+                            this.$refs.audioPlayer.play();
+                            this.isPlaying = true;
+                        } else {
+                            this.$refs.audioPlayer.pause();
+                            this.isPlaying = false;
+                        }
+                    } else if (this.currentMedia.type === 'video') {
+                        if (this.$refs.videoPlayer.paused) {
+                            this.$refs.videoPlayer.play();
+                            this.isPlaying = true;
+                        } else {
+                            this.$refs.videoPlayer.pause();
+                            this.isPlaying = false;
+                        }
+                    }
+                },
+                
+                toggleMute() {
+                    if (this.currentMedia.type === 'video') {
+                        this.isMuted = !this.isMuted;
+                        this.$refs.videoPlayer.muted = this.isMuted;
+                    }
+                },
+                
+                updateAudioProgress() {
+                    const player = this.$refs.audioPlayer;
+                    this.currentTime = player.currentTime;
+                    this.progress = (player.currentTime / player.duration) * 100;
+                },
+                
+                updateVideoProgress() {
+                    const player = this.$refs.videoPlayer;
+                    this.currentTime = player.currentTime;
+                    this.progress = (player.currentTime / player.duration) * 100;
+                },
+                
+                seekAudio(event) {
+                    const progressBar = event.currentTarget;
+                    const rect = progressBar.getBoundingClientRect();
+                    const offsetX = event.clientX - rect.left;
+                    const percent = offsetX / rect.width;
+                    this.$refs.audioPlayer.currentTime = this.$refs.audioPlayer.duration * percent;
+                },
+                
+                seekVideo(event) {
+                    const progressBar = event.currentTarget;
+                    const rect = progressBar.getBoundingClientRect();
+                    const offsetX = event.clientX - rect.left;
+                    const percent = offsetX / rect.width;
+                    this.$refs.videoPlayer.currentTime = this.$refs.videoPlayer.duration * percent;
+                },
+                
+                setVolume(event) {
+                    const volumeBar = event.currentTarget;
+                    const rect = volumeBar.getBoundingClientRect();
+                    const offsetX = event.clientX - rect.left;
+                    let newVolume = offsetX / rect.width;
+                    
+                    // Ensure volume is between 0 and 1
+                    newVolume = Math.max(0, Math.min(1, newVolume));
+                    this.volume = newVolume;
+                    
+                    if (this.currentMedia.type === 'audio') {
+                        this.$refs.audioPlayer.volume = newVolume;
+                    } else if (this.currentMedia.type === 'video') {
+                        this.$refs.videoPlayer.volume = newVolume;
+                    }
+                },
+                
+                skipBackward() {
+                    if (this.currentMedia.type === 'audio') {
+                        this.$refs.audioPlayer.currentTime = Math.max(0, this.$refs.audioPlayer.currentTime - 10);
+                    } else if (this.currentMedia.type === 'video') {
+                        this.$refs.videoPlayer.currentTime = Math.max(0, this.$refs.videoPlayer.currentTime - 10);
+                    }
+                },
+                
+                skipForward() {
+                    if (this.currentMedia.type === 'audio') {
+                        this.$refs.audioPlayer.currentTime = Math.min(
+                            this.$refs.audioPlayer.duration, 
+                            this.$refs.audioPlayer.currentTime + 10
+                        );
+                    } else if (this.currentMedia.type === 'video') {
+                        this.$refs.videoPlayer.currentTime = Math.min(
+                            this.$refs.videoPlayer.duration, 
+                            this.$refs.videoPlayer.currentTime + 10
+                        );
+                    }
+                },
+                
+                handleAudioEnded() {
+                    this.isPlaying = false;
+                },
+                
+                handleVideoEnded() {
+                    this.isPlaying = false;
+                },
+                
+                formatTime(seconds) {
+                    const mins = Math.floor(seconds / 60);
+                    const secs = Math.floor(seconds % 60);
+                    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+                },
+                
+                // Pagination functions for text sermons
+                nextPage() {
+                    if (this.currentMedia.currentPage < this.currentMedia.pages.length - 1) {
+                        this.currentMedia.currentPage++;
+                    }
+                },
+                
+                prevPage() {
+                    if (this.currentMedia.currentPage > 0) {
+                        this.currentMedia.currentPage--;
+                    }
+                },
+                
+                addComment() {
+                    if (!this.newComment.trim()) return;
 
-<?php include(ROOT_PATH . "/app/include/footer.php");?>
-
-<!-- move top -->
-
-<script>
-  // When the user scrolls down 20px from the top of the document, show the button
-  window.onscroll = function () {
-    scrollFunction()
-  };
-
-  function scrollFunction() {
-    if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
-      document.getElementById("movetop").style.display = "block";
-    } else {
-      document.getElementById("movetop").style.display = "none";
-    }
-  }
-
-  // When the user clicks on the button, scroll to the top of the document
-  function topFunction() {
-    document.body.scrollTop = 0;
-    document.documentElement.scrollTop = 0;
-  }
-</script>
-<!-- /move top -->
-</section>
-  <!-- //footer-29 block -->
-  <!-- disable body scroll which navbar is in active -->
-  <script>
-    $(function () {
-      $('.navbar-toggler').click(function () {
-        $('body').toggleClass('noscroll');
-      })
-    });
-  </script>
-  <!-- disable body scroll which navbar is in active -->
-
-  <!-- Template JavaScript -->
-  <script src="assets/js/jquery-3.3.1.min.js"></script>
-  <script src="assets/js/theme-change.js"></script>
-  <!--/MENU-JS-->
-  <script>
-    $(window).on("scroll", function () {
-      var scroll = $(window).scrollTop();
-
-      if (scroll >= 80) {
-        $("#site-header").addClass("nav-fixed");
-      } else {
-        $("#site-header").removeClass("nav-fixed");
-      }
-    });
-
-    //Main navigation Active Class Add Remove
-    $(".navbar-toggler").on("click", function () {
-      $("header").toggleClass("active");
-    });
-    $(document).on("ready", function () {
-      if ($(window).width() > 991) {
-        $("header").removeClass("active");
-      }
-      $(window).on("resize", function () {
-        if ($(window).width() > 991) {
-          $("header").removeClass("active");
-        }
-      });
-    });
-  </script>
-  <!--//MENU-JS-->
-
-  <script src="assets/js/bootstrap.min.js"></script>
-
-  <!--<script>
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const donationAmount = document.getElementById('donationAmount');
-        const customAmountWrapper = document.getElementById('customAmountWrapper');
-        const customAmount = document.getElementById('customAmount');
-
-        donationAmount.addEventListener('change', () => {
-            if (donationAmount.value === 'custom') {
-                customAmountWrapper.style.display = 'block';
-                customAmount.setAttribute('required', 'required');
-            } else {
-                customAmountWrapper.style.display = 'none';
-                customAmount.removeAttribute('required');
+                    fetch("{% url 'sales:add_comment' %}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": Alpine.store('csrf').token
+                        },
+                        body: JSON.stringify({
+                            media_id: this.currentMedia.id,
+                            comment: this.newComment
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'ok') {
+                            this.currentMedia.comments.unshift(data.comment);
+                            this.newComment = '';
+                            const commentsContainer = document.querySelector('.scrollable-comments');
+                            if (commentsContainer) commentsContainer.scrollTop = 0;
+                        } else {
+                            alert(data.message || "Failed to post comment.");
+                        }
+                    })
+                    .catch(() => {
+                        alert("Server error. Please try again.");
+                    });
+                }
+            
             }
-        });
-    });
-
-
-  </script>-->
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-    const donationAmount = document.getElementById('donationAmount');
-    const customAmountWrapper = document.getElementById('customAmountWrapper');
-    const customAmount = document.getElementById('customAmount');
-    const donationModal = document.getElementById('donationModal');
-    const donationSummary = document.getElementById('donationSummary');
-
-    // Handle "Other" amount selection
-    donationAmount.addEventListener('change', () => {
-        if (donationAmount.value === 'custom') {
-            customAmountWrapper.style.display = 'block';
-            customAmount.setAttribute('required', 'required');
-        } else {
-            customAmountWrapper.style.display = 'none';
-            customAmount.removeAttribute('required');
         }
-    });
-
-    // Open modal with donation summary
-    window.openDonationModal = function () {
-        const name = document.getElementById('donorName').value;
-        const amount = donationAmount.value === 'custom' ? customAmount.value : donationAmount.value;
-
-        if (!name || !amount || isNaN(amount) || amount <= 0) {
-            alert('Please provide valid details and donation amount.');
-            return;
-        }
-
-        donationSummary.textContent = `Thank you, ${name}! You are about to donate UGX ${amount}.`;
-        donationModal.style.display = 'block';
-    };
-
-    // Close modal
-    window.closeDonationModal = function () {
-        donationModal.style.display = 'none';
-    };
-
-    // Submit form
-    window.submitDonationForm = function () {
-        donationModal.style.display = 'none';
-        document.getElementById('donationForm').submit();
-    };
-});
-
-</script>
-
-
-<script>
-    // Add click event to toggle the dropdown
-document.querySelectorAll('.nav-link-dropdown-toggle').forEach((dropdownToggle) => {
-    dropdownToggle.addEventListener('click', (event) => {
-        event.preventDefault();
-
-        // Get the corresponding dropdown menu
-        const dropdownMenu = dropdownToggle.nextElementSibling;
-
-        // Toggle display of the dropdown menu
-        const isVisible = dropdownMenu.style.display === 'block';
-        dropdownMenu.style.display = isVisible ? 'none' : 'block';
-
-        // Close other dropdowns (optional)
-        document.querySelectorAll('.dropdown-menu').forEach((menu) => {
-            if (menu !== dropdownMenu) {
-                menu.style.display = 'none';
-            }
-        });
-    });
-});
-
-// Optional: Close dropdowns when clicking outside
-document.addEventListener('click', (event) => {
-    if (!event.target.closest('.nav-item-dropdown')) {
-        document.querySelectorAll('.dropdown-menu').forEach((menu) => {
-            menu.style.display = 'none';
-        });
-    }
-});
-
-</script>
-
-
-
+    </script>
 </body>
-
 </html>

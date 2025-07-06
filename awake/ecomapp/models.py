@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.urls import reverse
 
+from .utils import extract_text_from_file
 
 
 
@@ -26,14 +27,13 @@ class Category(models.Model):
     def __str__(self):
         return self.cat_name
     
-
 class Product(models.Model):
     category = models.ForeignKey(Category, related_name='product', on_delete=models.CASCADE)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL,  on_delete=models.CASCADE, related_name='product_creator')
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='product_creator')
     title = models.CharField(max_length=255)
     author = models.CharField(max_length=255, default='admin')
     description = models.TextField(blank=True, null=True)
-    product_image = models.ImageField(upload_to='product_images/', default='product_images/p2.jpg') 
+    product_image = models.ImageField(upload_to='product_images/', default='product_images/p2.jpg')
     product_slug = models.CharField(max_length=255)
     product_price = models.DecimalField(max_digits=30, decimal_places=0)
     qty_in_stock = models.DecimalField(max_digits=20, decimal_places=0, default='0')
@@ -49,7 +49,11 @@ class Product(models.Model):
         verbose_name_plural = 'products'
         ordering = ('-created',)
 
-    # dynamic way of linking products to the url on the front end
+    def save(self, *args, **kwargs):
+        # Automatically update in_stock status
+        self.in_stock = self.qty_in_stock > 0
+        super().save(*args, **kwargs)
+
     def get_absolute_url(self):
         return reverse('sales:product_detail', args=[self.product_slug])
 
@@ -61,9 +65,7 @@ class Product(models.Model):
 class BookOrder(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
-        ('ready', 'Ready for Pickup'),
         ('collected', 'Collected'),
-        ('cancelled', 'Cancelled'),
     ]
 
     full_name = models.CharField(max_length=255)  # updated from `name`
@@ -87,10 +89,13 @@ class BookOrderItem(models.Model):
     order = models.ForeignKey(BookOrder, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
     quantity = models.PositiveIntegerField(default=1)
-    price = models.DecimalField(max_digits=30, decimal_places=0)
+    price = models.DecimalField(max_digits=30, decimal_places=0, default=0)
 
     def get_total(self):
+        if self.price is None or self.quantity is None:
+            return 0
         return self.quantity * self.price
+
 
     def __str__(self):
         return f"{self.quantity} x {self.product.title}"
@@ -121,20 +126,46 @@ class BookReview(models.Model):
 # MEDIA CONTENT (Audio/Video)
 # -----------------------------
 
+
 class MediaContent(models.Model):
     MEDIA_TYPES = [
         ('audio', 'Audio'),
         ('video', 'Video'),
+        ('text', 'Text'),
     ]
 
     title = models.CharField(max_length=255)
     media_type = models.CharField(max_length=10, choices=MEDIA_TYPES)
-    file_url = models.URLField()
+    file = models.FileField(upload_to='media_files/', blank=True, null=True)
+    text_body = models.TextField(blank=True, null=True)
     thumbnail = models.ImageField(upload_to='media_thumbnails/', blank=True, null=True)
+    preacher = models.CharField(max_length=255, blank=True)
+    scripture = models.CharField(max_length=255, blank=True)
+    description = models.TextField(blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if self.media_type == 'text' and self.file and not self.text_body:
+            try:
+                self.text_body = extract_text_from_file(self.file.path)
+            except Exception as e:
+                print(f"Text extraction failed: {e}")
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.media_type.upper()}: {self.title}"
+
+    def get_file_url(self):
+        return self.file.url if self.file else ""
+
+    def get_thumbnail_url(self):
+        return self.thumbnail.url if self.thumbnail else ""
+
+    def get_excerpt(self, words=30):
+        if self.media_type == 'text' and self.text_body:
+            return ' '.join(self.text_body.split()[:words]) + '...'
+        return ""
+
 
 class MediaComment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -143,4 +174,12 @@ class MediaComment(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.name} on {self.media.title}"
+        return f"{self.user.get_full_name() or self.user.first_name } on {self.media.title}"
+
+    def as_dict(self):
+        return {
+            "username": self.user.get_full_name() or self.user.first_name,
+            "text": self.comment,
+            "timestamp": self.timestamp.strftime("%b %d, %Y"),
+        }
+

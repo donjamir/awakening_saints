@@ -75,7 +75,7 @@
 
                 <!-- Email -->
                 <div class="mb-3 col-md-6">
-                    <label class="form-label">Email address</label>
+                    <label class="form-label">Email ( Enter email used on registration )</label>
                     <input type="email" class="form-control"
                            x-model="form.email"
                            @input="validateField('email')"
@@ -92,6 +92,8 @@
                            :class="{'is-invalid': errors.phone}">
                     <div class="invalid-feedback" x-show="errors.phone" x-text="errors.phone"></div>
                 </div>
+
+               
             </div>
         </form>
     </div>

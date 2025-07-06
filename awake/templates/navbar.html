@@ -1,13 +1,10 @@
-{% load static %}
-
-
 
 {% load static %}
 
   <header id="site-header" class="fixed-top">
     <div class="container">
       <nav class="navbar navbar-expand-lg stroke">
-        <h1><a class="navbar-brand mr-lg-5" href="index.html">
+        <h1><a class="navbar-brand mr-lg-5" href="{% url 'sales:homeone' %}">
         <img src="{% static 'assets/images/logo.png' %}" alt="image" style="height: 55px; width: 55px;">
             Awakening<span>Saints</span>
           </a></h1>
@@ -49,18 +46,27 @@
             <a class="nav-link dropdown-toggle" href="#" id="navbarMoreDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               More
             </a>
-            <ul class="dropdown-menu" aria-labelledby="navbarMoreDropdown">
+          <ul class="dropdown-menu" aria-labelledby="navbarMoreDropdown">
+
               <li><a class="dropdown-item" href="{% url 'sales:donate' %}">Donate</a></li>
               <li><a class="dropdown-item" href="{% url 'sales:orphans' %}">Orphans</a></li>
-              <li><a class="dropdown-item" href="videos.html">Videos</a></li>
-              <li><a class="dropdown-item" href="{% url 'accounts:login' %}">Login</a></li>
-              <li><a class="dropdown-item" href="{% url 'cart:track' %}">Tracking</a></li>
-              <li><a class="dropdown-item" href="{% url 'cart:confirm' %}">Confirmation</a></li>
-              <!-- <li><a class="dropdown-item" href="#">Dashboard</a></li>
-              <li><a class="dropdown-item" href="#">Logout</a></li>
-              <li><a class="dropdown-item" href="#">Sign Up</a></li>
-              <li><a class="dropdown-item" href="#">Login</a></li> -->
+              <li><a class="dropdown-item" href="{% url 'sales:media' %}">Sermons</a></li>
+            
+
+              {% if user.is_authenticated %}
+                <li class="border-top">
+                  <a class="dropdown-item" href="{% url 'accounts:dashboard' %}">
+                    <i class="far fa-user"></i> {{ user.first_name }} {{ user.last_name }}
+                  </a>
+                </li>
+                <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">Logout</a></li>
+              {% else %}
+                <li><a class="dropdown-item" href="{% url 'accounts:login' %}">Login</a></li>
+                <li><a class="dropdown-item" href="{% url 'accounts:registration' %}">Sign Up</a></li>
+              {% endif %}
+
             </ul>
+
           </li>
 
           </ul>

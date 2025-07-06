@@ -4711,7 +4711,7 @@ label {
 .login_box_area .login_box_img {
   margin-right: -30px;
   position: relative; 
-  width: 455px;
+  width: 355px;
   border-radius: 10px;
 }
   .login_box_area .login_box_img img {
@@ -4751,14 +4751,14 @@ label {
   box-shadow: 0px 10px 30px 0px rgba(0, 0, 0, 0.07);
   height: 100%;
   text-align: center;
-  padding-top: 115px; }
+  padding-top: 15px; }
   .login_form_inner h3 {
     color: #222222;
     text-transform: uppercase;
     font-size: 18px;
     margin-bottom: 30px; }
   .login_form_inner .login_form {
-    max-width: 385px;
+    max-width: 345px;
     margin: auto; }
   .login_form_inner.reg_form {
     padding-top: 60px; }

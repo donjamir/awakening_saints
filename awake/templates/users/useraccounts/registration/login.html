@@ -27,34 +27,33 @@
 				<div class="col-lg-6">
 					<div class="login_form_inner">
 						<h3>Log in to enter</h3>
-						<form class="row login_form" action="{% url 'accounts:login' %}" method="post" id="contactForm">
+						<form class="row login_form" action="" method="post" id="contactForm">
 							{% csrf_token %}
 
 							{% if form.errors %}
-							<div class="alert alert-primary" role="alert">
-								Error: Email or Password is invalid !
-							</div>
+								<div class="alert alert-danger" role="alert">
+									Error: Email or Password is invalid!
+								</div>
 							{% endif %}
 
 							<div class="col-md-12 form-group">
-								<input type="email" class="form-control" id="name" name="email" placeholder="Email" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Username'" required>
+								<input type="email" class="form-control" id="email" name="email" placeholder="Email"
+									onfocus="this.placeholder = ''" onblur="this.placeholder = 'Email'" required>
 							</div>
 							<div class="col-md-12 form-group">
-								<input type="password" class="form-control" id="name" name="Password" placeholder="Password" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Password'" required>
+								<input type="password" class="form-control" id="password" name="password" placeholder="Password"
+									onfocus="this.placeholder = ''" onblur="this.placeholder = 'Password'" required>
 							</div>
-							<!-- <div class="col-md-12 form-group">
-								<div class="creat_account">
-									<input type="checkbox" id="f-option2" name="selector">
-									<label for="f-option2">Keep me logged in</label>
-								</div>
-							</div> -->
+
 							<div class="col-md-12 form-group">
 								<button type="submit" value="submit" class="primary-btn">Log In</button>
+								
 								<a href="#">Forgot Password?</a>
 							</div>
 						</form>
 					</div>
 				</div>
+
 
 				<div class="col-lg-6">
 					<div class="login_box_img">
@@ -66,8 +65,8 @@
 							<p>Feel free to logout at anytime !</p>
 								<a class="primary-btn" href="{% url 'accounts:logout' %}">Logout</a>
 							{% else %}
-							<h4>New to our website?</h4>
-							<p>There are advances being made in science and technology everyday, and a good example of this is the</p>
+							<h4>Create Account</h4>
+							<p> This helps you keep track of the transactions and orders you have carried out with the site. </p>
 								<a class="primary-btn" href="{% url 'accounts:registration' %}">Create an Account</a>
 							{% endif %}
 						</div>

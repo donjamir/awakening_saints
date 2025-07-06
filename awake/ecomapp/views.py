@@ -7,6 +7,12 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 import json
+from django.contrib.auth.decorators import login_required
+from django.core.serializers.json import DjangoJSONEncoder
+from django.utils import timezone
+
+from .utils import get_media_duration  # if using separate utils file
+
 
 
 
@@ -28,11 +34,104 @@ def donate(request):
 def orphans(request):
     return render(request, 'site/organisation.html')
 
-def media(request):
-    return render(request, 'site/media.html')
-
 def books(request):
     return render(request, 'site/books.html')
+
+
+
+
+
+def media(request):
+    media_items = MediaContent.objects.all()
+
+    def serialize(media):
+        duration = "00:00"
+        if media.media_type in ['audio', 'video'] and media.file:
+            try:
+                file_path = media.file.path
+                duration = get_media_duration(file_path, media.media_type)
+            except Exception:
+                duration = "00:00"
+
+        text_body = media.text_body or ""
+        pages = text_body.split('\n\n') if '\n\n' in text_body else [text_body] if text_body else []
+
+        return {
+            "id": media.id,
+            "type": media.media_type,
+            "title": media.title,
+            "artist": media.preacher or "Uploaded by Admin",
+            "duration": duration,
+            "date": media.uploaded_at.strftime('%b %d, %Y'),
+            "description": media.description or "No description yet.",
+            "scripture": media.scripture or "",
+            "src": media.get_file_url(),
+            "thumbnail": media.get_thumbnail_url(),
+            "excerpt": media.get_excerpt(),
+            "text_body": text_body,
+            "expanded": False,
+            "currentPage": 0,
+            "pages": pages,
+            "comments": [
+                {
+                    "username": comment.user.first_name or comment.user.last_name,
+                    "text": comment.comment,
+                    "timestamp": comment.timestamp.strftime('%b %d, %Y'),
+                }
+                for comment in media.comments.all().order_by('-timestamp')
+            ],
+        }
+
+    audios = [serialize(m) for m in media_items.filter(media_type='audio')]
+    videos = [serialize(m) for m in media_items.filter(media_type='video')]
+    texts = [serialize(m) for m in media_items.filter(media_type='text')]
+
+    context = {
+        'audio_json': json.dumps(audios, cls=DjangoJSONEncoder),
+        'video_json': json.dumps(videos, cls=DjangoJSONEncoder),
+        'text_json': json.dumps(texts, cls=DjangoJSONEncoder),
+    }
+
+    return render(request, 'site/media.html', context)
+
+
+
+@csrf_exempt  # Optional if you're passing CSRF tokens via JS
+@login_required
+def add_comment(request):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        media_id = data.get('media_id')
+        comment_text = data.get('comment')
+
+        if not media_id or not comment_text.strip():
+            return JsonResponse({'status': 'error', 'message': 'Missing comment or media ID'}, status=400)
+
+        media = MediaContent.objects.get(id=media_id)
+        comment = MediaComment.objects.create(
+            user=request.user,
+            media=media,
+            comment=comment_text.strip(),
+            timestamp=timezone.now()
+        )
+
+        return JsonResponse({
+            'status': 'ok',
+            'comment': {
+                'username': request.user.first_name or request.user.last_name,
+                'text': comment.comment,
+                'timestamp': 'Just now'
+            }
+        })
+
+    except MediaContent.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Media not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
 
 
 def index(request, cat_slug=None):
@@ -43,21 +142,23 @@ def index(request, cat_slug=None):
         products = Product.products.all()
 
     product_data = [{
-            "id": p.id,
-            "title": p.title,
-            "author": p.author,
-            "price": float(p.product_price),
-            "image": p.product_image.url if p.product_image else '',
-            "category_name": p.category.cat_name,
-            "category_slug": p.category.cat_slug,  # Add slug here
-            "rating": 4.5,  # placeholder
-            "slug": p.product_slug,
-        } for p in products]
+        "id": p.id,
+        "title": p.title,
+        "author": p.author,
+        "price": float(p.product_price),
+        "image": p.product_image.url if p.product_image else '',
+        "category_name": p.category.cat_name,
+        "category_slug": p.category.cat_slug,
+        "rating": 4.5,  # placeholder
+        "slug": p.product_slug,
+    } for p in products]
 
     categories = Category.objects.all()
     category_data = [{"name": cat.cat_name, "slug": cat.cat_slug} for cat in categories]
 
     context = {
+        "slider": products,
+        "products": products,  # Add this for Jinja2 rendering
         "products_json": json.dumps(product_data),
         "categories_json": json.dumps(category_data),
     }

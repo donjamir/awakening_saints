@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import *
 from .basket import cartbasket
 from django.http import JsonResponse
 from ecomapp.models import *
@@ -6,6 +6,11 @@ import json
 from django.core.serializers.json import DjangoJSONEncoder
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+
+from django.contrib import messages
+from django.utils import timezone
+
 
 
 # Show cart page
@@ -85,29 +90,73 @@ def cart_delete(request):
 # def checkout(request):
 #     return render(request, 'cart/basketapp/checkout.html')
 
+
+@login_required
 def checkout_view(request):
-    basket = cartbasket(request)  # ⬅ Creates the basket object
-
+    basket = cartbasket(request)
     cart_items = []
+    insufficient_stock = []
 
-    for item in basket:  # ⬅ This uses __iter__(), which injects 'product'
+    for item in basket:
         product = item.get('product')
         if product is None:
             continue
+
+        quantity = item['qty']
+
+        if product.qty_in_stock < quantity:
+            insufficient_stock.append(product.title)
 
         cart_items.append({
             'id': product.id,
             'name': product.title,
             'price': float(item['price']),
-            'qty': item['qty']
+            'qty': quantity
         })
+
+    # If any items are out of stock or insufficient
+    if insufficient_stock:
+        messages.error(request, f"Insufficient stock for: {', '.join(insufficient_stock)}.")
+        return redirect('sales:cart')  # Adjust to your actual cart view name
+
+    # If it's a POST (e.g., after user confirms)
+    if request.method == 'POST':
+        # Create order
+        order = BookOrder.objects.create(
+            full_name=request.POST.get('full_name', request.user.get_full_name()),
+            phone=request.POST.get('phone', ''),
+            email=request.POST.get('email', ''),
+            tx_ref=request.POST.get('tx_ref', f"TX-{timezone.now().timestamp()}"),
+            total=sum(item['price'] * item['qty'] for item in cart_items)
+        )
+
+        # Create order items and reduce stock
+        for item in cart_items:
+            product = Product.objects.get(id=item['id'])
+
+            # Create order item
+            BookOrderItem.objects.create(
+                order=order,
+                product=product,
+                quantity=item['qty'],
+                price=item['price']
+            )
+
+            # Update stock
+            product.qty_in_stock -= item['qty']
+            if product.qty_in_stock < 0:
+                product.qty_in_stock = 0
+            product.save()
+
+        basket.clear()  # clear the cart
+        messages.success(request, "Order placed successfully.")
+        return redirect('sales:order_success')  # Adjust to your success view
 
     cart_json = json.dumps(cart_items, cls=DjangoJSONEncoder)
 
     return render(request, 'cart/basketapp/checkout.html', {
         'cart_json': cart_json
     })
-
 
 
 
