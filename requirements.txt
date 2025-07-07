@@ -23,6 +23,7 @@ click
 click-didyoumean
 click-plugins
 click-repl
+cobble
 colorama
 coverage
 crispy-bootstrap5
@@ -115,6 +116,8 @@ jwcrypto
 kombu
 lockfile
 loguru
+lxml
+mammoth
 maxminddb
 mccabe
 moviepy
@@ -139,6 +142,7 @@ pycodestyle
 pycparser
 pydyf
 pyflakes
+Pygments
 PyJWT
 PyPDF2
 pyphen
@@ -150,7 +154,9 @@ pytest-django
 python-crontab
 python-dateutil
 python-decouple
+python-docx
 python-dotenv
+python-magic
 pytz
 PyYAML
 qrcode
