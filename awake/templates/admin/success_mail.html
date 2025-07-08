@@ -1,9 +1,10 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Activation Required</title>
+    <title>Admin</title>
     <!-- Favicon-->
 	<link rel="shortcut icon" type="image/jpg" href="{% static 'assets/images/logo.jpg' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -274,65 +275,43 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Activate Your Account</h1>
-            <p>We've sent an activation link to your email address</p>
-        </div>
-        
-        <div class="content">
-            <div class="icon-container">
-                <i class="fas fa-envelope-open-text"></i>
+
+
+        <div class="container">
+            <div class="header">
+                <h1>Admin Successfully Sent Mails</h1>
+                <p>Your message has been delivered to all subscribed members.</p>
             </div>
             
-            <div class="message">
-                <h2>Check Your Inbox</h2>
-                <p>To activate your account and start using our services, please check your email inbox for the activation link we've just sent you.</p>
+            <div class="content">
+                <div class="icon-container">
+                    <i class="fas fa-check-circle" style="color: green; font-size: 3rem;"></i>
+                </div>
+                
+                <div class="message">
+                    <h2>All Emails Sent!</h2>
+                    <p>Thank you for sharing your message. All subscribers have received your communication. You can view sent messages or send a new one anytime from the admin panel.</p>
+                </div>
+                
+                <div class="steps">
+                    <!-- You can add optional next actions or links here -->
+                </div>
+                
+                <!-- Optional future actions -->
+                <!-- 
+                <div class="actions">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-envelope"></i> Send Another Message
+                    </button>
+                </div>
+                -->
+                
             </div>
             
-            <div class="steps">
-        
+            <div class="footer">
+                <p>© 2017 Kireka Christian Fellowship Prayer Altar. All rights reserved.</p>
             </div>
-            
-            <!-- <div class="actions">
-                <button class="btn btn-primary">
-                    <i class="fas fa-paper-plane"></i> Resend Activation Email
-                </button>
-            </div> -->
-            
-            <!-- <div class="countdown">
-                Didn't receive the email? You can resend in <span id="timer">03:00</span>
-            </div> -->
-            
         </div>
-        
-        <div class="footer">
-            <p>© 2017 Kireka Christian Fellowship Prayer Altar . All rights reserved.</p>
-           
-        </div>
-    </div>
-
-
-
-
-
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-	<script>
-	emailjs.init("s48BMsVC2VrWDiqT4");  // Replace with your EmailJS public key
-
-	window.onload = function() {
-		emailjs.send("Rgteyue_vu1ifeb", "template_w67bncx", {
-		user_email: "{{ user.email }}",
-		activation_link: "{{ activation_link }}"
-		}).then(function(response) {
-		// alert("Activation email sent! Please check your inbox.");
-		// window.location.href = "{% url 'accounts:login' %}";
-		}, function(error) {
-		// alert("Failed to send activation email. Try again.");
-		console.error(error);
-		});
-	}
-	</script>
 
     
     <script>

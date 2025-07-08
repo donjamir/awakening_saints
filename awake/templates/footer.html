@@ -31,13 +31,14 @@
           <ul>
            
           </ul>
-              <ul>
+             <ul>
                 <h6 class="footer-title-29">Useful Links</h6>
-                <li><a href="services.php">Services</a></li>
-                <li><a href="about.php#ourteam">Our Team</a></li>
-                <li><a href= "books.php#trending">Trending Posts</a></li>
-                <li><a href="contact.php#address">Address</a></li>
-                <li><a href="register.php">Become a member</a></li>
+                 <li><a href="{% url 'sales:homeone' %}">Home</a></li>
+                <li><a href="{% url 'sales:services' %}">Services</a></li>
+                <li><a href="{% url 'sales:about' %}">About us</a></li>
+                <li><a href= "{% url 'sales:books' %}">Books</a></li>
+                <li><a href="{% url 'sales:contact' %}">Contact Us</a></li>
+               
               </ul>
           </div>
   

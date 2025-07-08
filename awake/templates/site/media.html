@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Responsive Media Gallery</title>
+    <!-- Favicon-->
+	<link rel="shortcut icon" type="image/jpg" href="{% static 'assets/images/logo.jpg' %}">
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -375,7 +377,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
         }
         
         .video-overlay {
@@ -387,9 +389,43 @@
             padding: 16px;
             z-index: 10;
         }
+
+        	.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.spinner {
+  border: 6px solid #ddd;
+  border-top: 6px solid #007bff; /* change color if needed */
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
     </style>
 </head>
 <body>
+
+    <div id="loader" class="fixed inset-0 bg-white/70 z-50 flex items-center justify-center hidden">
+        <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+
 
    <header id="site-header" class="fixed top-0 w-full bg-white text-black shadow z-50">
         <div class="container mx-auto px-4">
@@ -609,21 +645,25 @@
 
                         <div class="mb-5">
                              <!-- Media Info -->
-                        <div class="bg-gray-300 rounded-lg p-4 mb-6">
-                            <!-- Meta Information -->
-                            <div class="sermon-meta text-sm text-gray-600 mb-1">
-                                <span> Preacher: <strong x-text="currentMedia.artist || currentMedia.preacher || 'Unknown'"></strong></span>
-                                <span class="ml-4" x-text="currentMedia.date"></span>
+                            <div class="bg-gray-300 rounded-lg p-4 mb-6">
+                                <!-- Meta Information -->
+                                <div class="sermon-meta text-sm text-gray-600 mb-1 flex flex-wrap gap-x-4 gap-y-1">
+                                    <span>
+                                    Preacher: <strong x-text="currentMedia.artist || currentMedia.preacher || 'Unknown'"></strong>
+                                    </span>
+                                    <span x-text="currentMedia.date"></span>
+                                </div>
+
+                                <!-- Scripture reference -->
+                                <div class="scripture-reference italic text-sm text-blue-700 mb-4 break-words whitespace-normal" x-text="currentMedia.scripture"></div>
+
+                                <h4 class="font-semibold text-black mb-2 flex items-center">
+                                    <i class="fas fa-info-circle mr-2"></i> Verse
+                                </h4>
+
+                                <p class="text-black text-sm break-words whitespace-normal" x-text="currentMedia.description"></p>
                             </div>
 
-                            <!-- Scripture reference -->
-                            <div class="scripture-reference italic text-sm text-blue-700 mb-4" x-text="currentMedia.scripture"></div>
-
-                            <h4 class="font-semibold text-black mb-2 flex items-center">
-                                <i class="fas fa-info-circle mr-2"></i> Verse
-                            </h4>
-                            <p class="text-black text-sm" x-text="currentMedia.description"></p>
-                        </div>
                             <!-- Audio Player -->
                             <template x-if="currentMedia.type === 'audio'">
                                 <div class="audio-player p-4 sm:p-5 rounded-xl">
@@ -683,7 +723,7 @@
                             <template x-if="currentMedia.type === 'video'">
                                 <div>
                                     <div class="video-player-container rounded-xl overflow-hidden bg-black">
-                                        <video 
+                                        <video
                                             x-ref="videoPlayer"
                                             :src="currentMedia.src"
                                             @timeupdate="updateVideoProgress"
@@ -782,13 +822,14 @@
                                                 <i class="fas fa-user text-gray-400 text-sm"></i>
                                             </div>
                                             <div class="flex-1 min-w-0">
-                                                <div class="flex justify-between items-center mb-1">
-                                                    <span class="font-medium text-black text-sm" x-text="comment.username"></span>
-                                                    <span class="font-medium text-black text-sm" x-text="comment.email"></span>
-                                                    <span class="text-xs text-black" x-text="comment.timestamp"></span>
-                                                </div>
-                                                <p class="text-black text-sm" x-text="comment.text"></p>
+                                            <div class="flex flex-wrap justify-between items-center mb-1 gap-x-4 gap-y-1">
+                                                <span class="font-medium text-black text-sm break-words whitespace-normal" x-text="comment.username"></span>
+                                                <span class="font-medium text-black text-sm break-words whitespace-normal" x-text="comment.email"></span>
+                                                <span class="text-xs text-black break-words whitespace-normal" x-text="comment.timestamp"></span>
                                             </div>
+                                            <p class="text-black text-sm break-words whitespace-normal" x-text="comment.text"></p>
+                                            </div>
+
                                         </div>
                                     </div>
                                 </template>
@@ -829,14 +870,25 @@
     <section class="bg-black text-gray-400">
         <!-- Footer content remains the same -->
     </section>
-    <script>
-    document.addEventListener('alpine:init', () => {
-        Alpine.store('csrf', {
-            token: '{{ csrf_token }}'
-        });
-    });
-</script>
 
+
+
+   
+
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('csrf', {
+                token: '{{ csrf_token }}'
+            });
+        });
+    </script>
+
+    <script>
+        window.addEventListener("load", function() {
+            document.getElementById('loader').style.display = 'none';
+        });
+    </script>
 
     <script>
         function mediaGallery() {

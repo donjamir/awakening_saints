@@ -26,4 +26,7 @@ urlpatterns = [
     path('blog-details/', views.single_blog, name='blog1'),
     path('product-details/<slug:product_slug>/', views.single_product, name='product_detail'),
    
+    path("subscribe/", views.subscribe_email, name="subscribe_email"),
+    path("send-message/<int:message_id>/", views.send_message_to_subscribers, name="send_message_to_subscribers"),
+   
 ]

@@ -127,7 +127,7 @@ class BookReview(models.Model):
 # -----------------------------
 
 
-class MediaContent(models.Model):
+class SermonContent(models.Model):
     MEDIA_TYPES = [
         ('audio', 'Audio'),
         ('video', 'Video'),
@@ -167,9 +167,9 @@ class MediaContent(models.Model):
         return ""
 
 
-class MediaComment(models.Model):
+class SermonComment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    media = models.ForeignKey(MediaContent, on_delete=models.CASCADE, related_name='comments')
+    media = models.ForeignKey(SermonContent, on_delete=models.CASCADE, related_name='comments')
     comment = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
@@ -183,3 +183,21 @@ class MediaComment(models.Model):
             "timestamp": self.timestamp.strftime("%b %d, %Y"),
         }
 
+
+# -----------------------------
+# SUBSCRIPTION MODELS
+# -----------------------------
+class EmailSubscriber(models.Model):
+    email = models.EmailField(unique=True)
+    subscribed_on = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.email
+
+class SubscriberMessage(models.Model):
+    title = models.CharField(max_length=255)
+    body = models.TextField()
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title

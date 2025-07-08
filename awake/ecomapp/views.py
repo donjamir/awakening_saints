@@ -2,6 +2,7 @@ from django.shortcuts import *
 from django.contrib.auth.decorators import login_required
 from .models import *
 from django.views.decorators.http import require_POST
+from django.conf import settings
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -13,6 +14,9 @@ from django.utils import timezone
 
 from .utils import get_media_duration  # if using separate utils file
 
+import requests
+from itertools import islice
+from django.core.mail import send_mass_mail
 
 
 
@@ -42,7 +46,7 @@ def books(request):
 
 
 def media(request):
-    media_items = MediaContent.objects.all()
+    media_items = SermonContent.objects.all()
 
     def serialize(media):
         duration = "00:00"
@@ -110,8 +114,8 @@ def add_comment(request):
         if not media_id or not comment_text.strip():
             return JsonResponse({'status': 'error', 'message': 'Missing comment or media ID'}, status=400)
 
-        media = MediaContent.objects.get(id=media_id)
-        comment = MediaComment.objects.create(
+        media = SermonContent.objects.get(id=media_id)
+        comment = SermonComment.objects.create(
             user=request.user,
             media=media,
             comment=comment_text.strip(),
@@ -127,7 +131,7 @@ def add_comment(request):
             }
         })
 
-    except MediaContent.DoesNotExist:
+    except SermonContent.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Media not found'}, status=404)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
@@ -171,15 +175,6 @@ def single_product(request, product_slug):
     context = {'product':product,  'reviews': reviews,}
     return render(request, 'main/ecomapp/single-product.html', context)
 
-# def shop(request, cat_slug):
-#     category = get_object_or_404(Category, cat_slug = cat_slug)
-#     products = Product.objects.filter(category=category)
-#     context = {
-#       'category':category,
-#       'products':products
-#     }
-#     return render(request, 'main/ecomapp/category.html', context)
-
 
 @csrf_exempt
 @login_required
@@ -214,8 +209,7 @@ def add_review_ajax(request):
             return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
-
-
+@login_required
 def book_preview(request, product_slug):
     product = get_object_or_404(Product, product_slug=product_slug, in_stock=True)
     preview = get_object_or_404(BookPreview, book=product)
@@ -230,8 +224,47 @@ def book_preview(request, product_slug):
 
 
 
+# subscriptions/views.py
 
 
+
+
+
+
+
+
+def send_message_to_subscribers(request, message_id):
+    if not request.user.is_superuser:
+        return HttpResponse("Unauthorized", status=401)
+
+    message = get_object_or_404(SubscriberMessage, id=message_id)
+    subscribers = EmailSubscriber.objects.all()
+
+    subject = message.title
+    body = message.body
+    from_email = settings.DEFAULT_FROM_EMAIL
+
+    messages = [
+        (subject, body, from_email, [sub.email])
+        for sub in subscribers
+    ]
+
+    send_mass_mail(messages, fail_silently=False)
+    return render(request, 'admin/success_mail.html')
+    # return HttpResponse("Emails sent successfully.")
+
+
+
+
+
+@csrf_exempt
+def subscribe_email(request):
+    if request.method == "POST":
+        email = request.POST.get("email")
+        if email:
+            EmailSubscriber.objects.get_or_create(email=email)
+        return HttpResponseRedirect("/?subscribed_successfully=1")
+    return HttpResponseRedirect("/?subscription_not_successfully=0")
 
 
 

@@ -129,13 +129,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-ev28k=ir#vah2v)!-*t65t!+b#j(xnk24fv88!nkoemy)#0ag1'
 
-# DEBUG = True
+DEBUG = True
 
-# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = []
 
-DEBUG = False
+# DEBUG = False
 
-ALLOWED_HOSTS = ['awakeningsaint.org', '*']
+# ALLOWED_HOSTS = ['awakeningsaint.org', '*']
 
 
 INSTALLED_APPS = [
@@ -227,18 +227,18 @@ USE_TZ = True
 
 
 
-# STATIC_URL = 'static/'
-# STATICFILES_DIRS = [ BASE_DIR / 'static' ]
-
-# MEDIA_URL = '/media/'
-# MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
-
 STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') 
 STATICFILES_DIRS = [ BASE_DIR / 'static' ]
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
+# STATIC_URL = 'static/'
+# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') 
+# STATICFILES_DIRS = [ BASE_DIR / 'static' ]
+
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 ######## These tell django about the custom user modal we created ########
@@ -250,5 +250,23 @@ AUTH_USER_MODEL = 'useraccounts.UserBase'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-DEFAULT_FROM_EMAIL = 'noreply@example.com'
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development/testing
+# MAILERSEND_API_TOKEN = "mlsn.8ec1dc93d0be1b6fb7b3f4553217260eb0106aec2c586b7bf55a229a5b457b3d"
+# MAILERSEND_FROM_EMAIL = "noreply@awakeningsaints.org"  # ✅ Must be a full verified email
+# MAILERSEND_FROM_NAME = "Kireka Christian Fellowship Prayer Altar"
+# MAILERSEND_ADMIN_EMAIL = "awakeningsaints1@gmail.com"  # replace with real admin email
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'awakeningsaints.org'              # ✅ from "Outgoing Server"
+EMAIL_PORT = 465                                # ✅ from "SMTP Port"
+EMAIL_USE_SSL = True                            # ✅ because port 465 = SSL
+EMAIL_HOST_USER = 'info@awakeningsaints.org'    # ✅ or use 'noreply@...' if created
+EMAIL_HOST_PASSWORD = 'Christjesus1@!'    # 🔑 this is the password for the mailbox
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+
+
+
+
+

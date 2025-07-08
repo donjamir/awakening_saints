@@ -98,13 +98,38 @@
     <section class="product-tabs">
         <div class="container">
             <div class="tabs-header">
-                
                 <button class="tab-btn" data-tab="reviews">Reviews ( {{reviews.count}} )</button>
             </div>
             
             <div class="tab-content">
     
                 <div id="reviews" class="tab-pane active">
+
+                    <div class="review-form">
+					<h3>Add a Review</h3>
+					<p>Your Rating:</p>
+					<div class="star-rating">
+						<i class="far fa-star" data-rating="1"></i>
+						<i class="far fa-star" data-rating="2"></i>
+						<i class="far fa-star" data-rating="3"></i>
+						<i class="far fa-star" data-rating="4"></i>
+						<i class="far fa-star" data-rating="5"></i>
+					</div>
+
+					<form id="reviewForm">
+						{% csrf_token %}
+						<input type="hidden" name="rating" id="rating" value="0" required>
+						<input type="hidden" name="book_id" value="{{ product.id }}">
+						
+						<div class="form-group">
+							<textarea class="form-control" name="comment" id="comment" placeholder="Your Review" required></textarea>
+						</div>
+						<div class="form-group">
+							<button type="submit" class="submit-btn">Submit Review</button>
+						</div>
+					</form>
+				</div>
+
                     <div class="reviews-container">
                         
 					<div class="review-list">
@@ -197,32 +222,6 @@
                         </div> -->
                     </div>
                     
-                <div class="review-form">
-					<h3>Add a Review</h3>
-					<p>Your Rating:</p>
-					<div class="star-rating">
-						<i class="far fa-star" data-rating="1"></i>
-						<i class="far fa-star" data-rating="2"></i>
-						<i class="far fa-star" data-rating="3"></i>
-						<i class="far fa-star" data-rating="4"></i>
-						<i class="far fa-star" data-rating="5"></i>
-					</div>
-
-					<form id="reviewForm">
-						{% csrf_token %}
-						<input type="hidden" name="rating" id="rating" value="0" required>
-						<input type="hidden" name="book_id" value="{{ product.id }}">
-						
-						<div class="form-group">
-							<textarea class="form-control" name="comment" id="comment" placeholder="Your Review" required></textarea>
-						</div>
-						<div class="form-group">
-							<button type="submit" class="submit-btn">Submit Review</button>
-						</div>
-					</form>
-				</div>
-
-
                 </div>
             </div>
         </div>

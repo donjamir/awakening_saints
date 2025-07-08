@@ -62,7 +62,7 @@ class BookPreviewAdmin(admin.ModelAdmin):
  # custom JS we'll create next
 
 class MediaCommentInline(admin.TabularInline):
-    model = MediaComment
+    model = SermonComment
     extra = 0
     readonly_fields = ('user', 'comment', 'timestamp')
     can_delete = True
@@ -70,14 +70,14 @@ class MediaCommentInline(admin.TabularInline):
 
 class MediaContentAdminForm(forms.ModelForm):
     class Meta:
-        model = MediaContent
+        model = SermonContent
         fields = '__all__'
 
     class Media:
         js = ('admin/js/media_toggle.js',)  # See JS file below
 
 
-@admin.register(MediaContent)
+@admin.register(SermonContent)
 class MediaContentAdmin(admin.ModelAdmin):
     form = MediaContentAdminForm
     inlines = [MediaCommentInline]
@@ -157,5 +157,26 @@ class BookOrderAdmin(admin.ModelAdmin):
 #     def get_total(self, obj):
 #         return obj.get_total()
 #     get_total.short_description = "Total"
+
+
+
+
+@admin.register(EmailSubscriber)
+class EmailSubscriberAdmin(admin.ModelAdmin):
+    list_display = ['email', 'subscribed_on']
+    search_fields = ['email']
+
+@admin.register(SubscriberMessage)
+class SubscriberMessageAdmin(admin.ModelAdmin):
+    list_display = ['title', 'sent_at', 'send_to_all']
+    readonly_fields = ['sent_at']
+
+    def send_to_all(self, obj):
+        return format_html(
+            '<a class="button" href="/send-message/{}/">Send</a>', obj.id
+        )
+    send_to_all.short_description = 'Send Action'
+
+
 
 

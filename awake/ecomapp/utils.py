@@ -2,14 +2,8 @@ import os, mammoth
 from mutagen import File as MutagenFile
 from moviepy import VideoFileClip
 
-
-
 # from PyPDF2 import PdfReader
 from docx import Document
-
-
-
-
 
 
 def get_media_duration(file_path, media_type):
@@ -30,8 +24,6 @@ def format_duration(seconds):
     minutes = int(seconds // 60)
     secs = int(seconds % 60)
     return f"{minutes}:{secs:02d}"
-
-
 
 
 

@@ -16,8 +16,8 @@ class UserLoginForm(forms.Form):
     )
 
 class RegistartionForm(forms.ModelForm):
-    first_name = forms.CharField(label='First name', min_length=4, max_length=50, help_text='Required')
-    last_name = forms.CharField(label='last name', min_length=4, max_length=50, help_text='Required')
+    first_name = forms.CharField(label='First name', min_length=2, max_length=50, help_text='Required')
+    last_name = forms.CharField(label='last name', min_length=2, max_length=50, help_text='Required')
     email = forms.EmailField(max_length=100, help_text='Required', error_messages={'required':'Please enter a valid email address'})
     password = forms.CharField(label='Password', widget=forms.PasswordInput)
     password2 = forms.CharField(label='Confirm password', widget=forms.PasswordInput)
