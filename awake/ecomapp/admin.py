@@ -4,11 +4,11 @@ from django import forms
 from django.utils.safestring import mark_safe
 
 from django.utils.html import format_html
-@admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('cat_name','cat_slug')
-    prepopulated_fields = {'cat_slug': ('cat_name',)}
-    search_fields = ('cat_name',)
+# @admin.register(Category)
+# class CategoryAdmin(admin.ModelAdmin):
+#     list_display = ('cat_name','cat_slug')
+#     prepopulated_fields = {'cat_slug': ('cat_name',)}
+#     search_fields = ('cat_name',)
 
 
 
