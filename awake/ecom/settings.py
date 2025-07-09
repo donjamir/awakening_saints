@@ -195,12 +195,13 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'awakzfip_awake',
-        'USER': 'awakzfip_desta_spare_user',
-        'PASSWORD': 'your_db_password',
-        'HOST': 'localhost',  # usually localhost on Namecheap shared hosting
+        'USER': 'awakzfip_kal',
+        'PASSWORD': 'jamir1.022',  # the password you set in cPanel
+        'HOST': 'localhost',              # or the full domain if remote
         'PORT': '3306',
     }
 }
+
 
 
 
