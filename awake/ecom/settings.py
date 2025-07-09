@@ -124,7 +124,7 @@
 from pathlib import Path
 import os
 
-import pymysql     # This should be installed dependency on namecheap's ssh terminal.
+import pymysql     # This should be installed dependency on namecheap's ssh terminal
 pymysql.install_as_MySQLdb()   
 
 
