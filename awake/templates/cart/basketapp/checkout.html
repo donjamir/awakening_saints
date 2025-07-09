@@ -53,10 +53,7 @@
             <div class="billing_details">
                 <div class="row">
 <!-- <div class="row" x-data="checkoutForm({{ cart_json|safe }})" x-init="init()" id="checkout-component"> -->
-<div class="row" 
-     x-data="checkoutForm(JSON.parse('{{ cart_json|escapejs }}'))" 
-     x-init="init()" 
-     id="checkout-component">
+<div class="row" x-data="checkoutForm(JSON.parse('{{ cart_json|escapejs }}'))" x-init="init()" id="checkout-component">
 
     <!-- Checkout form section -->
     <div class="col-lg-8">
@@ -66,9 +63,7 @@
                 <!-- Full Name -->
                 <div class="mb-3 col-md-6">
                     <label class="form-label">Full Name</label>
-                    <input type="text" class="form-control"
-                           x-model="form.fullName"
-                           @input="validateField('fullName')"
+                    <input type="text" class="form-control" x-model="form.fullName" @input="validateField('fullName')"
                            :class="{'is-invalid': errors.fullName}">
                     <div class="invalid-feedback" x-show="errors.fullName" x-text="errors.fullName"></div>
                 </div>
@@ -121,9 +116,7 @@
             </div>
 
             <!-- Confirm & Pay button triggers the custom event -->
-            <button type="button"
-                    class="btn btn-success w-100 py-3 mt-3"
-                    @click="document.getElementById('checkout-component').dispatchEvent(new CustomEvent('trigger-submit'))">
+            <button type="button" class="btn btn-success w-100 py-3 mt-3" @click="document.getElementById('checkout-component').dispatchEvent(new CustomEvent('trigger-submit'))">
                 <i class="fas fa-lock me-2"></i> Confirm & Pay
             </button>
 
