@@ -129,13 +129,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-ev28k=ir#vah2v)!-*t65t!+b#j(xnk24fv88!nkoemy)#0ag1'
 
-DEBUG = True
+# DEBUG = True
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
 
-# DEBUG = False
+DEBUG = False
 
-# ALLOWED_HOSTS = ['awakeningsaint.org', '*']
+ALLOWED_HOSTS = ['awakeningsaint.org', '*']
 
 
 INSTALLED_APPS = [
@@ -193,10 +193,24 @@ WSGI_APPLICATION = 'ecom.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'awakzfip_awake',
+        'USER': 'awakzfip_desta_spare_user',
+        'PASSWORD': 'your_db_password',
+        'HOST': 'localhost',  # usually localhost on Namecheap shared hosting
+        'PORT': '3306',
     }
 }
+
+
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 
 
