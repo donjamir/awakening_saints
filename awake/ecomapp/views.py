@@ -209,7 +209,7 @@ def add_review_ajax(request):
             return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
-@login_required
+
 def book_preview(request, product_slug):
     product = get_object_or_404(Product, product_slug=product_slug, in_stock=True)
     preview = get_object_or_404(BookPreview, book=product)
