@@ -162,7 +162,7 @@
             <h4 class="my-2">Receive Updates on Upcoming Services and Events</h4>
           </div>
 
-          <form action="/subscribe/" method="post" class="subscribe-wthree pt-lg-3 mt-4">
+          <form action="{% url 'sales:subscribe_email' %}" method="post" class="subscribe-wthree pt-lg-3 mt-4">
             {% csrf_token %}
             <div class="flex-wrap subscribe-wthree-field">
               <input class="form-control" type="email" name="email" placeholder="Enter your email..." required>
