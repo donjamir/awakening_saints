@@ -269,11 +269,10 @@ AUTH_USER_MODEL = 'useraccounts.UserBase'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# MAILERSEND_API_TOKEN = "mlsn.8ec1dc93d0be1b6fb7b3f4553217260eb0106aec2c586b7bf55a229a5b457b3d"
-# MAILERSEND_FROM_EMAIL = "noreply@awakeningsaints.org"  # ✅ Must be a full verified email
-# MAILERSEND_FROM_NAME = "Kireka Christian Fellowship Prayer Altar"
-# MAILERSEND_ADMIN_EMAIL = "awakeningsaints1@gmail.com"  # replace with real admin email
 
+
+
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'awakeningsaints.org'              # ✅ from "Outgoing Server"

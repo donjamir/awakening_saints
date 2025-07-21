@@ -35,7 +35,7 @@ class Product(models.Model):
     description = models.TextField(blank=True, null=True)
     product_image = models.ImageField(upload_to='product_images/', default='product_images/p2.jpg')
     product_slug = models.CharField(max_length=255)
-    product_price = models.DecimalField(max_digits=30, decimal_places=0)
+    product_price = models.DecimalField(max_digits=30, decimal_places=2)
     qty_in_stock = models.DecimalField(max_digits=20, decimal_places=0, default='0')
     in_stock = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)

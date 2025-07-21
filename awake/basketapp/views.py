@@ -14,6 +14,7 @@ from django.utils import timezone
 
 
 # Show cart page
+@login_required
 def basket_summary(request):
     cart = cartbasket(request)
     return render(request, 'cart/basketapp/cart.html', {'cart': cart})

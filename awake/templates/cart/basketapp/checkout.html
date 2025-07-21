@@ -101,18 +101,18 @@
             <template x-for="(item, index) in cart" :key="index">
                 <div class="summary-item">
                     <span x-text="item.name + ' (' + item.qty + ')'"></span>
-                    <span>UGX<span x-text="(item.qty * item.price).toFixed(0)"></span></span>
+                    <span>USD<span x-text="(item.qty * item.price).toFixed(2)"></span></span>
                 </div>
             </template>
 
             <div class="summary-item">
                 <span>Subtotal:</span>
-                <span>UGX<span x-text="subtotal.toFixed(0)"></span></span>
+                <span>USD<span x-text="subtotal.toFixed(2)"></span></span>
             </div>
 
             <div class="summary-item total-row">
                 <span>Total:</span>
-                <span>UGX<span x-text="subtotal.toFixed(0)"></span></span>
+                <span>USD<span x-text="subtotal.toFixed(2)"></span></span>
             </div>
 
             <!-- Confirm & Pay button triggers the custom event -->
@@ -148,7 +148,7 @@ function checkoutForm(cartFromServer = []) {
         },
         errors: {},
         cart: cartFromServer,
-        shippingOption: 5000,
+        shippingOption: 0,
         discount: 0,
         loading: false, // Prevent double submit
         _handler: null,  // To store the bound event listener
@@ -194,7 +194,7 @@ function checkoutForm(cartFromServer = []) {
             this.loading = true;
 
             if (!this.validateForm()) {
-                alert("Please fix the errors before proceeding.");
+                // alert("Please fix the errors before proceeding.");
                 this.loading = false;
                 return;
             }
@@ -226,9 +226,9 @@ function checkoutForm(cartFromServer = []) {
                     FlutterwaveCheckout({
                         public_key: "FLWPUBK-4428954ab2b6a3921e716331f673338e-X",
                         tx_ref: tx_ref,
-                        amount: parseFloat(this.grandTotal),
-                        currency: "UGX",
-                        payment_options: "card,mobilemoneyuganda,ussd",
+                        amount: parseFloat(this.grandTotal), // Ensure amount is in USD
+                        currency: "USD",  // Changed from UGX to USD
+                        payment_options: "card",  // Mobile Money Uganda only works with UGX
                         customer: {
                             email: this.form.email,
                             name: this.form.fullName,
@@ -251,6 +251,7 @@ function checkoutForm(cartFromServer = []) {
                 } else {
                     alert("Order failed to save: " + (data.message || "Unknown error"));
                 }
+
             } catch (error) {
                 console.error("Order submission failed", error);
                 alert("An error occurred while placing the order.");

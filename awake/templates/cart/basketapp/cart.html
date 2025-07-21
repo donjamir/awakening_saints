@@ -45,7 +45,7 @@
                                         </div>
                                     </td>
                                     <td data-label="Price">
-                                        <div class="price">UGX {{ product.product_price }}</div>
+                                        <div class="price">USD {{ product.product_price }}</div>
                                     </td>
                                     <td data-label="Quantity">
                                         <div class="product-count" data-price="{{ product.product_price }}">
@@ -88,7 +88,7 @@
                                         </div>
                                     </td>
                                     <td data-label="Total">
-                                        <div class="price">UGX {{ item.total_price }}</div>
+                                        <div class="price">USD {{ item.total_price }}</div>
                                     </td>
                                     <td data-label="Actions">
                                         <div style="display: flex; gap: 10px;">
@@ -123,7 +123,7 @@
                     
                     <div class="summary-row">
   <span class="summary-label">Subtotal:</span>
-  <span class="summary-value" id="cart-subtotal">UGX {{ cart.get_total_price }}</span>
+  <span class="summary-value" id="cart-subtotal">USD {{ cart.get_total_price }}</span>
                     </div>
 
                     <!-- <div class="summary-row">
@@ -133,7 +133,7 @@
 
                     <div class="summary-row total-row">
                     <span class="summary-label">Total:</span>
-                    <span class="summary-value total-value" id="cart-total">UGX {{ cart.get_total_price }}</span>
+                    <span class="summary-value total-value" id="cart-total">USD {{ cart.get_total_price }}</span>
                     </div>
 
                     
