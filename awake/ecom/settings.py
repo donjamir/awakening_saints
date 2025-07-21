@@ -139,26 +139,25 @@ SECRET_KEY = 'django-insecure-ev28k=ir#vah2v)!-*t65t!+b#j(xnk24fv88!nkoemy)#0ag1
 
 DEBUG = False
 
-ALLOWED_HOSTS = ['awakeningsaint.org', '*']
+ALLOWED_HOSTS = ['awakeningsaints.org', '*']
 
 
 INSTALLED_APPS = [
-    'jazzmin',
     
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
     'ecomapp.apps.EcomappConfig',
     'useraccounts.apps.UseraccountsConfig',
     'basketapp.apps.BasketappConfig',
+    
 ]
 
-AUTHENTICATION_BACKENDS = [
-    'useraccounts.auth_backends.EmailAuthBackend',  # <-- use your correct path
+AUTHENTICATION_BACKENDS = ['useraccounts.auth_backends.EmailAuthBackend',  # <-- use your correct path
 ]
 
 MIDDLEWARE = [
