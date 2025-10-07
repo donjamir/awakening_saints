@@ -19,7 +19,7 @@ urlpatterns = [
     path('add-review/', views.add_review_ajax, name='add_review_ajax'),
     path('book-preview/<slug:product_slug>/', views.book_preview, name='book_preview'),
 
-    path('shop-home', views.index, name='books' ),
+    path('books-home', views.index, name='books' ),
     path('shop/<slug:cat_slug>', views.index, name='shop_list'),
     path('contact/', views.contact, name='contact'),
     path('blog/', views.blog, name='blog'),
@@ -28,5 +28,7 @@ urlpatterns = [
    
     path("subscribe/", views.subscribe_email, name="subscribe_email"),
     path("send-message/<int:message_id>/", views.send_message_to_subscribers, name="send_message_to_subscribers"),
+    
+ 
    
 ]

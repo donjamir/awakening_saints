@@ -438,12 +438,13 @@
             <h2>{{ preview.chapter_title }}</h2>
             <p><strong>From the book:</strong> {{ product.title }}</p>
             
-            <div class="preview-content" style="white-space: pre-wrap;">
-                {{ preview.content }}
+            <div class="preview-content ck-content">
+                    {{ preview.content|safe }}
             </div>
 
+
             <a href="{% url 'sales:product_detail' product.product_slug %}" class="btn btn-primary mt-3">
-                See other Chapters
+                Buy Book
             </a>
         </div>
         <!-- Theme Selector -->

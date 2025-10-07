@@ -684,7 +684,7 @@
 
                 <!-- Slide 1 -->
                     {% for slide in slider %}
-                        <a href="" class="slide-item">
+                        <a href="{% url 'sales:book_preview' product_slug=slide.product_slug %}" class="slide-item">
                             <img src="{{ slide.product_image.url }}" alt="Gourmet Experience" class="slide-img">
                             <div class="slide-overlay">
                                 <!-- <span class="slide-badge">New Arrival</span> -->
@@ -780,9 +780,10 @@
                 </div>
                 <div class="book-info">
                     <h3 class="book-title">${book.title}</h3>
-                    <div class="book-price">USD ${book.price.toFixed(2)}</div>
+                    <div class="book-price">USD ${book.price.toFixed(0)}</div>
                     <div class="book-actions">
                         <a href="/book-preview/${book.slug}/" class="add-to-cart">Read</a>
+                      
                     </div>
                 </div>
             </div>

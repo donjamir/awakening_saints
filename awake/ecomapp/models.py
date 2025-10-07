@@ -1,12 +1,8 @@
 from django.db import models
 from django.conf import settings
 from django.urls import reverse
-
 from .utils import extract_text_from_file
-
-
-
-
+from django_ckeditor_5.fields import CKEditor5Field
 
 
 class ProductManager(models.Manager):
@@ -37,6 +33,7 @@ class Product(models.Model):
     product_slug = models.CharField(max_length=255)
     product_price = models.DecimalField(max_digits=30, decimal_places=2)
     qty_in_stock = models.DecimalField(max_digits=20, decimal_places=0, default='0')
+    book_file = models.FileField(upload_to='books/', blank=True, null=True)
     in_stock = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -90,12 +87,12 @@ class BookOrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(max_digits=30, decimal_places=2, default=0)
+    downloaded = models.BooleanField(default=False)  # NEW
 
     def get_total(self):
         if self.price is None or self.quantity is None:
             return 0
         return self.quantity * self.price
-
 
     def __str__(self):
         return f"{self.quantity} x {self.product.title}"
@@ -106,7 +103,7 @@ class BookOrderItem(models.Model):
 class BookPreview(models.Model):
     book = models.OneToOneField('Product', on_delete=models.CASCADE, related_name='preview')
     chapter_title = models.CharField(max_length=255)
-    content = models.TextField()  # Replace file with content field
+    content = CKEditor5Field() 
 
     def __str__(self):
         return f"Preview of {self.book.title}"
@@ -137,7 +134,7 @@ class SermonContent(models.Model):
     title = models.CharField(max_length=255)
     media_type = models.CharField(max_length=10, choices=MEDIA_TYPES)
     file = models.FileField(upload_to='media_files/', blank=True, null=True)
-    text_body = models.TextField(blank=True, null=True)
+    text_body = CKEditor5Field(blank=True, null=True)  # For text sermons
     thumbnail = models.ImageField(upload_to='media_thumbnails/', blank=True, null=True)
     preacher = models.CharField(max_length=255, blank=True)
     scripture = models.CharField(max_length=255, blank=True)

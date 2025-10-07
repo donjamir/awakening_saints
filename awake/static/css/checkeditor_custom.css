@@ -1,0 +1,89 @@
+/* -------------------- General editor styling -------------------- */
+.ck-editor__editable_inline {
+    font-family: Georgia, 'Times New Roman', Times, serif; /* Book-style font */
+    font-size: 16px;
+    line-height: 1.6;
+    padding: 15px;
+    background-color: #fefefe;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    min-height: 400px;
+}
+
+/* Placeholder guidance */
+.ck-editor__editable_inline::before {
+    content: attr(placeholder);
+    color: #aaa;
+    font-style: italic;
+}
+
+/* -------------------- Toolbar button highlights -------------------- */
+.ck-toolbar .ck-button {
+    border-radius: 4px;
+    margin: 0 2px;
+    padding: 5px;
+    transition: background 0.2s;
+}
+
+/* Hover effect */
+.ck-toolbar .ck-button:hover {
+    background-color: #e0f7fa;
+}
+
+/* Active button effect */
+.ck-toolbar .ck-button.ck-on {
+    background-color: #80deea;
+    color: #000;
+}
+
+/* Special warning for remove image */
+.ck-toolbar .ck-button[title="Remove image"] {
+    color: #fff;
+    background-color: #e53935 !important;
+}
+
+.ck-toolbar .ck-button[title="Remove image"]:hover {
+    background-color: #b71c1c !important;
+}
+
+/* -------------------- Table styling inside editor -------------------- */
+.ck-content table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 10px 0;
+}
+
+.ck-content table th,
+.ck-content table td {
+    border: 1px solid #ccc;
+    padding: 6px 10px;
+}
+
+/* -------------------- Image styling inside editor -------------------- */
+/* CKEditor content styling */
+/* .ck-content img {
+    max-width: 100%;      
+    min-width: 200px;     
+    height: auto;        
+    display: block;       
+    margin: 10px 0;       
+    border-radius: 4px;   
+} */
+
+.ck-content img {
+    width: 100%;       /* scale to container */
+    max-width: 850px;  /* optional max for large screens */
+    min-width: 200px;  /* don't shrink too small */
+    height: auto;
+}
+
+
+
+/* -------------------- Blockquote styling -------------------- */
+.ck-content blockquote {
+    border-left: 4px solid #4fc3f7;
+    padding-left: 12px;
+    color: #555;
+    font-style: italic;
+    margin: 10px 0;
+}

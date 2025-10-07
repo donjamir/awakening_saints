@@ -20,6 +20,8 @@ from django.core.mail import send_mass_mail
 
 
 
+
+
 def indexone(request):
     return render(request, 'site/index.html')
 
@@ -40,9 +42,6 @@ def orphans(request):
 
 def books(request):
     return render(request, 'site/books.html')
-
-
-
 
 
 def media(request):
@@ -97,7 +96,6 @@ def media(request):
     }
 
     return render(request, 'site/media.html', context)
-
 
 
 @csrf_exempt  # Optional if you're passing CSRF tokens via JS
@@ -222,17 +220,7 @@ def book_preview(request, product_slug):
 
 
 
-
-
 # subscriptions/views.py
-
-
-
-
-
-
-
-
 def send_message_to_subscribers(request, message_id):
     if not request.user.is_superuser:
         return HttpResponse("Unauthorized", status=401)
@@ -254,9 +242,6 @@ def send_message_to_subscribers(request, message_id):
     # return HttpResponse("Emails sent successfully.")
 
 
-
-
-
 @csrf_exempt
 def subscribe_email(request):
     if request.method == "POST":
@@ -265,9 +250,6 @@ def subscribe_email(request):
             EmailSubscriber.objects.get_or_create(email=email)
         return HttpResponseRedirect("/?subscribed_successfully=1")
     return HttpResponseRedirect("/?subscription_not_successfully=0")
-
-
-
 
 
 

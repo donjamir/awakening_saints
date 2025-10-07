@@ -80,7 +80,7 @@
 
                 <!-- Phone -->
                 <div class="mb-3 col-12">
-                    <label class="form-label">Phone</label>
+                    <label class="form-label">Contact</label>
                    <input type="tel" class="form-control"
                            x-model="form.phone"
                            @input="validateField('phone')"
@@ -136,9 +136,11 @@
         </div>
     </section>
 
+
+
 <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
-<script>
+<!-- <script>
 function checkoutForm(cartFromServer = []) {
     return {
         form: {
@@ -222,13 +224,47 @@ function checkoutForm(cartFromServer = []) {
 
                 const data = await response.json();
 
+                // if (data.status === "ok") {
+                //     FlutterwaveCheckout({
+                //         // TEST PUBLIC KEY = FLWPUBK_TEST-b45b556c71f2f30a47f7985ef0893a3b-X
+                //         // LIVE PUBLIC KEY = FLWPUBK-eabfcd297464d04dd146e66a866942d6-X
+
+                //         public_key: "FLWPUBK-eabfcd297464d04dd146e66a866942d6-X", // This for live use your own key. This should be used accordingly depending on the mode we are using. if its is test mode we use the test public key, if its live mode we use the live public key
+                //         tx_ref: tx_ref,
+                //         amount: parseFloat(this.grandTotal), // Ensure amount is in USD
+                //         currency: "USD",  // Changed from UGX to USD
+                //         payment_options: "card",  // Mobile Money Uganda only works with UGX
+                //         customer: {
+                //             email: this.form.email,
+                //             name: this.form.fullName,
+                //         },
+                //         customizations: {
+                //             title: "Bookstore Payment",
+                //             description: "Payment for books",
+                //         },
+                //         callback: function (response) {
+                //             if (response.status === "successful") {
+                //                 window.location.href = `/payment-success/?tx_ref=${response.tx_ref}`;
+                //             } else {
+                //                 alert("Payment failed or cancelled");
+                //             }
+                //         },
+                //         onclose: function () {
+                //             console.log("Payment modal closed");
+                //         }
+                //     });
+                // } else {
+                //     alert("Order failed to save: " + (data.message || "Unknown error"));
+                // }
+
+
                 if (data.status === "ok") {
                     FlutterwaveCheckout({
-                        public_key: "FLWPUBK-4428954ab2b6a3921e716331f673338e-X",
+                        public_key: "FLWPUBK-eabfcd297464d04dd146e66a866942d6-X", // Use live or test accordingly
                         tx_ref: tx_ref,
-                        amount: parseFloat(this.grandTotal), // Ensure amount is in USD
-                        currency: "USD",  // Changed from UGX to USD
-                        payment_options: "card",  // Mobile Money Uganda only works with UGX
+                        amount: parseFloat(this.grandTotal), // Your amount should already be in UGX
+                        currency: "UGX",  // ✅ Change from USD to UGX
+                        payment_options: "card, mobilemoneyuganda",  // ✅ Add Mobile Money Uganda option
                         customer: {
                             email: this.form.email,
                             name: this.form.fullName,
@@ -252,6 +288,130 @@ function checkoutForm(cartFromServer = []) {
                     alert("Order failed to save: " + (data.message || "Unknown error"));
                 }
 
+
+
+
+            } catch (error) {
+                console.error("Order submission failed", error);
+                alert("An error occurred while placing the order.");
+            } finally {
+                this.loading = false;
+            }
+        }
+    };
+}
+</script> -->
+
+
+
+
+
+<script>
+function checkoutForm(cartFromServer = []) {
+    return {
+        form: {
+            fullName: '',
+            email: '',
+            phone: '',
+        },
+        errors: {},
+        cart: cartFromServer,
+        shippingOption: 0,
+        discount: 0,
+        loading: false,
+        _handler: null,
+
+        get subtotal() {
+            return this.cart.reduce((sum, item) => sum + item.qty * item.price, 0);
+        },
+
+        get grandTotal() {
+            return this.subtotal + parseFloat(this.shippingOption || 0) - parseFloat(this.discount || 0);
+        },
+
+        init() {
+            if (this._handler) {
+                this.$el.removeEventListener('trigger-submit', this._handler);
+            }
+            this._handler = this.submitOrder.bind(this);
+            this.$el.addEventListener('trigger-submit', this._handler);
+        },
+
+        validateField(field) {
+            switch (field) {
+                case 'fullName':
+                    this.errors.fullName = this.form.fullName.trim() ? null : 'Full Name is required'; 
+                    break;
+                case 'email':
+                    this.errors.email = this.form.email.includes('@') ? null : 'Valid email is required'; 
+                    break;
+                case 'phone':
+                    this.errors.phone = this.form.phone.trim() ? null : 'Phone number is required'; 
+                    break;
+            }
+        },
+
+        validateForm() {
+            this.errors = {};
+            ['fullName', 'email', 'phone'].forEach(field => this.validateField(field));
+            return Object.values(this.errors).every(e => !e);
+        },
+
+        async submitOrder() {
+            if (this.loading) return;
+            this.loading = true;
+
+            if (!this.validateForm()) {
+                this.loading = false;
+                return;
+            }
+
+            const tx_ref = `TX-${Date.now()}`;
+            const payload = {
+                tx_ref: tx_ref,
+                full_name: this.form.fullName,
+                email: this.form.email,
+                phone: this.form.phone,
+                cart: this.cart,
+                total: this.grandTotal,
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+            };
+
+            try {
+                const response = await fetch("{% url 'cart:submit_order' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": '{{ csrf_token }}',
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+
+                if (data.status === "ok") {
+                    // Use TEST PUBLIC KEY for sandbox, replace with LIVE for production
+                    FlutterwaveCheckout({
+                        public_key: "FLWPUBK_TEST-b45b556c71f2f30a47f7985ef0893a3b-X",
+                        tx_ref: tx_ref,
+                        amount: parseFloat(this.grandTotal),
+                        currency: "USD",
+                        payment_options: "card",
+                        customer: {
+                            email: this.form.email,
+                            name: this.form.fullName,
+                        },
+                        customizations: {
+                            title: "Bookstore Payment",
+                            description: "Payment for books",
+                        },
+                        redirect_url: "{{ request.scheme }}://{{ request.get_host }}{% url 'cart:payment_success' %}?tx_ref=" + tx_ref
+                    });
+
+                } else {
+                    alert("Order failed: " + (data.message || "Unknown error"));
+                }
+
             } catch (error) {
                 console.error("Order submission failed", error);
                 alert("An error occurred while placing the order.");
@@ -262,6 +422,8 @@ function checkoutForm(cartFromServer = []) {
     };
 }
 </script>
+
+
 
 
 
