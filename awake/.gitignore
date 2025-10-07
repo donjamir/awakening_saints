@@ -1,0 +1,61 @@
+# Byte-compiled / compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Environment files
+.env
+*.env
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# VS Code / JetBrains IDEs
+.vscode/
+.idea/
+
+# MacOS
+.DS_Store
+
+# Linux
+*~
+
+# Git
+# .git/
+# .gitignore
+
+# Logs and local data
+*.log
+
+# Deployment-specific (Namecheap)
+passenger_wsgi.py
+instance/
+*.bak
+*.swp
+*.tmp
+node_modules/
+npm-debug.log
+
+# pip-tools output
+
+
+# Migrations (optional, uncomment if you're auto-generating them and not tracking)
+**/migrations/
+!**/migrations/__init__.py
+
+db.sqlite3
+db.sqlite3-journal
+
+
+flutterwave_cardtest
+
+
+
+
+
+
