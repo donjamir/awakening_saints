@@ -28,7 +28,7 @@ class Product(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='product_creator')
     title = models.CharField(max_length=255)
     author = models.CharField(max_length=255, default='admin')
-    description = models.TextField(blank=True, null=True)
+    description = CKEditor5Field(blank=True, null=True)  # Rich text editor field
     product_image = models.ImageField(upload_to='product_images/', default='product_images/p2.jpg')
     product_slug = models.CharField(max_length=255)
     product_price = models.DecimalField(max_digits=30, decimal_places=2)
