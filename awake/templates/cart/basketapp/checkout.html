@@ -391,8 +391,10 @@ function checkoutForm(cartFromServer = []) {
 
                 if (data.status === "ok") {
                     // Use TEST PUBLIC KEY for sandbox, replace with LIVE for production
+                    // testkey - FLWPUBK_TEST-b45b556c71f2f30a47f7985ef0893a3b-X
+                    // Livekey - FLWPUBK-eabfcd297464d04dd146e66a866942d6-X
                     FlutterwaveCheckout({
-                        public_key: "FLWPUBK-eabfcd297464d04dd146e66a866942d6-X",
+                        public_key: "FLWPUBK_TEST-b45b556c71f2f30a47f7985ef0893a3b-X",
                         tx_ref: tx_ref,
                         amount: parseFloat(this.grandTotal),
                         currency: "USD",

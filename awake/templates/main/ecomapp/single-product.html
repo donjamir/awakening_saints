@@ -42,7 +42,7 @@
 					<h3>{{ product.title }}</h3>
 					<span class="price">USD {{ product.product_price }}</span>
 
-					<p>{{ product.description }}</p>
+					<p>{{ product.description|safe }}</p>
 
 					<div class="product_count" style="display: none;">
 						<label for="sst">Quantity:</label>
