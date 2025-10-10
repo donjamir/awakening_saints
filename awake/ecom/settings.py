@@ -239,7 +239,7 @@ CKEDITOR_5_CONFIGS = {
         # Editor dimensions
         'height': 400,
         'width': '100%',
-        'placeholder': 'Start typing your book preview here...'
+        'placeholder': 'Write text here...'
     },
 }
 
@@ -348,7 +348,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # LIVE SECRET = FLWSECK-f13f07df9e5a20a357ed90ccfac7c691-198b1b5e275vt-X
 
 FLUTTERWAVE_SECRET_KEY = "FLWSECK-f13f07df9e5a20a357ed90ccfac7c691-198b1b5e275vt-X"
-FLUTTERWAVE_SANDBOX = True  # True for test, False for live
+FLUTTERWAVE_SANDBOX = False  # True for test, False for live
 
 # Flutterwave
 # FLUTTERWAVE_PUBLIC_KEY = "FLWPUBK_TEST-xxxxxxxxxxxxxxxxxxxx-X"

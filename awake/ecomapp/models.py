@@ -193,7 +193,7 @@ class EmailSubscriber(models.Model):
 
 class SubscriberMessage(models.Model):
     title = models.CharField(max_length=255)
-    body = models.TextField()
+    body = CKEditor5Field() 
     sent_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
