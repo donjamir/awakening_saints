@@ -322,14 +322,22 @@ function checkoutForm(cartFromServer = []) {
         _handler: null,
 
         get subtotal() {
-            return this.cart.reduce((sum, item) => sum + item.qty * item.price, 0);
+            const subtotal = this.cart.reduce((sum, item) => sum + item.qty * item.price, 0);
+            console.log("[DEBUG] Subtotal calculated:", subtotal);
+            return subtotal;
         },
 
         get grandTotal() {
-            return this.subtotal + parseFloat(this.shippingOption || 0) - parseFloat(this.discount || 0);
+            const subtotal = Number(this.subtotal);
+            const shipping = Number(this.shippingOption) || 0;
+            const discount = Number(this.discount) || 0;
+            const grand = (subtotal + shipping - discount).toFixed(2);
+            console.log("[DEBUG] Grand total calculated:", grand);
+            return grand;
         },
 
         init() {
+            console.log("[DEBUG] Checkout form initialized.");
             if (this._handler) {
                 this.$el.removeEventListener('trigger-submit', this._handler);
             }
@@ -349,19 +357,26 @@ function checkoutForm(cartFromServer = []) {
                     this.errors.phone = this.form.phone.trim() ? null : 'Phone number is required'; 
                     break;
             }
+            if (this.errors[field]) {
+                console.warn(`[DEBUG] Validation error on ${field}:`, this.errors[field]);
+            }
         },
 
         validateForm() {
             this.errors = {};
             ['fullName', 'email', 'phone'].forEach(field => this.validateField(field));
-            return Object.values(this.errors).every(e => !e);
+            const isValid = Object.values(this.errors).every(e => !e);
+            console.log("[DEBUG] Form validation result:", isValid ? "Valid ✅" : "Invalid ❌", this.errors);
+            return isValid;
         },
 
         async submitOrder() {
             if (this.loading) return;
             this.loading = true;
+            console.log("[DEBUG] Submitting order...");
 
             if (!this.validateForm()) {
+                console.warn("[DEBUG] Form validation failed — aborting submission.");
                 this.loading = false;
                 return;
             }
@@ -377,6 +392,8 @@ function checkoutForm(cartFromServer = []) {
                 csrfmiddlewaretoken: '{{ csrf_token }}',
             };
 
+            console.log("[DEBUG] Payload being sent to backend:", payload);
+
             try {
                 const response = await fetch("{% url 'cart:submit_order' %}", {
                     method: "POST",
@@ -387,13 +404,22 @@ function checkoutForm(cartFromServer = []) {
                     body: JSON.stringify(payload),
                 });
 
+                console.log("[DEBUG] Raw response:", response);
                 const data = await response.json();
+                console.log("[DEBUG] Backend response JSON:", data);
 
                 if (data.status === "ok") {
-                    // Use TEST PUBLIC KEY for sandbox, replace with LIVE for production
-                    // testkey - FLWPUBK_TEST-b45b556c71f2f30a47f7985ef0893a3b-X
-                    // Livekey - FLWPUBK-eabfcd297464d04dd146e66a866942d6-X
-                    FlutterwaveCheckout({
+                    console.log("[DEBUG] Order accepted by backend, preparing FlutterwaveCheckout...");
+
+                    // Safety check for Flutterwave script
+                    if (typeof FlutterwaveCheckout !== "function") {
+                        console.error("[DEBUG] FlutterwaveCheckout function missing! Did you include https://checkout.flutterwave.com/v3.js ?");
+                        alert("Payment service not loaded yet. Please refresh and try again.");
+                        this.loading = false;
+                        return;
+                    }
+
+                    const fwConfig = {
                         public_key: "FLWPUBK-eabfcd297464d04dd146e66a866942d6-X",
                         tx_ref: tx_ref,
                         amount: parseFloat(this.grandTotal),
@@ -408,22 +434,29 @@ function checkoutForm(cartFromServer = []) {
                             description: "Payment for books",
                         },
                         redirect_url: "{{ request.scheme }}://{{ request.get_host }}{% url 'cart:payment_success' %}?tx_ref=" + tx_ref
-                    });
+                    };
+
+                    console.log("[DEBUG] FlutterwaveCheckout config:", fwConfig);
+
+                    FlutterwaveCheckout(fwConfig);
 
                 } else {
+                    console.error("[DEBUG] Order submission failed:", data.message);
                     alert("Order failed: " + (data.message || "Unknown error"));
                 }
 
             } catch (error) {
-                console.error("Order submission failed", error);
+                console.error("[DEBUG] Network or runtime error during order submission:", error);
                 alert("An error occurred while placing the order.");
             } finally {
                 this.loading = false;
+                console.log("[DEBUG] Submission process complete.");
             }
         }
     };
 }
 </script>
+
 
 
 
