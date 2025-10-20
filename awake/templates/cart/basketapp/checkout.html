@@ -305,14 +305,13 @@ function checkoutForm(cartFromServer = []) {
 
 
 
-
 <script>
 function checkoutForm(cartFromServer = []) {
     return {
         form: {
             fullName: '',
             email: '',
-            phone: '',
+            phone: '',  // local format, e.g. 0778382992019
         },
         errors: {},
         cart: cartFromServer,
@@ -322,22 +321,14 @@ function checkoutForm(cartFromServer = []) {
         _handler: null,
 
         get subtotal() {
-            const subtotal = this.cart.reduce((sum, item) => sum + item.qty * item.price, 0);
-            console.log("[DEBUG] Subtotal calculated:", subtotal);
-            return subtotal;
+            return this.cart.reduce((sum, item) => sum + item.qty * item.price, 0);
         },
 
         get grandTotal() {
-            const subtotal = Number(this.subtotal);
-            const shipping = Number(this.shippingOption) || 0;
-            const discount = Number(this.discount) || 0;
-            const grand = (subtotal + shipping - discount).toFixed(2);
-            console.log("[DEBUG] Grand total calculated:", grand);
-            return grand;
+            return this.subtotal + parseFloat(this.shippingOption || 0) - parseFloat(this.discount || 0);
         },
 
         init() {
-            console.log("[DEBUG] Checkout form initialized.");
             if (this._handler) {
                 this.$el.removeEventListener('trigger-submit', this._handler);
             }
@@ -348,51 +339,44 @@ function checkoutForm(cartFromServer = []) {
         validateField(field) {
             switch (field) {
                 case 'fullName':
-                    this.errors.fullName = this.form.fullName.trim() ? null : 'Full Name is required'; 
+                    this.errors.fullName = this.form.fullName.trim() ? null : 'Full Name is required';
                     break;
                 case 'email':
-                    this.errors.email = this.form.email.includes('@') ? null : 'Valid email is required'; 
+                    this.errors.email = this.form.email.includes('@') ? null : 'Valid email is required';
                     break;
                 case 'phone':
-                    this.errors.phone = this.form.phone.trim() ? null : 'Phone number is required'; 
+                    this.errors.phone = this.form.phone.trim() ? null : 'Phone number is required';
                     break;
-            }
-            if (this.errors[field]) {
-                console.warn(`[DEBUG] Validation error on ${field}:`, this.errors[field]);
             }
         },
 
         validateForm() {
             this.errors = {};
             ['fullName', 'email', 'phone'].forEach(field => this.validateField(field));
-            const isValid = Object.values(this.errors).every(e => !e);
-            console.log("[DEBUG] Form validation result:", isValid ? "Valid ✅" : "Invalid ❌", this.errors);
-            return isValid;
+            return Object.values(this.errors).every(e => !e);
         },
 
         async submitOrder() {
             if (this.loading) return;
             this.loading = true;
-            console.log("[DEBUG] Submitting order...");
 
             if (!this.validateForm()) {
-                console.warn("[DEBUG] Form validation failed — aborting submission.");
                 this.loading = false;
                 return;
             }
 
             const tx_ref = `TX-${Date.now()}`;
+            const phoneIntl = this.formatPhoneInternational(this.form.phone);
+
             const payload = {
                 tx_ref: tx_ref,
                 full_name: this.form.fullName,
                 email: this.form.email,
-                phone: this.form.phone,
+                phone: phoneIntl,
                 cart: this.cart,
                 total: this.grandTotal,
                 csrfmiddlewaretoken: '{{ csrf_token }}',
             };
-
-            console.log("[DEBUG] Payload being sent to backend:", payload);
 
             try {
                 const response = await fetch("{% url 'cart:submit_order' %}", {
@@ -404,22 +388,10 @@ function checkoutForm(cartFromServer = []) {
                     body: JSON.stringify(payload),
                 });
 
-                console.log("[DEBUG] Raw response:", response);
                 const data = await response.json();
-                console.log("[DEBUG] Backend response JSON:", data);
 
                 if (data.status === "ok") {
-                    console.log("[DEBUG] Order accepted by backend, preparing FlutterwaveCheckout...");
-
-                    // Safety check for Flutterwave script
-                    if (typeof FlutterwaveCheckout !== "function") {
-                        console.error("[DEBUG] FlutterwaveCheckout function missing! Did you include https://checkout.flutterwave.com/v3.js ?");
-                        alert("Payment service not loaded yet. Please refresh and try again.");
-                        this.loading = false;
-                        return;
-                    }
-
-                    const fwConfig = {
+                    console.log("Preparing FlutterwaveCheckout payload:", {
                         public_key: "FLWPUBK-eabfcd297464d04dd146e66a866942d6-X",
                         tx_ref: tx_ref,
                         amount: parseFloat(this.grandTotal),
@@ -428,35 +400,61 @@ function checkoutForm(cartFromServer = []) {
                         customer: {
                             email: this.form.email,
                             name: this.form.fullName,
+                            phone_number: phoneIntl // <-- correct field
                         },
                         customizations: {
                             title: "Bookstore Payment",
                             description: "Payment for books",
                         },
                         redirect_url: "{{ request.scheme }}://{{ request.get_host }}{% url 'cart:payment_success' %}?tx_ref=" + tx_ref
-                    };
+                    });
 
-                    console.log("[DEBUG] FlutterwaveCheckout config:", fwConfig);
-
-                    FlutterwaveCheckout(fwConfig);
+                    FlutterwaveCheckout({
+                        public_key: "FLWPUBK-eabfcd297464d04dd146e66a866942d6-X", // live key
+                        tx_ref: tx_ref,
+                        amount: parseFloat(this.grandTotal),
+                        currency: "USD",
+                        payment_options: "card",
+                        customer: {
+                            email: this.form.email,
+                            name: this.form.fullName,
+                            phone_number: phoneIntl
+                        },
+                        customizations: {
+                            title: "Bookstore Payment",
+                            description: "Payment for books",
+                        },
+                        redirect_url: "{{ request.scheme }}://{{ request.get_host }}{% url 'cart:payment_success' %}?tx_ref=" + tx_ref
+                    });
 
                 } else {
-                    console.error("[DEBUG] Order submission failed:", data.message);
                     alert("Order failed: " + (data.message || "Unknown error"));
                 }
 
             } catch (error) {
-                console.error("[DEBUG] Network or runtime error during order submission:", error);
+                console.error("Order submission failed", error);
                 alert("An error occurred while placing the order.");
             } finally {
                 this.loading = false;
-                console.log("[DEBUG] Submission process complete.");
+            }
+        },
+
+        // Converts a local phone number to international format (Uganda example)
+        formatPhoneInternational(phone) {
+            phone = phone.replace(/\D/g, ''); // remove non-digits
+            if (phone.startsWith('0')) {
+                return '+256' + phone.slice(1); // Uganda country code
+            } else if (phone.startsWith('256')) {
+                return '+' + phone;
+            } else if (phone.startsWith('+')) {
+                return phone;
+            } else {
+                return '+256' + phone; // fallback
             }
         }
     };
 }
 </script>
-
 
 
 
