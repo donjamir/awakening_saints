@@ -18,6 +18,7 @@ from django.urls import reverse
 from django.core.signing import BadSignature, SignatureExpired
 from django.core.signing import TimestampSigner
 from django.http import HttpResponseForbidden
+from ecomapp.models import *
 import requests
 from django.conf import settings
 import urllib.request     # for opening URLs (urllib.request.urlopen, etc.)
@@ -139,12 +140,15 @@ def submit_order(request):
     try:
         data = json.loads(request.body)
 
+        user = request.user if request.user.is_authenticated else None
+
         order = BookOrder.objects.create(
             full_name=data['full_name'],
-            email=data['email'],
+            email=data.get('email', ''),
             phone=data.get('phone', ''),
             tx_ref=data['tx_ref'],
             total=data.get('total', 0),
+            user=user,
             status='pending'
         )
 
@@ -159,6 +163,8 @@ def submit_order(request):
 
         return JsonResponse({"status": "ok", "order_id": order.id})
 
+    except Product.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Product not found."}, status=404)
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
@@ -290,7 +296,7 @@ def payment_success(request):
             # Validate amount and currency to prevent tampering
             expected_amount = float(order.total)
             actual_amount = float(data.get("amount", 0))
-            expected_currency = "USD" # Ensure this matches your order's currency
+            expected_currency = "USD"#Ensure this matches your order's currency
             actual_currency = data.get("currency")
 
             if actual_amount >= expected_amount and actual_currency == expected_currency:

@@ -3,3 +3,13 @@ AC NO.: 4070 4300 3069 1535
 expdate: 12/29 from 12/24
 
 cvc: 196
+
+
+
+
+
+
+
+Card type	Number	CVV	Expiry
+Visa	5531886652142950	564	Any future date
+Mastercard	5399838383838381	564
