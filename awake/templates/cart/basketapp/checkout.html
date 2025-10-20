@@ -52,8 +52,8 @@
         <div class="container">
             <div class="billing_details">
                 <div class="row">
-<!-- <div class="row" x-data="checkoutForm({{ cart_json|safe }})" x-init="init()" id="checkout-component"> --> , 
-<div class="row" x-data="checkoutForm(JSON.parse('{{ cart_json|escapejs }}'), '{{ FLUTTERWAVE_PUBLIC_KEY }}')" x-init="init()" id="checkout-component">
+<!-- <div class="row" x-data="checkoutForm({{ cart_json|safe }})" x-init="init()" id="checkout-component"> -->
+<div class="row" x-data="checkoutForm(JSON.parse('{{ cart_json|escapejs }}'))" x-init="init()" id="checkout-component">
 
     <!-- Checkout form section -->
     <div class="col-lg-8">
@@ -70,7 +70,7 @@
 
                 <!-- Email -->
                 <div class="mb-3 col-md-6">
-                    <label class="form-label">Email</label>&nbsp;<small>( Enter email used on registration )</small>
+                    <label class="form-label">Email ( Enter email used on registration )</label>
                     <input type="email" class="form-control"
                            x-model="form.email"
                            @input="validateField('email')"
@@ -82,11 +82,13 @@
                 <div class="mb-3 col-12">
                     <label class="form-label">Contact</label>
                    <input type="tel" class="form-control"
-                           x-model="form.phoneNumber" 
-                           @input="validateField('phoneNumber')" 
-                           :class="{'is-invalid': errors.phoneNumber}"> 
-                    <div class="invalid-feedback" x-show="errors.phoneNumber" x-text="errors.phoneNumber"></div> 
+                           x-model="form.phone"
+                           @input="validateField('phone')"
+                           :class="{'is-invalid': errors.phone}">
+                    <div class="invalid-feedback" x-show="errors.phone" x-text="errors.phone"></div>
                 </div>
+
+               
             </div>
         </form>
     </div>
@@ -107,27 +109,15 @@
                 <span>Subtotal:</span>
                 <span>USD<span x-text="subtotal.toFixed(2)"></span></span>
             </div>
-            
-            <div class="summary-item">
-                <span>Shipping:</span>
-                <span>USD<span x-text="parseFloat(shippingOption).toFixed(2)"></span></span>
-            </div>
-
-            <div class="summary-item">
-                <span>Discount:</span>
-                <span>USD<span x-text="parseFloat(discount).toFixed(2)"></span></span> 
-            </div>
 
             <div class="summary-item total-row">
                 <span>Total:</span>
-                <span>USD<span x-text="grandTotal.toFixed(2)"></span></span> 
+                <span>USD<span x-text="subtotal.toFixed(2)"></span></span>
             </div>
 
             <!-- Confirm & Pay button triggers the custom event -->
-            <button type="button" class="btn btn-success w-100 py-3 mt-3" @click="document.getElementById('checkout-component').dispatchEvent(new CustomEvent('trigger-submit'))" :disabled="loading">
-                <i class="fas fa-lock me-2"></i>
-                <span x-show="!loading">Confirm & Pay</span>
-                <span x-show="loading">Processing...</span>
+            <button type="button" class="btn btn-success w-100 py-3 mt-3" @click="document.getElementById('checkout-component').dispatchEvent(new CustomEvent('trigger-submit'))">
+                <i class="fas fa-lock me-2"></i> Confirm & Pay
             </button>
 
             <a href="{% url 'sales:books' %}" class="btn btn-secondary w-100 py-3 mt-3">
@@ -136,6 +126,7 @@
         </div>
     </div>
 </div>
+
 
 
 
@@ -314,32 +305,28 @@ function checkoutForm(cartFromServer = []) {
 
 
 
+
 <script>
-function checkoutForm(cartFromServer = [], flutterwavePublicKey = 'FLWPUBK-eabfcd297464d04dd146e66a866942d6-X') { // Pass public key to init
+function checkoutForm(cartFromServer = []) {
     return {
         form: {
             fullName: '',
             email: '',
-            phoneNumber: '' // Added for Flutterwave customer details
+            phone: '',
         },
         errors: {},
         cart: cartFromServer,
-        shippingOption: 0, // Assuming this is a numerical value
-        discount: 0,     // Assuming this is a numerical value
+        shippingOption: 0,
+        discount: 0,
         loading: false,
         _handler: null,
-        flutterwavePK: flutterwavePublicKey, // Store public key
 
         get subtotal() {
             return this.cart.reduce((sum, item) => sum + item.qty * item.price, 0);
         },
 
         get grandTotal() {
-            // Ensure calculations are always on numbers
-            let total = parseFloat(this.subtotal);
-            let shipping = parseFloat(this.shippingOption || 0);
-            let discount = parseFloat(this.discount || 0);
-            return total + shipping - discount;
+            return this.subtotal + parseFloat(this.shippingOption || 0) - parseFloat(this.discount || 0);
         },
 
         init() {
@@ -348,67 +335,54 @@ function checkoutForm(cartFromServer = [], flutterwavePublicKey = 'FLWPUBK-eabfc
             }
             this._handler = this.submitOrder.bind(this);
             this.$el.addEventListener('trigger-submit', this._handler);
-            
-            // If you need to populate initial form data (e.g., from logged-in user)
-            // this.form.fullName = '{{ request.user.get_full_name|default:'' }}';
-            // this.form.email = '{{ request.user.email|default:'' }}';
-            // You might fetch phone number if stored on user profile
         },
 
         validateField(field) {
             switch (field) {
                 case 'fullName':
-                    this.errors.fullName = this.form.fullName.trim() ? null : 'Full Name is required';
+                    this.errors.fullName = this.form.fullName.trim() ? null : 'Full Name is required'; 
                     break;
                 case 'email':
-                    // Basic email validation
-                    this.errors.email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.email) ? null : 'Valid email is required';
+                    this.errors.email = this.form.email.includes('@') ? null : 'Valid email is required'; 
                     break;
-                case 'phoneNumber':
-                    // Basic phone number validation (adjust regex for specific country formats)
-                    this.errors.phoneNumber = this.form.phoneNumber.trim() && /^\+?[0-9\s-()]{7,20}$/.test(this.form.phoneNumber) ? null : 'Valid phone number is required';
+                case 'phone':
+                    this.errors.phone = this.form.phone.trim() ? null : 'Phone number is required'; 
                     break;
             }
         },
 
         validateForm() {
             this.errors = {};
-            ['fullName', 'email', 'phoneNumber'].forEach(field => this.validateField(field));
+            ['fullName', 'email', 'phone'].forEach(field => this.validateField(field));
             return Object.values(this.errors).every(e => !e);
         },
 
         async submitOrder() {
             if (this.loading) return;
-            this.loading = true; // Start loading state
+            this.loading = true;
 
             if (!this.validateForm()) {
-                this.loading = false; // End loading state if validation fails
-                alert("Please correct the form errors."); // Give user feedback
+                this.loading = false;
                 return;
             }
 
-            // Generate a unique transaction reference
-            const tx_ref = `TX-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-            const totalAmount = parseFloat(this.grandTotal); // Ensure it's a float for Flutterwave
-
+            const tx_ref = `TX-${Date.now()}`;
             const payload = {
                 tx_ref: tx_ref,
                 full_name: this.form.fullName,
                 email: this.form.email,
-                phone_number: this.form.phoneNumber, // Include phone number for backend
+                phone: this.form.phone,
                 cart: this.cart,
-                total: totalAmount, // Send the calculated total
-                shipping_fee: this.shippingOption, // <--- ADD THIS
-                discount: this.discount,    
+                total: this.grandTotal,
+                csrfmiddlewaretoken: '{{ csrf_token }}',
             };
 
             try {
-                // Step 1: Submit order to your Django backend to create a pending order
                 const response = await fetch("{% url 'cart:submit_order' %}", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "X-CSRFToken": '{{ csrf_token }}', // Django CSRF token
+                        "X-CSRFToken": '{{ csrf_token }}',
                     },
                     body: JSON.stringify(payload),
                 });
@@ -416,58 +390,44 @@ function checkoutForm(cartFromServer = [], flutterwavePublicKey = 'FLWPUBK-eabfc
                 const data = await response.json();
 
                 if (data.status === "ok") {
-                    // Step 2: If order submission is successful, initiate Flutterwave Checkout
+                    // Use TEST PUBLIC KEY for sandbox, replace with LIVE for production
+                    // testkey - FLWPUBK_TEST-b45b556c71f2f30a47f7985ef0893a3b-X
+                    // Livekey - FLWPUBK-eabfcd297464d04dd146e66a866942d6-X
                     FlutterwaveCheckout({
-                        public_key: this.flutterwavePK, // Use the public key passed from Django
-                        tx_ref: tx_ref, // Use the generated transaction reference
-                        amount: totalAmount, // Use the calculated total amount
-                        currency: "USD", // Ensure this matches your backend's expected currency
-                        payment_options: "card,mobilemoney,banktransfer,ussd", // Allow more options
+                        public_key: "FLWPUBK-eabfcd297464d04dd146e66a866942d6-X",
+                        tx_ref: tx_ref,
+                        amount: parseFloat(this.grandTotal),
+                        currency: "USD",
+                        payment_options: "card",
                         customer: {
                             email: this.form.email,
-                            phone_number: this.form.phoneNumber,
                             name: this.form.fullName,
                         },
                         customizations: {
                             title: "Bookstore Payment",
                             description: "Payment for books",
-                            logo: "https://awakeningsaints.org/static/images/logo.png", // Replace with your actual logo URL
                         },
-                        // Ensure this redirect_url matches the 'payment_success' view in Django
-                        redirect_url: "{{ request.scheme }}://{{ request.get_host }}{% url 'cart:payment_success' %}?tx_ref=" + tx_ref,
-                        
-                        // Callback for when the modal is closed or completed
-                        callback: function (response) {
-                            console.log("Flutterwave Inline Callback:", response);
-                            // NOTE: This callback is client-side. The definitive verification
-                            // happens on the `redirect_url` in your `payment_success` view.
-                            // You might use this for client-side analytics or immediate feedback,
-                            // but DO NOT trust payment status from here for order fulfillment.
-                            if (response.status === "successful") {
-                                // Potentially show a temporary success message
-                            } else {
-                                // Potentially show a temporary failure message
-                            }
-                        },
-                        onclose: function () {
-                            console.log("Flutterwave Checkout closed by user.");
-                            // Handle case where user closes the popup
-                            // You might redirect back to cart or show a message
-                        }
+                        redirect_url: "{{ request.scheme }}://{{ request.get_host }}{% url 'cart:payment_success' %}?tx_ref=" + tx_ref
                     });
+
                 } else {
-                    alert("Order creation failed: " + (data.message || "Unknown error"));
+                    alert("Order failed: " + (data.message || "Unknown error"));
                 }
+
             } catch (error) {
-                console.error("Order submission or Flutterwave initiation failed:", error);
-                alert("An error occurred while processing your order. Please try again.");
+                console.error("Order submission failed", error);
+                alert("An error occurred while placing the order.");
             } finally {
-                this.loading = false; // Always reset loading state
+                this.loading = false;
             }
         }
     };
 }
 </script>
+
+
+
+
 
 
 

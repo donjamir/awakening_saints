@@ -139,13 +139,12 @@ SECRET_KEY = 'django-insecure-ev28k=ir#vah2v)!-*t65t!+b#j(xnk24fv88!nkoemy)#0ag1
 
 DEBUG = False
 
-# ALLOWED_HOSTS = ['awakeningsaints.org', '*']
+ALLOWED_HOSTS = ['awakeningsaints.org', '*']
 
-ALLOWED_HOSTS = [
-    'awakeningsaints.org',
-    'www.awakeningsaints.org',
-]
+
+
 INSTALLED_APPS = [
+    
     'jazzmin',
     'django_ckeditor_5',
     'django.contrib.admin',
@@ -350,14 +349,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 FLUTTERWAVE_SECRET_KEY = "FLWSECK-f13f07df9e5a20a357ed90ccfac7c691-198b1b5e275vt-X"
 FLUTTERWAVE_SANDBOX = False  # True for test, False for live
-FLUTTERWAVE_PUBLIC_KEY = "FLWPUBK-eabfcd297464d04dd146e66a866942d6-X"
+
 # Flutterwave
 # FLUTTERWAVE_PUBLIC_KEY = "FLWPUBK_TEST-xxxxxxxxxxxxxxxxxxxx-X"
 # FLUTTERWAVE_SECRET_KEY = "FLWSECK_TEST-xxxxxxxxxxxxxxxxxxxx-X"
-
-# // Use TEST PUBLIC KEY for sandbox, replace with LIVE for production 
-# // testkey - FLWPUBK_TEST-b45b556c71f2f30a47f7985ef0893a3b-X 
-# // Livekey - FLWPUBK-eabfcd297464d04dd146e66a866942d6-X 
 
 
 
