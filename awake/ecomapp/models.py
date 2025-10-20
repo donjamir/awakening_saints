@@ -68,7 +68,7 @@ class BookOrder(models.Model):
     full_name = models.CharField(max_length=255)  # updated from `name`
     phone = models.CharField(max_length=20)
     email = models.EmailField(blank=True, null=True)
-
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='book_orders')
     tx_ref = models.CharField(max_length=100, unique=True)  # transaction ref for Flutterwave
     shipping_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)

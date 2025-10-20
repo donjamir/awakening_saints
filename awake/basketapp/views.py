@@ -19,6 +19,7 @@ from django.core.signing import BadSignature, SignatureExpired
 from django.core.signing import TimestampSigner
 from django.http import HttpResponseForbidden
 import requests
+from django.http import *
 from django.conf import settings
 import urllib.request     # for opening URLs (urllib.request.urlopen, etc.)
 import urllib.parse       # for parsing URLs or encoding parameters
@@ -107,6 +108,7 @@ def cart_delete(request):
 
 
 
+
 # -----------------------------
 # Checkout view (optional if using Alpine.js for front-end)
 # -----------------------------
@@ -121,13 +123,18 @@ def checkout_view(request):
             continue
         cart_items.append({
             'id': product.id,
-            'name': product.title,
-            'price': float(product.product_price),
+            'name': product.title, # Assuming 'title' field on Product
+            'price': float(product.product_price), # Assuming 'product_price' field on Product
             'qty': item['qty']
         })
 
     cart_json = json.dumps(cart_items)
-    return render(request, 'cart/basketapp/checkout.html', {'cart_json': cart_json})
+    # Pass public key to the template for the Alpine.js component
+    context = {
+        'cart_json': cart_json,
+        'FLUTTERWAVE_PUBLIC_KEY': settings.FLUTTERWAVE_PUBLIC_KEY,
+    }
+    return render(request, 'cart/basketapp/checkout.html', context)
 
 
 # -----------------------------
@@ -136,54 +143,125 @@ def checkout_view(request):
 @csrf_exempt
 @require_POST
 def submit_order(request):
+    """
+    Receives cart and customer details from frontend,
+    creates a pending order in the database, and returns tx_ref.
+    """
     try:
         data = json.loads(request.body)
 
+        # Basic validation for required fields
+        # Added 'phone_number' to required fields check
+        required_fields = ['full_name', 'email', 'phone_number', 'tx_ref', 'cart']
+        if not all(field in data for field in required_fields):
+            # Improved error message to indicate which fields are missing
+            missing_fields = [field for field in required_fields if field not in data]
+            return HttpResponseBadRequest(f"Missing required fields: {', '.join(missing_fields)}")
+
+        # Extract customer details from the payload
+        full_name = data['full_name']
+        email = data['email']
+        phone_number = data['phone_number'] # <--- EXTRACT PHONE NUMBER
+        tx_ref = data['tx_ref']
+
+
+        # Calculate total from cart items to prevent client-side tampering
+        calculated_total = 0
+        for item in data['cart']:
+            product_id = item.get('id')
+            qty = item.get('qty', 0)
+            # It's safer to always get the price from the DB for security and consistency
+            # price = item.get('price', 0.0)
+
+            if not product_id or not isinstance(qty, int) or qty <= 0: # Removed price check here
+                return HttpResponseBadRequest("Invalid cart item data (product_id or quantity invalid).")
+
+            try:
+                product_db = Product.objects.get(pk=product_id)
+                calculated_total += qty * float(product_db.product_price) # Use DB price
+            except Product.DoesNotExist:
+                return HttpResponseBadRequest(f"Product with ID {product_id} not found.")
+
+        # If you have shipping or discount, ensure they are also server-side calculated or validated
+        # and then applied to calculated_total BEFORE comparing with frontend_total if you do.
+        # For now, let's keep it simple with what's in your BookOrder model
+        # Assuming shipping_fee and discount are sent by frontend if applicable, or default to 0
+        shipping_fee = float(data.get('shipping_fee', 0))
+        discount = float(data.get('discount', 0))
+        final_calculated_total = calculated_total + shipping_fee - discount
+
+        # Compare calculated_total with frontend_total (now final_calculated_total with shipping/discount)
+        frontend_total = float(data.get('total', 0))
+        if abs(final_calculated_total - frontend_total) > 0.01: # Allow for float precision
+             print(f"Total mismatch! Calculated: {final_calculated_total}, Frontend: {frontend_total}. Using calculated total.")
+             # Decide whether to error out or proceed with calculated_total. Proceeding for now.
+             # You might want to return an error here instead:
+             # return HttpResponseBadRequest("Total amount mismatch with server calculation.")
+
         order = BookOrder.objects.create(
-            full_name=data['full_name'],
-            email=data['email'],
-            phone=data.get('phone', ''),
-            tx_ref=data['tx_ref'],
-            total=data.get('total', 0),
+            user=request.user if request.user.is_authenticated else None, # Link order to user
+            full_name=full_name,
+            email=email,
+            phone=phone_number, # <--- ADD THIS LINE!
+            tx_ref=tx_ref,
+            total=final_calculated_total, # Use the final calculated total
+            shipping_fee=shipping_fee, # Pass shipping fee if you track it
+            discount=discount,       # Pass discount if you track it
             status='pending'
         )
 
-        for item in data['cart']:
-            product = Product.objects.get(pk=item['id'])
-            BookOrderItem.objects.create(
-                order=order,
-                product=product,
-                quantity=item['qty'],
-                price=item['price']
-            )
+        for item_data in data['cart']:
+            try:
+                product = Product.objects.get(pk=item_data['id'])
+                BookOrderItem.objects.create(
+                    order=order,
+                    product=product,
+                    quantity=item_data['qty'],
+                    price=float(product.product_price) # Always use DB price for order item
+                )
+            except Product.DoesNotExist:
+                # This should ideally not happen if calculated_total passed, but as a safeguard.
+                # If an item fails, you might want to rollback the whole order.
+                print(f"Product with ID {item_data.get('id')} not found when creating order item.")
+                order.delete() # Rollback the parent order
+                return HttpResponseBadRequest(f"Product with ID {item_data.get('id')} not found.")
+            except Exception as e:
+                print(f"Error creating order item: {e}")
+                order.delete() # Rollback the parent order
+                return HttpResponseServerError({"status": "error", "message": f"Error creating order item: {e}"})
 
-        return JsonResponse({"status": "ok", "order_id": order.id})
+        return JsonResponse({"status": "ok", "order_id": order.id, "tx_ref": order.tx_ref})
 
+    except json.JSONDecodeError:
+        return HttpResponseBadRequest("Invalid JSON in request body.")
     except Exception as e:
+        print(f"Error submitting order: {e}")
+        # Return a JSON error response for better frontend handling
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
-
 
 # -----------------------------
 # Payment success (Flutterwave redirect)
 # -----------------------------
-
 @login_required
 def payment_success(request):
     tx_ref = None
+    transaction_id = None # Flutterwave's transaction ID for direct lookup
 
-    # --- Debugging Start ---
     print("\n--- Payment Success View Entry Point ---")
     print(f"Request GET parameters: {request.GET}")
-    # --- Debugging End ---
 
-    # Attempt 1: Get tx_ref directly from the URL query parameters
-    # This is common for card payments and some Flutterwave redirects
+    # Attempt 1: Get tx_ref and transaction_id directly from URL query parameters
     tx_ref = request.GET.get("tx_ref")
-    if tx_ref:
-        print(f"Attempt 1: Found tx_ref directly: {tx_ref}")
+    transaction_id = request.GET.get("transaction_id") # Flutterwave's transaction_id
+
+    if tx_ref and transaction_id:
+        print(f"Attempt 1: Found tx_ref='{tx_ref}' and transaction_id='{transaction_id}' directly.")
+    elif tx_ref:
+         print(f"Attempt 1: Found tx_ref='{tx_ref}' directly, but no transaction_id. Will rely on API.")
+
 
     # Attempt 2: If tx_ref not found, check for the 'resp' parameter (Mobile Money / Sandbox)
-    # This is based on your debug output for mobile money
+    # This often contains more detailed JSON
     if not tx_ref:
         flutterwave_resp_param = request.GET.get("resp")
         if flutterwave_resp_param:
@@ -191,30 +269,22 @@ def payment_success(request):
             try:
                 decoded_resp_param = urllib.parse.unquote_plus(flutterwave_resp_param)
                 resp_json = json.loads(decoded_resp_param)
-                # print(f"Parsed 'resp' JSON: {resp_json}")
-
-                # Extract tx_ref from the 'data' key within the JSON response
+                
                 data_from_resp = resp_json.get("data", {})
                 tx_ref = data_from_resp.get("txRef") or data_from_resp.get("tx_ref")
-                
-                # print(f"Extracted tx_ref from 'resp' parameter's data: {tx_ref}")
+                transaction_id = data_from_resp.get("id") # Often 'id' in the 'data' part of 'resp'
 
-                # Optional: Early check for payment status from the redirect (good for immediate feedback)
-                # However, the API verification is the definitive source.
+                print(f"Extracted tx_ref='{tx_ref}' and transaction_id='{transaction_id}' from 'resp' parameter's data.")
+
                 if data_from_resp.get("status") != "successful":
-                    messages.info(request, f"Payment status from redirect: {data_from_resp.get('status')}. We'll try to verify it.")
-                    # Do not return yet, proceed to API verification as it's more reliable
-                    print(f"Early status check from 'resp' JSON was not 'successful' for tx_ref: {tx_ref}. Proceeding to API verification.")
-
+                    messages.info(request, f"Payment status from redirect was '{data_from_resp.get('status')}'. Proceeding to API verification for definitive status.")
+                
             except (json.JSONDecodeError, KeyError, TypeError) as e:
                 print(f"Error parsing 'resp' parameter: {e}")
-                print(f"Raw 'resp' parameter: {flutterwave_resp_param}")
                 messages.error(request, "Invalid payment response received from Flutterwave (malformed 'resp' parameter).")
                 return redirect("cart:checkout")
 
-    # Attempt 3: Fallback - check for 'response' parameter (less common, but good to have)
-    # This was in your original code, and while 'resp' was the actual one,
-    # it doesn't hurt to keep 'response' as a very low priority fallback.
+    # Attempt 3: Fallback - check for 'response' parameter (less common/legacy)
     if not tx_ref:
         flutterwave_legacy_response_param = request.GET.get("response")
         if flutterwave_legacy_response_param:
@@ -222,18 +292,18 @@ def payment_success(request):
             try:
                 decoded_legacy_param = urllib.parse.unquote_plus(flutterwave_legacy_response_param)
                 legacy_resp_json = json.loads(decoded_legacy_param)
-                print(f"Parsed legacy 'response' JSON: {legacy_resp_json}")
                 
                 # Try to extract from top-level or 'data' in legacy response
                 tx_ref = legacy_resp_json.get("txRef") or legacy_resp_json.get("tx_ref")
                 if not tx_ref: # Try data if not at top level
                     tx_ref = legacy_resp_json.get("data", {}).get("txRef") or legacy_resp_json.get("data", {}).get("tx_ref")
+                
+                transaction_id = legacy_resp_json.get("id") or legacy_resp_json.get("data", {}).get("id")
 
-                print(f"Extracted tx_ref from legacy 'response' parameter: {tx_ref}")
+                print(f"Extracted tx_ref='{tx_ref}' and transaction_id='{transaction_id}' from legacy 'response' parameter.")
 
                 if legacy_resp_json.get("status") != "successful" and legacy_resp_json.get("data",{}).get("status") != "successful":
-                    messages.info(request, f"Payment status from legacy redirect: {legacy_resp_json.get('status', legacy_resp_json.get('data', {}).get('status'))}. We'll try to verify it.")
-                    print(f"Early status check from legacy 'response' JSON was not 'successful' for tx_ref: {tx_ref}. Proceeding to API verification.")
+                    messages.info(request, f"Payment status from legacy redirect was '{legacy_resp_json.get('status', legacy_resp_json.get('data', {}).get('status'))}'. Proceeding to API verification.")
 
             except (json.JSONDecodeError, KeyError, TypeError) as e:
                 print(f"Error parsing legacy 'response' parameter: {e}")
@@ -249,14 +319,22 @@ def payment_success(request):
     # --- Proceed to verify transaction via Flutterwave API ---
     print(f"\n--- Proceeding to API Verification for tx_ref: {tx_ref} ---")
     headers = {"Authorization": f"Bearer {settings.FLUTTERWAVE_SECRET_KEY}"}
-    verify_url = f"https://api.flutterwave.com/v3/transactions/verify_by_reference?tx_ref={tx_ref}"
+    
+    # Use verify_by_reference for tx_ref or direct transaction ID verification
+    if transaction_id:
+        verify_url = f"https://api.flutterwave.com/v3/transactions/{transaction_id}/verify"
+        print(f"Verifying using transaction_id: {transaction_id}")
+    else:
+        verify_url = f"https://api.flutterwave.com/v3/transactions/verify_by_reference?tx_ref={tx_ref}"
+        print(f"Verifying using tx_ref: {tx_ref}")
+
 
     try:
         response_obj = requests.get(verify_url, headers=headers, timeout=10)
         response_obj.raise_for_status() # Raises HTTPError for bad responses (4xx or 5xx)
         
         verification_response = response_obj.json()
-        print(f"Flutterwave verification API response for {tx_ref}: {verification_response}")
+        print(f"Flutterwave verification API response for {tx_ref} / {transaction_id}: {verification_response}")
 
     except requests.exceptions.HTTPError as e:
         error_msg = f"Flutterwave verification failed (HTTP Error: {e.response.status_code}). Please try again."
@@ -281,6 +359,7 @@ def payment_success(request):
         if data.get("status") == "successful":
             try:
                 # IMPORTANT: Ensure the order exists and belongs to the current user
+                # Fetching by tx_ref and email ensures the user owns this transaction.
                 order = get_object_or_404(BookOrder, tx_ref=tx_ref, email=request.user.email)
             except BookOrder.DoesNotExist:
                 messages.error(request, "Order not found or user mismatch. Please contact support.")
@@ -288,35 +367,64 @@ def payment_success(request):
                 return redirect("cart:checkout")
 
             # Validate amount and currency to prevent tampering
+            # Use order.total for the expected amount, as calculated server-side during submit_order
             expected_amount = float(order.total)
             actual_amount = float(data.get("amount", 0))
-            expected_currency = "USD" # Ensure this matches your order's currency
+            expected_currency = "USD" # Ensure this matches your order's currency (or order.currency)
             actual_currency = data.get("currency")
 
-            if actual_amount >= expected_amount and actual_currency == expected_currency:
+            # Use a small tolerance for floating-point comparisons
+            if abs(actual_amount - expected_amount) < 0.01 and actual_currency == expected_currency:
                 order.status = "collected" # Mark order as paid
-                order.save(update_fields=["status"])
-                messages.success(request, "Payment successful! Your downloads are ready.")
+                order.flutterwave_id = data.get("id") # Store Flutterwave's internal ID
+                order.save(update_fields=["status", "flutterwave_id"])
+                
+                # Clear the user's cart/basket after successful payment
+                # (Assuming cartbasket returns a mutable object or has a clear method)
+                basket_to_clear = cartbasket(request)
+                if hasattr(basket_to_clear, 'clear'):
+                    basket_to_clear.clear() # If your cartbasket has a clear method
+                else:
+                    # If it's a simple list, you might clear session manually or similar
+                    if 'skey' in request.session: # Example if cart is stored under 'skey'
+                        del request.session['skey']
+                
+                messages.success(request, "Payment successful! Your order has been placed and is ready.")
                 print(f"Payment for order {order.id} ({tx_ref}) successful and verified. Redirecting to download page.")
-                return redirect("cart:download_page", order_id=order.id)
+                return redirect("cart:download_page", order_id=order.id) # Redirect to a specific order/download page
             else:
-                messages.error(request, "Payment amount or currency mismatch. Potential tampering detected.")
+                messages.error(request, f"Payment amount or currency mismatch. Potential tampering detected. Please contact support. (Expected: {expected_amount} {expected_currency}, Actual: {actual_amount} {actual_currency})")
                 print(f"Amount/currency mismatch for tx_ref: {tx_ref}. Expected: {expected_amount} {expected_currency}, Actual: {actual_amount} {actual_currency}")
+                order.status = "failed_verification" # Mark as failed due to mismatch
+                order.save(update_fields=["status"])
                 return redirect("cart:checkout")
         else:
-            messages.info(request, f"Payment status: {data.get('status')}. Please check your transaction or try again.")
+            messages.info(request, f"Payment status: {data.get('status')}. Your payment was not fully successful. Please check your transaction or try again.")
             print(f"API verification status is not 'successful' for tx_ref: {tx_ref}. Status: {data.get('status')}")
+            # Consider updating order status to 'failed' or 'pending_retry'
+            try:
+                order = get_object_or_404(BookOrder, tx_ref=tx_ref)
+                order.status = "failed"
+                order.save(update_fields=["status"])
+            except BookOrder.DoesNotExist:
+                pass # Order might not have been created if tx_ref was forged
             return redirect("cart:checkout")
     else:
         messages.error(request, f"Failed to verify payment with Flutterwave: {verification_response.get('message', 'Unknown error')}")
         print(f"API verification status is not 'success' for tx_ref: {tx_ref}. Response: {verification_response}")
+        # Consider updating order status to 'failed'
+        try:
+            order = get_object_or_404(BookOrder, tx_ref=tx_ref)
+            order.status = "failed"
+            order.save(update_fields=["status"])
+        except BookOrder.DoesNotExist:
+            pass
         return redirect("cart:checkout")
 
     # Generic catch-all for unexpected scenarios
     messages.error(request, "An unexpected error occurred during payment processing. Please contact support.")
     print(f"Unexpected error at the end of payment_success view for tx_ref: {tx_ref} (or None if not found).")
     return redirect("cart:checkout")
-
 # @login_required
 # def payment_success(request):
 #     tx_ref = request.GET.get("tx_ref") # Try to get tx_ref directly first
