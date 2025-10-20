@@ -142,9 +142,7 @@ DEBUG = False
 ALLOWED_HOSTS = ['awakeningsaints.org', '*']
 
 
-
 INSTALLED_APPS = [
-    
     'jazzmin',
     'django_ckeditor_5',
     'django.contrib.admin',
