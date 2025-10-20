@@ -9,7 +9,7 @@ document.getElementById("payNowButton").addEventListener("click", function () {
 
     // Flutterwave Payment Configuration
     FlutterwaveCheckout({
-        public_key: "FLWPUBK-4428954ab2b6a3921e716331f673338e-X", // Replace with your Flutterwave public key
+        public_key: "FLWPUBK-eabfcd297464d04dd146e66a866942d6-X", // Replace with your Flutterwave public key
         tx_ref: "donation_" + Date.now(),
         amount: amount,
         currency: currency,

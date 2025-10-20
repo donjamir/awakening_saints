@@ -9,7 +9,7 @@
         var donationMessage = document.getElementById("donation_message").value;
 
         FlutterwaveCheckout({
-            public_key: "FLWPUBK-4428954ab2b6a3921e716331f673338e-X",  // Replace with your Flutterwave Public Key
+            public_key: "FLWPUBK-eabfcd297464d04dd146e66a866942d6-X",  // Replace with your Flutterwave Public Key
             tx_ref: "TX_" + Math.floor((Math.random() * 1000000000) + 1),  // Unique transaction reference
             amount: amount,
             currency: currency,
