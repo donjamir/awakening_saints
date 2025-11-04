@@ -7,8 +7,9 @@ cvc: 196
 
 
 
+js course - https://youtu.be/EerdGm-ehJQ?si=w0bJQyR8FifKwGwh
 
-
+django full course ecom - https://youtu.be/qx9nshX9CQQ?si=JTydW8l1NHXtOryg
 
 Card type	Number	CVV	Expiry
 Visa	5531886652142950	564	Any future date

@@ -127,6 +127,55 @@
 
 
 
+<style>
+  /* Make all text unselectable */
+  .no-copy {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+</style>
+
+<script>
+(function() {
+  // Apply no-copy class to the whole page
+  document.documentElement.classList.add('no-copy');
+
+  // Disable right-click context menu
+  document.addEventListener('contextmenu', e => e.preventDefault(), { passive: false });
+
+  // Disable text selection
+  document.addEventListener('selectstart', e => e.preventDefault(), { passive: false });
+
+  // Disable copy and cut events
+  document.addEventListener('copy', e => e.preventDefault(), { passive: false });
+  document.addEventListener('cut', e => e.preventDefault(), { passive: false });
+
+  // Block common keyboard shortcuts (Ctrl/Cmd+C, Ctrl/Cmd+X, Ctrl/Cmd+S, Ctrl/Cmd+U, F12, Ctrl+Shift+I)
+  document.addEventListener('keydown', e => {
+    const key = e.key.toLowerCase();
+    const ctrlOrCmd = e.ctrlKey || e.metaKey;
+
+    if (
+      (ctrlOrCmd && ['c', 'x', 's', 'u'].includes(key)) || // copy, cut, save, view-source
+      (e.ctrlKey && e.shiftKey && key === 'i') ||          // Ctrl+Shift+I (DevTools)
+      e.key === 'F12'                                      // F12 (DevTools)
+    ) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+  }, { passive: false });
+
+  // Optional: If you want to allow copying inside specific elements
+  // Add class="allow-copy" to them
+  document.querySelectorAll('.allow-copy').forEach(el => {
+    el.addEventListener('copy', e => e.stopPropagation());
+    el.addEventListener('selectstart', e => e.stopPropagation());
+  });
+})();
+</script>
 
 
 
