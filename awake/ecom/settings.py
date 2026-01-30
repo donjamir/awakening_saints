@@ -10,13 +10,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-ev28k=ir#vah2v)!-*t65t!+b#j(xnk24fv88!nkoemy)#0ag1'
 
-DEBUG = True
+# DEBUG = True
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
 
-# DEBUG = False
+DEBUG = False
 
-# ALLOWED_HOSTS = ['awakeningsaints.org', '*']
+ALLOWED_HOSTS = ['awakeningsaints.org', '*']
 
 
 
@@ -160,12 +160,12 @@ DATABASES = {
 
 
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 
 
@@ -235,11 +235,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 
-# PESAPAL_CONSUMER_KEY = '0IvCo5VfHebocBulSLEeLlQlU13f1Y+0'
-# PESAPAL_CONSUMER_SECRET = '+EDtZ0OSUa56evNPYaQKFoOFtdI='
+PESAPAL_CONSUMER_KEY = '0IvCo5VfHebocBulSLEeLlQlU13f1Y+0'
+PESAPAL_CONSUMER_SECRET = '+EDtZ0OSUa56evNPYaQKFoOFtdI='
 
-PESAPAL_CONSUMER_KEY = 'TDpigBOOhs+zAl8cwH2Fl82jJGyD8xev'
-PESAPAL_CONSUMER_SECRET = '1KpqkfsMaihIcOlhnBo/gBZ5smw='
+# PESAPAL_CONSUMER_KEY = 'TDpigBOOhs+zAl8cwH2Fl82jJGyD8xev'
+# PESAPAL_CONSUMER_SECRET = '1KpqkfsMaihIcOlhnBo/gBZ5smw='
 PESAPAL_ENVIRONMENT = 'sandbox'  # Change to 'live' for production and 'sandbox' for test
 PESAPAL_NOTIFICATION_ID = ''  # Optional: Get from PesaPal IPN settings
 DEFAULT_CURRENCY = 'USD'
