@@ -9,6 +9,9 @@ urlpatterns = [
     path('accounts/', include('useraccounts.urls', namespace='accounts')),
     path('cart/', include('basketapp.urls', namespace='cart')),
     path('ckeditor/', include('django_ckeditor_5.urls')),
+    
+    
+   
 ]
 
 # + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

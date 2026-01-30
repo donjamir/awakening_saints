@@ -1,3 +1,4 @@
+
 from django.shortcuts import *
 from .basket import cartbasket
 from django.http import JsonResponse
@@ -21,9 +22,11 @@ from django.http import HttpResponseForbidden
 from ecomapp.models import *
 import requests
 from django.conf import settings
-import urllib.request     # for opening URLs (urllib.request.urlopen, etc.)
-import urllib.parse       # for parsing URLs or encoding parameters
-import urllib.error       # for catching HTTPError or URLError
+import urllib.request
+import urllib.parse
+import urllib.error
+import uuid
+from decimal import Decimal
 
 signer = TimestampSigner()
 
@@ -33,8 +36,6 @@ signer = TimestampSigner()
 def basket_summary(request):
     cart = cartbasket(request)
     return render(request, 'cart/basketapp/cart.html', {'cart': cart})
-
-
 
 # Add product to cart
 def cart_add(request):
@@ -49,17 +50,14 @@ def cart_add(request):
         product = get_object_or_404(Product, id=product_id)
         basket.add(product=product, qty=product_qty)
 
-        # Calculate total quantity in cart
-        total_qty = len(basket)  # or use sum(item['qty'] for item in basket.basket.values())
-
+        total_qty = len(basket)
         return JsonResponse({
             'message': 'Product added',
             'product_id': product_id,
             'qty': product_qty,
-            'cart_count': total_qty  # end this to update the icon
+            'cart_count': total_qty
         })
     return JsonResponse({'error': 'Invalid action'}, status=400)
-
 
 # Update product quantity in cart
 @require_POST
@@ -71,20 +69,19 @@ def cart_update(request):
             product_id = int(request.POST.get('productid'))
             product_qty = int(request.POST.get('productqty'))
             if product_qty < 1:
-                product_qty = 1  # optional: prevent 0 or negative quantities
+                product_qty = 1
         except (TypeError, ValueError):
             return JsonResponse({'error': 'Invalid input'}, status=400)
 
         basket.update(product=product_id, qty=product_qty)
 
         return JsonResponse({
-            'cart_count': len(basket),  # total items in cart
+            'cart_count': len(basket),
             'subtotal': basket.get_total_price()
         })
 
     return JsonResponse({'error': 'Invalid action'}, status=400)
 
-   
 # Remove product from cart
 def cart_delete(request):
     cart = cartbasket(request)
@@ -98,19 +95,11 @@ def cart_delete(request):
 
         return JsonResponse({
             'subtotal': cart.get_total_price(),
-            'cart_count': len(cart)  # 👈 use 'cart_count'
+            'cart_count': len(cart)
         })
     return JsonResponse({'error': 'Invalid action'}, status=400)
 
-
-# def checkout(request):
-#     return render(request, 'cart/basketapp/checkout.html')
-
-
-
-# -----------------------------
-# Checkout view (optional if using Alpine.js for front-end)
-# -----------------------------
+# Checkout view
 @login_required
 def checkout_view(request):
     basket = cartbasket(request)
@@ -130,355 +119,480 @@ def checkout_view(request):
     cart_json = json.dumps(cart_items)
     return render(request, 'cart/basketapp/checkout.html', {'cart_json': cart_json})
 
+# -----------------------------
+# PesaPal Integration Functions for LIVE/PRODUCTION
+# -----------------------------
+
+def payment_success(request):
+    """Handle legacy payment success redirects - now using PesaPal"""
+    # Check for PesaPal parameters first
+    order_tracking_id = request.GET.get('OrderTrackingId')
+    order_merchant_reference = request.GET.get('OrderMerchantReference')
+    
+    if order_tracking_id and order_merchant_reference:
+        # This is a PesaPal callback, redirect to proper handler
+        return redirect(f'{reverse("cart:pesapal_callback")}?OrderTrackingId={order_tracking_id}&OrderMerchantReference={order_merchant_reference}')
+    
+    # Check for legacy Flutterwave parameter
+    tx_ref = request.GET.get("tx_ref")
+    if tx_ref:
+        try:
+            # Try to find PesaPal order with this reference
+            order = BookOrder.objects.get(tx_ref=tx_ref)
+            
+            # Check if order is already paid
+            if order.status == 'collected':
+                messages.success(request, "Payment successful! Your downloads are ready.")
+                return redirect('cart:download_page', order_id=order.id)
+            
+            # Try to verify with PesaPal
+            return redirect('cart:order_status', order_id=order.id)
+            
+        except BookOrder.DoesNotExist:
+            messages.error(request, "Order not found")
+    
+    # Default fallback
+    messages.info(request, "Please check your orders for payment status.")
+    return redirect('cart:checkout')
+
+def get_pesapal_token():
+    """Get PesaPal access token for sandbox or live based on settings."""
+    try:
+
+        env = getattr(settings, 'PESAPAL_ENVIRONMENT', 'sandbox').lower()
+        if env == 'live':
+            base_url = 'https://pay.pesapal.com/v3'
+            print("Getting PesaPal token (LIVE)...")
+        else:
+            base_url = 'https://cybqa.pesapal.com/pesapalv3'
+            print("Getting PesaPal token (SANDBOX)...")
+
+        url = f'{base_url}/api/Auth/RequestToken'
+        consumer_key = settings.PESAPAL_CONSUMER_KEY
+        consumer_secret = settings.PESAPAL_CONSUMER_SECRET
+        payload = {
+            "consumer_key": consumer_key,
+            "consumer_secret": consumer_secret
+        }
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+        response = requests.post(url, json=payload, headers=headers, timeout=30)
+        print(f"PesaPal {env.upper()} Auth URL: {url}")
+        print(f"PesaPal {env.upper()} Response Status: {response.status_code}")
+        print(f"PesaPal {env.upper()} Response: {response.text}")
+        if response.status_code == 200:
+            data = response.json()
+            token = data.get('token')
+            if token:
+                print(f"PesaPal {env.upper()} token obtained successfully")
+                return token
+            else:
+                print(f"No token in {env.upper()} response: {data}")
+                return None
+        else:
+            print(f"PesaPal {env.upper()} auth failed: {response.status_code} - {response.text}")
+            return None
+
+    except Exception as e:
+        print(f"Error getting PesaPal {env.upper()} token: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
+@csrf_exempt
+@require_POST
+def save_order(request):
+    """Save order to database before PesaPal payment"""
+    try:
+        data = json.loads(request.body)
+        
+        # Validate required fields
+        full_name = data.get("full_name", "").strip()
+        email = data.get("email", "").strip()
+        
+        # Handle both 'phone' and 'phone_number' for compatibility
+        phone = data.get("phone", "").strip()
+        if not phone:  # Try phone_number if phone is empty
+            phone = data.get("phone_number", "").strip()
+        
+        # reference = data.get("reference", f"PESAPAL-LIVE-{uuid.uuid4().hex[:12].upper()}")
+        
+
+        env = getattr(settings, 'PESAPAL_ENVIRONMENT', 'sandbox').lower()
+        prefix = "PESAPAL-LIVE" if env == "live" else "PESAPAL-SBX"
+        reference = data.get(
+            "reference",
+            f"{prefix}-{uuid.uuid4().hex[:12].upper()}"
+        )
+
+        
+        
+        if not full_name:
+            return JsonResponse({"status": "error", "message": "Full name is required"}, status=400)
+        
+        if not email:
+            return JsonResponse({"status": "error", "message": "Email is required"}, status=400)
+        
+        if not phone:
+            return JsonResponse({"status": "error", "message": "Phone number is required"}, status=400)
+        
+        cart_items = data.get("cart", [])
+        if not cart_items:
+            return JsonResponse({"status": "error", "message": "Cart is empty"}, status=400)
+        
+        amount = float(data.get("amount", 0))
+        if amount <= 0:
+            return JsonResponse({"status": "error", "message": "Invalid order amount"}, status=400)
+        
+        # Get or create user
+        user = request.user if request.user.is_authenticated else None
+        
+        # Get additional fields for PesaPal
+        address = data.get("address", "").strip() or "Not specified"
+        city = data.get("city", "").strip() or "Kampala"
+        country = data.get("country", "").strip() or "Uganda"
+        postal_code = data.get("postal_code", "").strip() or "256"
+        currency = data.get("currency", "USD")
+        
+        # Create order
+        order = BookOrder.objects.create(
+            full_name=full_name,
+            email=email,
+            phone=phone,
+            address=address,
+            city=city,
+            country=country,
+            tx_ref=reference,
+            total=amount,
+            user=user,
+            status="pending",
+            currency=currency,
+            payment_status="pending"
+        )
+        
+        # Save order items
+        for item in cart_items:
+            try:
+                product = Product.objects.get(pk=item["id"])
+                qty = int(item["qty"])
+                
+                BookOrderItem.objects.create(
+                    order=order,
+                    product=product,
+                    quantity=qty,
+                    price=product.product_price,
+                )
+            except Product.DoesNotExist:
+                continue
+        
+        # Update subtotal (same as total for now)
+        order.subtotal = amount
+        order.save(update_fields=['subtotal'])
+        
+        print(f"Order saved successfully: ID {order.id}, Reference: {reference}")
+        
+        return JsonResponse({
+            "status": "success",
+            "order_id": order.id,
+            "reference": reference,
+            "message": "Order saved successfully"
+        })
+        
+    except Exception as e:
+        print(f"Error saving order: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@csrf_exempt
+@require_POST
+def initiate_pesapal_payment(request):
+    """Initiate PesaPal payment (sandbox or live based on settings)"""
+    try:
+        data = json.loads(request.body)
+
+        # Get order ID and reference
+        order_id = data.get("order_id")
+        reference = data.get("reference")
+
+        if not order_id or not reference:
+            return JsonResponse({"status": "error", "message": "Order ID and reference are required"}, status=400)
+
+        # Get order
+        order = BookOrder.objects.get(id=order_id, tx_ref=reference)
+
+        # Get PesaPal token
+        token = get_pesapal_token()
+        if not token:
+            return JsonResponse({"status": "error", "message": "Failed to authenticate with PesaPal. Check your credentials and ensure your account is fully activated."}, status=500)
+
+
+        env = getattr(settings, 'PESAPAL_ENVIRONMENT', 'sandbox').lower()
+        if env == 'live':
+            base_url = 'https://pay.pesapal.com/v3'
+            scheme = 'https'
+            host = 'awakeningsaints.org'
+        else:
+            base_url = 'https://cybqa.pesapal.com/pesapalv3'
+            scheme = request.scheme
+            host = request.get_host()
+        url = f'{base_url}/api/Transactions/SubmitOrderRequest'
+        callback_url = f"{scheme}://{host}{reverse('cart:pesapal_callback')}"
+        cancellation_url = f"{scheme}://{host}{reverse('cart:checkout')}"
+
+        names = order.full_name.split(' ', 1)
+        first_name = names[0] if names else ""
+        last_name = names[1] if len(names) > 1 else ""
+
+        order_data = {
+            "id": order.tx_ref,
+            "currency": order.currency or "USD",
+            "amount": float(order.total),
+            "description": f"Book Purchase - Awakening Saints - Order #{order.id}",
+            "callback_url": callback_url,
+            "cancellation_url": cancellation_url,
+            "notification_id": settings.PESAPAL_NOTIFICATION_ID,
+            "billing_address": {
+                "email_address": order.email,
+                "phone_number": order.phone,
+                "country_code": "UG",
+                "first_name": first_name,
+                "middle_name": "",
+                "last_name": last_name,
+                "line_1": order.address or "Not specified",
+                "city": order.city or "Kampala",
+                "state": "Central",
+                "postal_code": "256",
+                "zip_code": "256"
+            }
+        }
+
+        print(f"PesaPal {env.upper()} order data: {order_data}")
+        print(f"Sending to PesaPal {env.upper()} URL: {url}")
+
+        headers = {
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+
+        response = requests.post(url, json=order_data, headers=headers, timeout=30)
+
+        print(f"PesaPal {env.upper()} Response Status: {response.status_code}")
+        print(f"PesaPal {env.upper()} Response: {response.text}")
+
+        if response.status_code == 200:
+            result = response.json()
+            if result.get('redirect_url'):
+                order.pesapal_tracking_id = result.get('order_tracking_id')
+                order.pesapal_redirect_url = result.get('redirect_url')
+                order.save(update_fields=['pesapal_tracking_id', 'pesapal_redirect_url'])
+                print(f"PesaPal {env.upper()} payment initiated successfully")
+                print(f"Redirect URL: {result.get('redirect_url')}")
+                return JsonResponse({
+                    'status': 'success',
+                    'redirect_url': result.get('redirect_url'),
+                    'order_tracking_id': result.get('order_tracking_id')
+                })
+            else:
+                print(f"No redirect URL from PesaPal {env.upper()}: {result}")
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'No redirect URL received from PesaPal'
+                })
+        else:
+            print(f"PesaPal {env.upper()} error: {response.status_code} - {response.text}")
+            return JsonResponse({
+                'status': 'error',
+                'message': f'PesaPal error: {response.status_code} - {response.text}'
+            })
+
+    except BookOrder.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Order not found"}, status=404)
+    except Exception as e:
+        print(f"Error initiating PesaPal payment: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+def pesapal_callback(request):
+    """Handle PesaPal LIVE callback"""
+    order_tracking_id = request.GET.get('OrderTrackingId')
+    order_merchant_reference = request.GET.get('OrderMerchantReference')
+    
+    if not order_tracking_id or not order_merchant_reference:
+        messages.error(request, "Missing payment information")
+        return redirect('cart:checkout')
+    
+    try:
+        # Get the order
+        order = BookOrder.objects.get(tx_ref=order_merchant_reference)
+        
+
+        # Verify payment status with PesaPal (sandbox or live)
+        token = get_pesapal_token()
+        if token:
+            env = getattr(settings, 'PESAPAL_ENVIRONMENT', 'sandbox').lower()
+            if env == 'live':
+                base_url = 'https://pay.pesapal.com/v3'
+            else:
+                base_url = 'https://cybqa.pesapal.com/pesapalv3'
+            url = f'{base_url}/api/Transactions/GetTransactionStatus?orderTrackingId={order_tracking_id}'
+            headers = {
+                'Authorization': f'Bearer {token}',
+                'Accept': 'application/json'
+            }
+            print(f"Checking payment status at: {url}")
+            response = requests.get(url, headers=headers, timeout=30)
+            if response.status_code == 200:
+                payment_status = response.json()
+                status_code = payment_status.get('status_code', '')
+                # Update order status based on PesaPal response
+                if status_code == '1':  # Payment completed
+                    order.status = 'collected'
+                    order.payment_status = 'completed'
+                    order.payment_date = timezone.now()
+                    order.save()
+                    messages.success(request, "Payment successful! Your downloads are ready.")
+                    return redirect('cart:download_page', order_id=order.id)
+                elif status_code == '0':  # Payment pending
+                    order.status = 'pending'
+                    order.payment_status = 'pending'
+                    order.save()
+                    messages.info(request, "Payment is pending. You will be notified when it's completed.")
+                    return redirect('cart:order_status', order_id=order.id)
+                else:  # Payment failed or cancelled
+                    order.status = 'failed'
+                    order.payment_status = 'failed'
+                    order.save()
+                    messages.error(request, "Payment failed. Please try again.")
+                    return redirect('cart:checkout')
+        # If we can't verify, check if order is already marked as collected
+        if order.status == 'collected':
+            messages.success(request, "Payment was already processed. Your downloads are ready.")
+            return redirect('cart:download_page', order_id=order.id)
+        # Default: show pending status
+        messages.info(request, "We're verifying your payment. Please check back shortly.")
+        return redirect('cart:order_status', order_id=order.id)
+        
+    except BookOrder.DoesNotExist:
+        messages.error(request, "Order not found")
+        return redirect('cart:checkout')
+    except Exception as e:
+        print(f"Error in pesapal_callback: {e}")
+        messages.error(request, "Error processing payment. Please contact support.")
+        return redirect('cart:checkout')
+
+
+@csrf_exempt
+def pesapal_ipn(request):
+    """Handle PesaPal IPN notifications for LIVE"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            order_merchant_reference = data.get('OrderMerchantReference')
+            order_tracking_id = data.get('OrderTrackingId')
+            if order_merchant_reference and order_tracking_id:
+                try:
+                    order = BookOrder.objects.get(tx_ref=order_merchant_reference)
+                    # Always verify status with Pesapal
+                    token = get_pesapal_token()
+                    env = getattr(settings, 'PESAPAL_ENVIRONMENT', 'sandbox').lower()
+                    if env == 'live':
+                        base_url = 'https://pay.pesapal.com/v3'
+                    else:
+                        base_url = 'https://cybqa.pesapal.com/pesapalv3'
+                    url = f'{base_url}/api/Transactions/GetTransactionStatus?orderTrackingId={order_tracking_id}'
+                    headers = {
+                        'Authorization': f'Bearer {token}',
+                        'Accept': 'application/json'
+                    }
+                    print(f"IPN: Checking payment status at: {url}")
+                    response = requests.get(url, headers=headers, timeout=30)
+                    if response.status_code == 200:
+                        payment_status = response.json()
+                        status_code = payment_status.get('status_code', '')
+                        if status_code == '1':
+                            order.status = 'collected'
+                            order.payment_status = 'completed'
+                            order.payment_date = timezone.now()
+                        elif status_code == '0':
+                            order.status = 'pending'
+                            order.payment_status = 'pending'
+                        else:
+                            order.status = 'failed'
+                            order.payment_status = 'failed'
+                        order.save()
+                        PaymentLog.objects.create(
+                            order=order,
+                            tracking_id=order_tracking_id,
+                            status_code=status_code,
+                            status_description=payment_status.get('status_description', ''),
+                            ipn_data=data
+                        )
+                        return JsonResponse({'status': 'ok'})
+                    else:
+                        print(f"IPN: Failed to verify payment status: {response.text}")
+                        return JsonResponse({'status': 'error', 'message': 'Failed to verify payment status'}, status=500)
+                except BookOrder.DoesNotExist:
+                    return JsonResponse({'status': 'error', 'message': 'Order not found'}, status=404)
+            return JsonResponse({'status': 'ok'})
+        except Exception as e:
+            print(f"Error in IPN handler: {e}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+# Check order status
+@login_required
+def order_status(request, order_id):
+    """Display order payment status"""
+    order = get_object_or_404(BookOrder, id=order_id, email=request.user.email)
+    
+    # If payment is completed, redirect to downloads
+    if order.status == 'collected':
+        messages.success(request, "Payment successful! Your downloads are ready.")
+        return redirect('cart:download_page', order_id=order.id)
+    
+    return render(request, 'cart/basketapp/order_status.html', {
+        'order': order
+    })
 
 # -----------------------------
-# Submit order (creates pending order)
+# Legacy submit_order (for compatibility)
 # -----------------------------
 @csrf_exempt
 @require_POST
 def submit_order(request):
+    """Legacy endpoint - redirects to new PesaPal flow"""
     try:
         data = json.loads(request.body)
-
-        user = request.user if request.user.is_authenticated else None
-
-        order = BookOrder.objects.create(
-            full_name=data['full_name'],
-            email=data.get('email', ''),
-            phone=data.get('phone', ''),
-            tx_ref=data['tx_ref'],
-            total=data.get('total', 0),
-            user=user,
-            status='pending'
-        )
-
-        for item in data['cart']:
-            product = Product.objects.get(pk=item['id'])
-            BookOrderItem.objects.create(
-                order=order,
-                product=product,
-                quantity=item['qty'],
-                price=item['price']
-            )
-
-        return JsonResponse({"status": "ok", "order_id": order.id})
-
-    except Product.DoesNotExist:
-        return JsonResponse({"status": "error", "message": "Product not found."}, status=404)
+        
+        # Generate new reference for PesaPal
+        reference = f"PESAPAL-LIVE-{uuid.uuid4().hex[:12].upper()}"
+        
+        # Return success to trigger frontend PesaPal flow
+        return JsonResponse({
+            "status": "ok",
+            "reference": reference,
+            "message": "Proceed with PesaPal payment"
+        })
+        
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
-
 # -----------------------------
-# Payment success (Flutterwave redirect)
-# -----------------------------
-
-@login_required
-def payment_success(request):
-    tx_ref = None
-
-    # --- Debugging Start ---
-    print("\n--- Payment Success View Entry Point ---")
-    print(f"Request GET parameters: {request.GET}")
-    # --- Debugging End ---
-
-    # Attempt 1: Get tx_ref directly from the URL query parameters
-    # This is common for card payments and some Flutterwave redirects
-    tx_ref = request.GET.get("tx_ref")
-    if tx_ref:
-        print(f"Attempt 1: Found tx_ref directly: {tx_ref}")
-
-    # Attempt 2: If tx_ref not found, check for the 'resp' parameter (Mobile Money / Sandbox)
-    # This is based on your debug output for mobile money
-    if not tx_ref:
-        flutterwave_resp_param = request.GET.get("resp")
-        if flutterwave_resp_param:
-            print(f"Attempt 2: Found 'resp' parameter: {flutterwave_resp_param}")
-            try:
-                decoded_resp_param = urllib.parse.unquote_plus(flutterwave_resp_param)
-                resp_json = json.loads(decoded_resp_param)
-                # print(f"Parsed 'resp' JSON: {resp_json}")
-
-                # Extract tx_ref from the 'data' key within the JSON response
-                data_from_resp = resp_json.get("data", {})
-                tx_ref = data_from_resp.get("txRef") or data_from_resp.get("tx_ref")
-                
-                # print(f"Extracted tx_ref from 'resp' parameter's data: {tx_ref}")
-
-                # Optional: Early check for payment status from the redirect (good for immediate feedback)
-                # However, the API verification is the definitive source.
-                if data_from_resp.get("status") != "successful":
-                    messages.info(request, f"Payment status from redirect: {data_from_resp.get('status')}. We'll try to verify it.")
-                    # Do not return yet, proceed to API verification as it's more reliable
-                    print(f"Early status check from 'resp' JSON was not 'successful' for tx_ref: {tx_ref}. Proceeding to API verification.")
-
-            except (json.JSONDecodeError, KeyError, TypeError) as e:
-                print(f"Error parsing 'resp' parameter: {e}")
-                print(f"Raw 'resp' parameter: {flutterwave_resp_param}")
-                messages.error(request, "Invalid payment response received from Flutterwave (malformed 'resp' parameter).")
-                return redirect("cart:checkout")
-
-    # Attempt 3: Fallback - check for 'response' parameter (less common, but good to have)
-    # This was in your original code, and while 'resp' was the actual one,
-    # it doesn't hurt to keep 'response' as a very low priority fallback.
-    if not tx_ref:
-        flutterwave_legacy_response_param = request.GET.get("response")
-        if flutterwave_legacy_response_param:
-            print(f"Attempt 3: Found 'response' parameter (legacy fallback): {flutterwave_legacy_response_param}")
-            try:
-                decoded_legacy_param = urllib.parse.unquote_plus(flutterwave_legacy_response_param)
-                legacy_resp_json = json.loads(decoded_legacy_param)
-                print(f"Parsed legacy 'response' JSON: {legacy_resp_json}")
-                
-                # Try to extract from top-level or 'data' in legacy response
-                tx_ref = legacy_resp_json.get("txRef") or legacy_resp_json.get("tx_ref")
-                if not tx_ref: # Try data if not at top level
-                    tx_ref = legacy_resp_json.get("data", {}).get("txRef") or legacy_resp_json.get("data", {}).get("tx_ref")
-
-                print(f"Extracted tx_ref from legacy 'response' parameter: {tx_ref}")
-
-                if legacy_resp_json.get("status") != "successful" and legacy_resp_json.get("data",{}).get("status") != "successful":
-                    messages.info(request, f"Payment status from legacy redirect: {legacy_resp_json.get('status', legacy_resp_json.get('data', {}).get('status'))}. We'll try to verify it.")
-                    print(f"Early status check from legacy 'response' JSON was not 'successful' for tx_ref: {tx_ref}. Proceeding to API verification.")
-
-            except (json.JSONDecodeError, KeyError, TypeError) as e:
-                print(f"Error parsing legacy 'response' parameter: {e}")
-                messages.error(request, "Invalid payment response received from Flutterwave (malformed legacy 'response' parameter).")
-                return redirect("cart:checkout")
-
-    # Final check: If after all attempts, tx_ref is still missing, we cannot proceed
-    if not tx_ref:
-        messages.error(request, "Transaction reference missing. Cannot verify payment. Please contact support if this persists.")
-        print("Final Fallback: No tx_ref found after all attempts. Redirecting to checkout.")
-        return redirect("cart:checkout")
-
-    # --- Proceed to verify transaction via Flutterwave API ---
-    print(f"\n--- Proceeding to API Verification for tx_ref: {tx_ref} ---")
-    headers = {"Authorization": f"Bearer {settings.FLUTTERWAVE_SECRET_KEY}"}
-    verify_url = f"https://api.flutterwave.com/v3/transactions/verify_by_reference?tx_ref={tx_ref}"
-
-    try:
-        response_obj = requests.get(verify_url, headers=headers, timeout=10)
-        response_obj.raise_for_status() # Raises HTTPError for bad responses (4xx or 5xx)
-        
-        verification_response = response_obj.json()
-        print(f"Flutterwave verification API response for {tx_ref}: {verification_response}")
-
-    except requests.exceptions.HTTPError as e:
-        error_msg = f"Flutterwave verification failed (HTTP Error: {e.response.status_code}). Please try again."
-        print(f"{error_msg} - Details: {e.response.text}")
-        messages.error(request, error_msg)
-        return redirect("cart:checkout")
-    except json.JSONDecodeError as e:
-        error_msg = "Flutterwave API returned an unreadable response. Please contact support."
-        print(f"{error_msg} - Details: {e} - Raw: {response_obj.text}")
-        messages.error(request, error_msg)
-        return redirect("cart:checkout")
-    except requests.RequestException as e:
-        error_msg = "Payment verification failed due to network error. Please try again."
-        print(f"{error_msg} - Details: {e}")
-        messages.error(request, error_msg)
-        return redirect("cart:checkout")
-
-    # --- Process successful API verification response ---
-    if verification_response.get("status") == "success":
-        data = verification_response.get("data", {}) # This 'data' is from the API verification
-        
-        if data.get("status") == "successful":
-            try:
-                # IMPORTANT: Ensure the order exists and belongs to the current user
-                order = get_object_or_404(BookOrder, tx_ref=tx_ref, email=request.user.email)
-            except BookOrder.DoesNotExist:
-                messages.error(request, "Order not found or user mismatch. Please contact support.")
-                print(f"API Verified but Order not found in DB for tx_ref: {tx_ref} and email: {request.user.email}")
-                return redirect("cart:checkout")
-
-            # Validate amount and currency to prevent tampering
-            expected_amount = float(order.total)
-            actual_amount = float(data.get("amount", 0))
-            expected_currency = "USD"#Ensure this matches your order's currency
-            actual_currency = data.get("currency")
-
-            if actual_amount >= expected_amount and actual_currency == expected_currency:
-                order.status = "collected" # Mark order as paid
-                order.save(update_fields=["status"])
-                messages.success(request, "Payment successful! Your downloads are ready.")
-                print(f"Payment for order {order.id} ({tx_ref}) successful and verified. Redirecting to download page.")
-                return redirect("cart:download_page", order_id=order.id)
-            else:
-                messages.error(request, "Payment amount or currency mismatch. Potential tampering detected.")
-                print(f"Amount/currency mismatch for tx_ref: {tx_ref}. Expected: {expected_amount} {expected_currency}, Actual: {actual_amount} {actual_currency}")
-                return redirect("cart:checkout")
-        else:
-            messages.info(request, f"Payment status: {data.get('status')}. Please check your transaction or try again.")
-            print(f"API verification status is not 'successful' for tx_ref: {tx_ref}. Status: {data.get('status')}")
-            return redirect("cart:checkout")
-    else:
-        messages.error(request, f"Failed to verify payment with Flutterwave: {verification_response.get('message', 'Unknown error')}")
-        print(f"API verification status is not 'success' for tx_ref: {tx_ref}. Response: {verification_response}")
-        return redirect("cart:checkout")
-
-    # Generic catch-all for unexpected scenarios
-    messages.error(request, "An unexpected error occurred during payment processing. Please contact support.")
-    print(f"Unexpected error at the end of payment_success view for tx_ref: {tx_ref} (or None if not found).")
-    return redirect("cart:checkout")
-
-# @login_required
-# def payment_success(request):
-#     tx_ref = request.GET.get("tx_ref") # Try to get tx_ref directly first
-
-#     # If tx_ref is not found directly, check for the 'response' parameter
-#     if not tx_ref:
-#         flutterwave_response_param = request.GET.get("response")
-#         if flutterwave_response_param:
-#             try:
-#                 # URL-decode the parameter value before loading JSON
-#                 decoded_response_param = urllib.parse.unquote_plus(flutterwave_response_param)
-#                 resp_json = json.loads(decoded_response_param)
-                
-#                 # Extract txRef from the top level of the JSON response
-#                 tx_ref = resp_json.get("txRef") or resp_json.get("tx_ref")
-                
-#                 # --- IMPORTANT DEBUGGING STEP ---
-#                 # Log the parsed redirect response. Check if tx_ref is truly there.
-#                 print(f"Parsed Flutterwave redirect 'response' parameter: {resp_json}")
-#                 print(f"Extracted tx_ref from redirect 'response': {tx_ref}")
-
-#                 # Early check for payment status from the redirect (API verification is still definitive)
-#                 if resp_json.get("status") != "successful":
-#                     messages.error(request, f"Payment not marked as successful in Flutterwave redirect. Status: {resp_json.get('status')}")
-#                     return redirect("cart:checkout")
-
-#             except (json.JSONDecodeError, KeyError, TypeError) as e:
-#                 print(f"Error parsing Flutterwave 'response' parameter: {e}")
-#                 print(f"Raw 'response' parameter: {flutterwave_response_param}")
-#                 messages.error(request, "Invalid payment response received from Flutterwave.")
-#                 return redirect("cart:checkout")
-        
-#     # If after all attempts, tx_ref is still missing
-#     if not tx_ref:
-#         messages.error(request, "Transaction reference missing. Cannot verify payment.")
-#         return redirect("cart:checkout")
-
-#     # Proceed to verify transaction via Flutterwave API using the extracted tx_ref
-#     headers = {"Authorization": f"Bearer {settings.FLUTTERWAVE_SECRET_KEY}"}
-#     verify_url = f"https://api.flutterwave.com/v3/transactions/verify_by_reference?tx_ref={tx_ref}"
-
-#     try:
-#         response_obj = requests.get(verify_url, headers=headers, timeout=10)
-        
-#         # --- NEW ROBUST HANDLING ---
-#         # 1. Check HTTP status code first
-#         response_obj.raise_for_status() # Raises an HTTPError for bad responses (4xx or 5xx)
-        
-#         # 2. Try to parse JSON. If it fails, the response was not JSON.
-#         verification_response = response_obj.json()
-#         print(f"Flutterwave verification API response for {tx_ref}: {verification_response}")
-#         # --- END NEW ROBUST HANDLING ---
-
-#     except requests.exceptions.HTTPError as e:
-#         print(f"Flutterwave API returned HTTP Error: {e.response.status_code} - {e.response.text}")
-#         messages.error(request, f"Flutterwave verification failed (HTTP Error: {e.response.status_code}). Please try again.")
-#         return redirect("cart:checkout")
-#     except json.JSONDecodeError as e:
-#         print(f"Flutterwave API response was not valid JSON: {e}")
-#         print(f"Raw API response text: {response_obj.text}") # Log the raw text here!
-#         messages.error(request, "Flutterwave API returned an unreadable response. Please contact support.")
-#         return redirect("cart:checkout")
-#     except requests.RequestException as e:
-#         print(f"Request to Flutterwave API failed: {e}")
-#         messages.error(request, "Payment verification failed due to network error. Please try again.")
-#         return redirect("cart:checkout")
-
-#     # Process successful JSON verification response
-#     if verification_response.get("status") == "success":
-#         data = verification_response.get("data", {})
-        
-#         if data.get("status") == "successful":
-#             try:
-#                 order = get_object_or_404(BookOrder, tx_ref=tx_ref, email=request.user.email)
-#             except BookOrder.DoesNotExist:
-#                 messages.error(request, "Order not found or user mismatch.")
-#                 return redirect("cart:checkout")
-
-#             expected_amount = float(order.total)
-#             actual_amount = float(data.get("amount", 0))
-#             expected_currency = "UGX" # Adjust if your order model stores currency
-#             actual_currency = data.get("currency")
-
-#             if actual_amount >= expected_amount and actual_currency == expected_currency:
-#                 order.status = "collected"
-#                 order.save(update_fields=["status"])
-#                 messages.success(request, "Payment successful! Your downloads are ready.")
-#                 return redirect("cart:download_page", order_id=order.id)
-#             else:
-#                 messages.error(request, "Payment amount or currency mismatch. Potential tampering detected.")
-#                 return redirect("cart:checkout")
-#         else:
-#             messages.info(request, f"Payment status: {data.get('status')}. Please check your transaction or try again.")
-#             return redirect("cart:checkout")
-#     else:
-#         messages.error(request, f"Failed to verify payment with Flutterwave: {verification_response.get('message', 'Unknown error')}")
-#         return redirect("cart:checkout")
-
-#     messages.error(request, "An unexpected error occurred during payment processing. Please contact support.")
-#     return redirect("cart:checkout")
-
-# @login_required
-# def payment_success(request):
-#     # 1️⃣ Try to get resp (sandbox)
-#     resp_param = request.GET.get("resp")
-#     tx_ref = None
-
-#     if resp_param:
-#         try:
-#             resp_json = json.loads(resp_param)
-#             data = resp_json.get("data", {})
-#             tx_ref = data.get("txRef") or data.get("tx_ref")
-#         except json.JSONDecodeError:
-#             messages.error(request, "Invalid payment response.")
-#             return redirect("cart:checkout")
-    
-#     # 2️⃣ Fallback for live accounts (redirect sends tx_ref)
-#     if not tx_ref:
-#         tx_ref = request.GET.get("tx_ref")
-    
-#     if not tx_ref:
-#         messages.error(request, "Transaction reference missing.")
-#         return redirect("cart:checkout")
-
-#     # 3️⃣ Verify transaction via Flutterwave API
-#     headers = {"Authorization": f"Bearer {settings.FLUTTERWAVE_SECRET_KEY}"}
-#     verify_url = f"https://api.flutterwave.com/v3/transactions/verify_by_reference?tx_ref={tx_ref}"
-
-#     try:
-#         verification = requests.get(verify_url, headers=headers, timeout=10).json()
-#     except requests.RequestException:
-#         messages.error(request, "Payment verification failed. Please try again.")
-#         return redirect("cart:checkout")
-
-#     # 4️⃣ Check successful payment
-#     if verification.get("status") == "success" and verification["data"]["status"] == "successful":
-#         order = get_object_or_404(BookOrder, tx_ref=tx_ref, email=request.user.email)
-#         order.status = "collected"
-#         order.save(update_fields=["status"])
-#         return redirect("cart:download_page", order_id=order.id)
-
-#     messages.error(request, "Payment could not be verified. Please contact support.")
-#     return redirect("cart:checkout")
-
-# -----------------------------
-# Generate download link
+# Download functions
 # -----------------------------
 def generate_download_link(order_item):
     value = f"{order_item.order.id}:{order_item.product.id}"
     signed_value = signer.sign(value)
     return reverse('cart:download_book', args=[signed_value])
 
-
-# -----------------------------
-# Download individual book
-# -----------------------------
 @login_required
 def download_book(request, signed_value):
     try:
@@ -510,10 +624,6 @@ def download_book(request, signed_value):
         response['Content-Disposition'] = f'attachment; filename="{order_item.product.title}.pdf"'
         return response
 
-
-# -----------------------------
-# Download page (all pending downloads)
-# -----------------------------
 @login_required
 def download_page(request, order_id):
     order = get_object_or_404(
@@ -529,10 +639,10 @@ def download_page(request, order_id):
                 'title': item.product.title,
                 'cover_image': item.product.product_image.url if item.product.product_image else None,
                 'order_number': order.id,
-                'purchase_date': order.created.strftime("%B %d, %Y %I:%M %p"),  # e.g., October 06, 2025 11:30 AM
+                'purchase_date': order.created.strftime("%B %d, %Y %I:%M %p"),
                 'author': item.product.author,
                 'file_size': f"{item.product.book_file.size / (1024 * 1024):.2f} MB" if item.product.book_file else "N/A",
-                'formats': ['PDF'],  # Extend if multiple formats are available
+                'formats': ['PDF'],
                 'link': generate_download_link(item),
                 'expires_at': expires_at.isoformat()
             })
@@ -541,7 +651,6 @@ def download_page(request, order_id):
         'order': order,
         'links': links
     })
-
 
 def confirmation(request):
     return render(request, 'cart/basketapp/confirmation.html')

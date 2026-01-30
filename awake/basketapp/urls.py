@@ -16,13 +16,21 @@ urlpatterns = [
     
     path('submit-order/', views.submit_order, name='submit_order'),
    
-    path('download/<signed_value>/', views.download_book, name='download_book'),
- 
-    path('order/<int:order_id>/downloads/', views.download_page, name='download_page'),
-    
     # path('payment-waiting/', views.payment_waiting, name='payment_waiting'), 
     path("payment-success/", views.payment_success, name="payment_success"),
-
+    
+    
+    # PesaPal URLs
+    path('save-order/', views.save_order, name='save_order'),
+    path('initiate-pesapal-payment/', views.initiate_pesapal_payment, name='initiate_pesapal_payment'),
+    path('pesapal-callback/', views.pesapal_callback, name='pesapal_callback'),
+    path('pesapal-ipn/', views.pesapal_ipn, name='pesapal_ipn'),
+    path('order-status/<int:order_id>/', views.order_status, name='order_status'),
+    
+    # Download URLs
+    path('download/<str:signed_value>/', views.download_book, name='download_book'),
+    path('downloads/<int:order_id>/', views.download_page, name='download_page'),
+    
    
 ]
 

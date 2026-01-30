@@ -2,309 +2,163 @@
 {% load static %}
 {% block content %}
 
-
-
 <style>
     .order-summary {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 25px;
-            margin-top: 20px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-        }
-        
-        .summary-title {
-            font-weight: 600;
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            color: var(--dark);
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 10px;
-        }
-        
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px dashed var(--border);
-        }
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 25px;
+        margin-top: 20px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    }
+    
+    .summary-title {
+        font-weight: 600;
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+        color: var(--dark);
+        border-bottom: 2px solid var(--border);
+        padding-bottom: 10px;
+    }
+    
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px dashed var(--border);
+    }
 </style>
 
-
-    <!-- Start Banner Area -->
-    <section class="banner-area organic-breadcrumb">
-        <div class="container">
-            <div class="breadcrumb-banner d-flex flex-wrap align-items-center justify-content-end">
-                <div class="col-first">
-                    <h1>Checkout</h1>
-                    <nav class="d-flex align-items-center">
-                        <a href="{% url 'sales:books' %}">Home<span class="lnr lnr-arrow-right"></span></a>
-                        <a href="single-product.html">Checkout</a>
-                    </nav>
-                </div>
+<!-- Start Banner Area -->
+<section class="banner-area organic-breadcrumb">
+    <div class="container">
+        <div class="breadcrumb-banner d-flex flex-wrap align-items-center justify-content-end">
+            <div class="col-first">
+                <h1>Checkout</h1>
+                <nav class="d-flex align-items-center">
+                    <a href="{% url 'sales:books' %}">Home<span class="lnr lnr-arrow-right"></span></a>
+                    <a href="single-product.html">Checkout</a>
+                </nav>
             </div>
         </div>
-    </section>
-    <!-- End Banner Area -->
+    </div>
+</section>
+<!-- End Banner Area -->
 
-    <!--================Checkout Area =================-->
-    <section class="checkout_area section_gap">
-        <div class="container">
-            <div class="billing_details">
-                <div class="row">
-<!-- <div class="row" x-data="checkoutForm({{ cart_json|safe }})" x-init="init()" id="checkout-component"> -->
-<div class="row" x-data="checkoutForm(JSON.parse('{{ cart_json|escapejs }}'))" x-init="init()" id="checkout-component">
-
-    <!-- Checkout form section -->
-    <div class="col-lg-8">
-        <form id="checkoutForm" class="bg-light p-4 rounded" @submit.prevent>
-            <h4 class="mb-4">Checkout Information</h4>
+<!--================Checkout Area =================-->
+<section class="checkout_area section_gap">
+    <div class="container">
+        <div class="billing_details">
             <div class="row">
-                <!-- Full Name -->
-                <div class="mb-3 col-md-6">
-                    <label class="form-label">Full Name</label>
-                    <input type="text" class="form-control" x-model="form.fullName" @input="validateField('fullName')"
-                           :class="{'is-invalid': errors.fullName}">
-                    <div class="invalid-feedback" x-show="errors.fullName" x-text="errors.fullName"></div>
-                </div>
+                <div class="row" x-data="checkoutForm(JSON.parse('{{ cart_json|escapejs }}'))" x-init="init()" id="checkout-component">
+                    
+                    <!-- Checkout form section -->
+                    <div class="col-lg-8">
+                        <form id="checkoutForm" class="bg-light p-4 rounded" @submit.prevent>
+                            <h4 class="mb-4">Checkout Information</h4>
+                            
+                            <div class="row">
+                                <!-- Full Name -->
+                                <div class="mb-3 col-md-6">
+                                    <label class="form-label">Full Name *</label>
+                                    <input type="text" class="form-control" x-model="form.fullName" @input="validateField('fullName')"
+                                           :class="{'is-invalid': errors.fullName}" required>
+                                    <div class="invalid-feedback" x-show="errors.fullName" x-text="errors.fullName"></div>
+                                </div>
 
-                <!-- Email -->
-                <div class="mb-3 col-md-6">
-                    <label class="form-label">Email</label>&nbsp;<small>( Enter email used on registration )</small>
-                    <input type="email" class="form-control"
-                           x-model="form.email"
-                           @input="validateField('email')"
-                           :class="{'is-invalid': errors.email}">
-                    <div class="invalid-feedback" x-show="errors.email" x-text="errors.email"></div>
-                </div>
+                                <!-- Email -->
+                                <div class="mb-3 col-md-6">
+                                    <label class="form-label">Email *</label>
+                                    <small class="text-muted">(Enter email used on registration)</small>
+                                    <input type="email" class="form-control"
+                                           x-model="form.email"
+                                           @input="validateField('email')"
+                                           :class="{'is-invalid': errors.email}" required>
+                                    <div class="invalid-feedback" x-show="errors.email" x-text="errors.email"></div>
+                                </div>
 
-                <!-- Phone -->
-                <div class="mb-3 col-12">
-                    <label class="form-label">Contact</label>
-                   <input type="tel" class="form-control"
-                           x-model="form.phone"
-                           @input="validateField('phone')"
-                           :class="{'is-invalid': errors.phone}">
-                    <div class="invalid-feedback" x-show="errors.phone" x-text="errors.phone"></div>
-                </div>
+                                <!-- Phone -->
+                                <div class="mb-3 col-12">
+                                    <label class="form-label">Phone Number *</label>
+                                    <input type="tel" class="form-control"
+                                           x-model="form.phone"
+                                           @input="validateField('phone')"
+                                           :class="{'is-invalid': errors.phone}"
+                                           placeholder="2567XXXXXXXX" required>
+                                    <small class="text-muted">Format: 2567XXXXXXXX (Uganda)</small>
+                                    <div class="invalid-feedback" x-show="errors.phone" x-text="errors.phone"></div>
+                                </div>
+                                
+                                <!-- Additional fields for PesaPal -->
+                                <div class="mb-3 col-12">
+                                    <label class="form-label">Billing Address (Optional)</label>
+                                    <input type="text" class="form-control" x-model="form.address" placeholder="Street, City">
+                                </div>
+                                
+                                <!-- Country (Fixed to Uganda) -->
+                                <div class="mb-3 col-md-6">
+                                    <label class="form-label">Country</label>
+                                    <input type="text" class="form-control" value="Uganda" readonly>
+                                    <input type="hidden" x-model="form.country" value="UGANDA">
+                                </div>
+                                
+                                <!-- City -->
+                                <div class="mb-3 col-md-6">
+                                    <label class="form-label">City/Town</label>
+                                    <input type="text" class="form-control" x-model="form.city" placeholder="Kampala, Entebbe, etc.">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
 
-               
+                    <!-- Order summary and buttons -->
+                    <div class="col-lg-4">
+                        <div class="order-summary">
+                            <div class="summary-title">Order Summary</div>
+
+                            <template x-for="(item, index) in cart" :key="index">
+                                <div class="summary-item">
+                                    <span x-text="item.name + ' (' + item.qty + ')'"></span>
+                                    <span>USD <span x-text="(item.qty * item.price).toFixed(2)"></span></span>
+                                </div>
+                            </template>
+
+                            <div class="summary-item">
+                                <span>Subtotal:</span>
+                                <span>USD <span x-text="subtotal.toFixed(2)"></span></span>
+                            </div>
+
+                            <div class="summary-item total-row">
+                                <strong>Total:</strong>
+                                <strong>USD <span x-text="grandTotal.toFixed(2)"></span></strong>
+                            </div>
+
+                            <!-- PesaPal Payment Button -->
+                            <button type="button" 
+                                    class="btn btn-warning w-100 py-3 mt-3" 
+                                    style="background-color: #FF6B00; border-color: #FF6B00; color: white;"
+                                    @click="initiatePesaPalPayment()"
+                                    :disabled="loading">
+                                <span x-text="loading ? 'Processing...' : 'Pay with PesaPal'"></span>
+                            </button>
+
+                            <a href="{% url 'sales:books' %}" class="btn btn-secondary w-100 py-3 mt-3">
+                                Continue Shopping
+                            </a>
+                            
+                            <div class="mt-3 text-center">
+                                <small class="text-muted">
+                                    Secure payment powered by PesaPal
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </form>
-    </div>
-
-    <!-- Order summary and buttons -->
-    <div class="col-lg-4">
-        <div class="order-summary">
-            <div class="summary-title">Order Summary</div>
-
-            <template x-for="(item, index) in cart" :key="index">
-                <div class="summary-item">
-                    <span x-text="item.name + ' (' + item.qty + ')'"></span>
-                    <span>USD<span x-text="(item.qty * item.price).toFixed(2)"></span></span>
-                </div>
-            </template>
-
-            <div class="summary-item">
-                <span>Subtotal:</span>
-                <span>USD<span x-text="subtotal.toFixed(2)"></span></span>
-            </div>
-
-            <div class="summary-item total-row">
-                <span>Total:</span>
-                <span>USD<span x-text="subtotal.toFixed(2)"></span></span>
-            </div>
-
-            <!-- Confirm & Pay button triggers the custom event -->
-            <button type="button" class="btn btn-success w-100 py-3 mt-3" @click="document.getElementById('checkout-component').dispatchEvent(new CustomEvent('trigger-submit'))">
-                <i class="fas fa-lock me-2"></i> Confirm & Pay
-            </button>
-
-            <a href="{% url 'sales:books' %}" class="btn btn-secondary w-100 py-3 mt-3">
-                <i class="fas fa-arrow-left me-2"></i> Continue Shopping
-            </a>
         </div>
     </div>
-</div>
-
-
-
-
-
-                </div>
-            </div>
-        </div>
-    </section>
-
-
+</section>
 
 <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-
-<!-- <script>
-function checkoutForm(cartFromServer = []) {
-    return {
-        form: {
-            fullName: '',
-            email: '',
-            phone: '',
-        },
-        errors: {},
-        cart: cartFromServer,
-        shippingOption: 0,
-        discount: 0,
-        loading: false, // Prevent double submit
-        _handler: null,  // To store the bound event listener
-
-        get subtotal() {
-            return this.cart.reduce((sum, item) => sum + item.qty * item.price, 0);
-        },
-
-        get grandTotal() {
-            return this.subtotal + parseFloat(this.shippingOption) - this.discount;
-        },
-
-        init() {
-            // Detach if already bound
-            if (this._handler) {
-                this.$el.removeEventListener('trigger-submit', this._handler);
-            }
-
-            // Bind once and store it
-            this._handler = this.submitOrder.bind(this);
-            this.$el.addEventListener('trigger-submit', this._handler);
-        },
-
-        validateField(field) {
-            switch (field) {
-                case 'fullName':
-                    this.errors.fullName = this.form.fullName.trim() ? null : 'Full Name is required'; break;
-                case 'email':
-                    this.errors.email = this.form.email.includes('@') ? null : 'Valid email is required'; break;
-                case 'phone':
-                    this.errors.phone = this.form.phone.trim() ? null : 'Phone number is required'; break;
-            }
-        },
-
-        validateForm() {
-            this.errors = {};
-            ['fullName', 'email', 'phone'].forEach(field => this.validateField(field));
-            return Object.values(this.errors).every(e => !e);
-        },
-
-        async submitOrder() {
-            if (this.loading) return;
-            this.loading = true;
-
-            if (!this.validateForm()) {
-                // alert("Please fix the errors before proceeding.");
-                this.loading = false;
-                return;
-            }
-
-            const tx_ref = `TX-${Date.now()}`;
-            const payload = {
-                tx_ref: tx_ref,
-                full_name: this.form.fullName,
-                email: this.form.email,
-                phone: this.form.phone,
-                cart: this.cart,
-                total: this.grandTotal,
-                csrfmiddlewaretoken: '{{ csrf_token }}',
-            };
-
-            try {
-                const response = await fetch("{% url 'cart:submit_order' %}", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRFToken": '{{ csrf_token }}',
-                    },
-                    body: JSON.stringify(payload),
-                });
-
-                const data = await response.json();
-
-                // if (data.status === "ok") {
-                //     FlutterwaveCheckout({
-                //         // TEST PUBLIC KEY = FLWPUBK_TEST-b45b556c71f2f30a47f7985ef0893a3b-X
-                //         // LIVE PUBLIC KEY = FLWPUBK-eabfcd297464d04dd146e66a866942d6-X
-
-                //         public_key: "FLWPUBK-eabfcd297464d04dd146e66a866942d6-X", // This for live use your own key. This should be used accordingly depending on the mode we are using. if its is test mode we use the test public key, if its live mode we use the live public key
-                //         tx_ref: tx_ref,
-                //         amount: parseFloat(this.grandTotal), // Ensure amount is in USD
-                //         currency: "USD",  // Changed from UGX to USD
-                //         payment_options: "card",  // Mobile Money Uganda only works with UGX
-                //         customer: {
-                //             email: this.form.email,
-                //             name: this.form.fullName,
-                //         },
-                //         customizations: {
-                //             title: "Bookstore Payment",
-                //             description: "Payment for books",
-                //         },
-                //         callback: function (response) {
-                //             if (response.status === "successful") {
-                //                 window.location.href = `/payment-success/?tx_ref=${response.tx_ref}`;
-                //             } else {
-                //                 alert("Payment failed or cancelled");
-                //             }
-                //         },
-                //         onclose: function () {
-                //             console.log("Payment modal closed");
-                //         }
-                //     });
-                // } else {
-                //     alert("Order failed to save: " + (data.message || "Unknown error"));
-                // }
-
-
-                if (data.status === "ok") {
-                    FlutterwaveCheckout({
-                        public_key: "FLWPUBK-eabfcd297464d04dd146e66a866942d6-X", // Use live or test accordingly
-                        tx_ref: tx_ref,
-                        amount: parseFloat(this.grandTotal), // Your amount should already be in UGX
-                        currency: "UGX",  // ✅ Change from USD to UGX
-                        payment_options: "card, mobilemoneyuganda",  // ✅ Add Mobile Money Uganda option
-                        customer: {
-                            email: this.form.email,
-                            name: this.form.fullName,
-                        },
-                        customizations: {
-                            title: "Bookstore Payment",
-                            description: "Payment for books",
-                        },
-                        callback: function (response) {
-                            if (response.status === "successful") {
-                                window.location.href = `/payment-success/?tx_ref=${response.tx_ref}`;
-                            } else {
-                                alert("Payment failed or cancelled");
-                            }
-                        },
-                        onclose: function () {
-                            console.log("Payment modal closed");
-                        }
-                    });
-                } else {
-                    alert("Order failed to save: " + (data.message || "Unknown error"));
-                }
-
-
-
-
-            } catch (error) {
-                console.error("Order submission failed", error);
-                alert("An error occurred while placing the order.");
-            } finally {
-                this.loading = false;
-            }
-        }
-    };
-}
-</script> -->
-
-
-
-
 
 <script>
 function checkoutForm(cartFromServer = []) {
@@ -313,13 +167,16 @@ function checkoutForm(cartFromServer = []) {
             fullName: '',
             email: '',
             phone: '',
+            address: '',
+            city: 'Kampala',
+            country: 'UGANDA',
+            postalCode: '256'
         },
         errors: {},
         cart: cartFromServer,
         shippingOption: 0,
         discount: 0,
         loading: false,
-        _handler: null,
 
         get subtotal() {
             return this.cart.reduce((sum, item) => sum + item.qty * item.price, 0);
@@ -330,23 +187,27 @@ function checkoutForm(cartFromServer = []) {
         },
 
         init() {
-            if (this._handler) {
-                this.$el.removeEventListener('trigger-submit', this._handler);
-            }
-            this._handler = this.submitOrder.bind(this);
-            this.$el.addEventListener('trigger-submit', this._handler);
+            console.log("Checkout form initialized for LIVE mode");
         },
 
         validateField(field) {
             switch (field) {
                 case 'fullName':
-                    this.errors.fullName = this.form.fullName.trim() ? null : 'Full Name is required'; 
+                    this.errors.fullName = this.form.fullName.trim() ? null : 'Full Name is required';
                     break;
                 case 'email':
-                    this.errors.email = this.form.email.includes('@') ? null : 'Valid email is required'; 
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    this.errors.email = emailRegex.test(this.form.email) ? null : 'Valid email is required';
                     break;
                 case 'phone':
-                    this.errors.phone = this.form.phone.trim() ? null : 'Phone number is required'; 
+                    // Validate Ugandan phone number (256XXXXXXXXX)
+                    const phoneRegex = /^256[0-9]{9}$/;
+                    const cleanPhone = this.form.phone.replace(/\D/g, '');
+                    if (!phoneRegex.test(cleanPhone)) {
+                        this.errors.phone = 'Please enter a valid Ugandan number (e.g., 2567XXXXXXXX)';
+                    } else {
+                        this.errors.phone = null;
+                    }
                     break;
             }
         },
@@ -357,87 +218,90 @@ function checkoutForm(cartFromServer = []) {
             return Object.values(this.errors).every(e => !e);
         },
 
-        async submitOrder() {
+        async initiatePesaPalPayment() {
             if (this.loading) return;
-            this.loading = true;
-
+            
             if (!this.validateForm()) {
-                this.loading = false;
+                alert("Please fix the errors before proceeding.");
                 return;
             }
-
-            const tx_ref = `TX-${Date.now()}`;
-            const payload = {
-                tx_ref: tx_ref,
-                full_name: this.form.fullName,
-                email: this.form.email,
-                phone: this.form.phone,
-                cart: this.cart,
-                total: this.grandTotal,
-                csrfmiddlewaretoken: '{{ csrf_token }}',
-            };
-
+            
+            this.loading = true;
+            
             try {
-                const response = await fetch("{% url 'cart:submit_order' %}", {
+                // Generate unique reference for LIVE
+                const reference = `PESAPAL-LIVE-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+                
+                // Prepare order data for PesaPal LIVE
+                const orderData = {
+                    reference: reference,
+                    full_name: this.form.fullName,
+                    email: this.form.email,
+                    phone: this.form.phone,
+                    address: this.form.address || 'Not specified',
+                    city: this.form.city || 'Kampala',
+                    country: 'UGANDA',
+                    postal_code: '256',
+                    cart: this.cart,
+                    amount: this.grandTotal,
+                    currency: 'USD',
+                    description: 'Book Purchase - Awakening Saints',
+                    callback_url: "https://awakeningsaints.org{% url 'cart:pesapal_callback' %}",
+                    cancellation_url: "https://awakeningsaints.org{% url 'cart:checkout' %}",
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                };
+                
+                console.log("Saving order:", orderData);
+                
+                // First, save the order to your database
+                const saveResponse = await fetch("{% url 'cart:save_order' %}", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                         "X-CSRFToken": '{{ csrf_token }}',
                     },
-                    body: JSON.stringify(payload),
+                    body: JSON.stringify(orderData),
                 });
-
-                const data = await response.json();
-
-                if (data.status === "ok") {
-                    // Use TEST PUBLIC KEY for sandbox, replace with LIVE for production
-                    // testkey - FLWPUBK_TEST-b45b556c71f2f30a47f7985ef0893a3b-X
-                    // Livekey - FLWPUBK-eabfcd297464d04dd146e66a866942d6-X
-                    FlutterwaveCheckout({
-                        public_key: "FLWPUBK-eabfcd297464d04dd146e66a866942d6-X",
-                        tx_ref: tx_ref,
-                        amount: parseFloat(this.grandTotal),
-                        currency: "USD",
-                        payment_options: "card",
-                        customer: {
-                            email: this.form.email,
-                            name: this.form.fullName,
-                            phone: this.form.phone
+                
+                const saveResult = await saveResponse.json();
+                console.log("Save result:", saveResult);
+                
+                if (saveResult.status === "success") {
+                    // Now initiate PesaPal payment
+                    const paymentResponse = await fetch("{% url 'cart:initiate_pesapal_payment' %}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": '{{ csrf_token }}',
                         },
-                        customizations: {
-                            title: "Bookstore Payment",
-                            description: "Payment for books",
-                            logo: "https://awakeningsaints.org/logo.png"
-                        },
-                        redirect_url: "{{ request.scheme }}://{{ request.get_host }}{% url 'cart:payment_success' %}?tx_ref=" + tx_ref
+                        body: JSON.stringify({
+                            order_id: saveResult.order_id,
+                            reference: saveResult.reference
+                        }),
                     });
-
+                    
+                    const paymentResult = await paymentResponse.json();
+                    console.log("Payment result:", paymentResult);
+                    
+                    if (paymentResult.status === "success" && paymentResult.redirect_url) {
+                        // Redirect to PesaPal LIVE payment page
+                        window.location.href = paymentResult.redirect_url;
+                    } else {
+                        alert("Failed to initiate PesaPal payment: " + (paymentResult.message || "Unknown error"));
+                        this.loading = false;
+                    }
                 } else {
-                    alert("Order failed: " + (data.message || "Unknown error"));
+                    alert("Failed to save order: " + (saveResult.message || "Unknown error"));
+                    this.loading = false;
                 }
-
+                
             } catch (error) {
-                console.error("Order submission failed", error);
-                alert("An error occurred while placing the order.");
-            } finally {
+                console.error("Payment initiation failed:", error);
+                alert("An error occurred while initiating payment. Please try again.");
                 this.loading = false;
             }
         }
     };
 }
 </script>
-
-
-
-
-
-
-
-
-
-
-
-
-    <!--================End Checkout Area =================-->
-
-   {% endblock %}
+{% endblock %}

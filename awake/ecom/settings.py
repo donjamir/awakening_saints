@@ -1,131 +1,8 @@
-
-# from pathlib import Path
-# import os
-
-# BASE_DIR = Path(__file__).resolve().parent.parent
-
-
-# SECRET_KEY = 'django-insecure-ev28k=ir#vah2v)!-*t65t!+b#j(xnk24fv88!nkoemy)#0ag1'
-
-# DEBUG = False
-
-# ALLOWED_HOSTS = ['awakeningsaint.org', '*']
-
-
-# INSTALLED_APPS = [
-#     'jazzmin',
-    
-#     'django.contrib.admin',
-#     'django.contrib.auth',
-#     'django.contrib.contenttypes',
-#     'django.contrib.sessions',
-#     'django.contrib.messages',
-#     'django.contrib.staticfiles',
-
-#     'ecomapp.apps.EcomappConfig',
-#     'useraccounts.apps.UseraccountsConfig',
-#     'basketapp.apps.BasketappConfig',
-
-# ]
-
-# MIDDLEWARE = [
-#     'django.middleware.security.SecurityMiddleware',
-#     'django.contrib.sessions.middleware.SessionMiddleware',
-#     'django.middleware.common.CommonMiddleware',
-#     'django.middleware.csrf.CsrfViewMiddleware',
-#     'django.contrib.auth.middleware.AuthenticationMiddleware',
-#     'django.contrib.messages.middleware.MessageMiddleware',
-#     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-# ]
-
-# ROOT_URLCONF = 'ecom.urls'
-
-# TEMPLATES = [
-#     {
-#         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-#         'DIRS': [ BASE_DIR /'templates' ],
-#         'APP_DIRS': True,
-#         'OPTIONS': {
-#             'context_processors': [
-#                 'django.template.context_processors.request',
-#                 'django.contrib.auth.context_processors.auth',
-#                 'django.contrib.messages.context_processors.messages',
-                
-#                 # addintional context processors
-#                 'ecomapp.context_processors.categories',
-#                 'basketapp.context_processors.cart',
-#             ],
-#         },
-#     },
-# ]
-
-# WSGI_APPLICATION = 'ecom.wsgi.application'
-
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
-
-
-# AUTH_PASSWORD_VALIDATORS = [
-#     {
-#         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-#     },
-#     {
-#         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-#     },
-#     {
-#         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-#     },
-#     {
-#         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-#     },
-# ]
-
-
-
-# LANGUAGE_CODE = 'en-us'
-
-# TIME_ZONE = 'UTC'
-
-# USE_I18N = True
-
-# USE_TZ = True
-
-
-
-# STATIC_URL = 'static/'
-# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') 
-# STATICFILES_DIRS = [ BASE_DIR / 'static' ]
-
-# MEDIA_URL = '/media/'
-# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-
-# ######## These tell django about the custom user modal we created ########
-# AUTH_USER_MODEL = 'useraccounts.UserBase'
-
-
-# DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-# DEFAULT_FROM_EMAIL = 'noreply@example.com'
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development/testing
-
-
-
-
-
-
 from pathlib import Path
 import os
 
-import pymysql     # This should be installed dependency on namecheap's ssh terminal
-pymysql.install_as_MySQLdb()   
+# import pymysql     # This should be installed dependency on namecheap's ssh terminal
+# pymysql.install_as_MySQLdb()   
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -133,13 +10,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-ev28k=ir#vah2v)!-*t65t!+b#j(xnk24fv88!nkoemy)#0ag1'
 
-# DEBUG = True
+DEBUG = True
 
-# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = []
 
-DEBUG = False
+# DEBUG = False
 
-ALLOWED_HOSTS = ['awakeningsaints.org', '*']
+# ALLOWED_HOSTS = ['awakeningsaints.org', '*']
 
 
 
@@ -156,6 +33,7 @@ INSTALLED_APPS = [
     'ecomapp.apps.EcomappConfig',
     'useraccounts.apps.UseraccountsConfig',
     'basketapp.apps.BasketappConfig',
+
     
 ]
 
@@ -282,12 +160,12 @@ DATABASES = {
 
 
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 
 
@@ -341,22 +219,31 @@ AUTH_USER_MODEL = 'useraccounts.UserBase'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# this should be used accordingly depending on the mode we are using. if its is test mode we use the test secret key, if its live mode we use the live secret key
 
-# TEST SECRET = FLWSECK_TEST-4123e83842cca308b3eabbb68bec7160-X
 
-# LIVE SECRET = FLWSECK-f13f07df9e5a20a357ed90ccfac7c691-198b1b5e275vt-X
 
-FLUTTERWAVE_SECRET_KEY = "FLWSECK-f13f07df9e5a20a357ed90ccfac7c691-198b1b5e275vt-X"
-FLUTTERWAVE_SANDBOX = False  # True for test, False for live
-
-# Flutterwave
-# FLUTTERWAVE_PUBLIC_KEY = "FLWPUBK_TEST-xxxxxxxxxxxxxxxxxxxx-X"
-# FLUTTERWAVE_SECRET_KEY = "FLWSECK_TEST-xxxxxxxxxxxxxxxxxxxx-X"
-
+# SECURE_SSL_REDIRECT = True
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True
 
 
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# consumer_key: TDpigBOOhs+zAl8cwH2Fl82jJGyD8xev
+# consumer_secret: 1KpqkfsMaihIcOlhnBo/gBZ5smw=
+
+
+
+# PESAPAL_CONSUMER_KEY = '0IvCo5VfHebocBulSLEeLlQlU13f1Y+0'
+# PESAPAL_CONSUMER_SECRET = '+EDtZ0OSUa56evNPYaQKFoOFtdI='
+
+PESAPAL_CONSUMER_KEY = 'TDpigBOOhs+zAl8cwH2Fl82jJGyD8xev'
+PESAPAL_CONSUMER_SECRET = '1KpqkfsMaihIcOlhnBo/gBZ5smw='
+PESAPAL_ENVIRONMENT = 'sandbox'  # Change to 'live' for production and 'sandbox' for test
+PESAPAL_NOTIFICATION_ID = ''  # Optional: Get from PesaPal IPN settings
+DEFAULT_CURRENCY = 'USD'
+
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'awakeningsaints.org'              # ✅ from "Outgoing Server"
