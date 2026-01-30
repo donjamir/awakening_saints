@@ -16,11 +16,7 @@ SECRET_KEY = 'django-insecure-ev28k=ir#vah2v)!-*t65t!+b#j(xnk24fv88!nkoemy)#0ag1
 
 DEBUG = False
 
-ALLOWED_HOSTS = [
-    'awakeningsaints.org',
-    'www.awakeningsaints.org',
-]
-
+ALLOWED_HOSTS = ['awakeningsaints.org', 'www.awakeningsaints.org']  # Do NOT use '*' in production
 
 
 
@@ -239,10 +235,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 
-PESAPAL_CONSUMER_KEY = os.environ.get('PESAPAL_CONSUMER_KEY', '0IvCo5VfHebocBulSLEeLlQlU13f1Y+0')
-PESAPAL_CONSUMER_SECRET = os.environ.get('PESAPAL_CONSUMER_SECRET', '+EDtZ0OSUa56evNPYaQKFoOFtdI=')
+PESAPAL_CONSUMER_KEY = os.environ.get('PESAPAL_CONSUMER_KEY', '0IvCo5VfHebocBulSLEeLlQlU13f1Y+0')  # Set your real key in environment for production
+PESAPAL_CONSUMER_SECRET = os.environ.get('PESAPAL_CONSUMER_SECRET', '+EDtZ0OSUa56evNPYaQKFoOFtdI=')  # Set your real secret in environment for production
 PESAPAL_ENVIRONMENT = os.environ.get('PESAPAL_ENVIRONMENT', 'live')  # 'live' or 'sandbox'
-PESAPAL_NOTIFICATION_ID = ''  # Optional: Get from PesaPal IPN settings
+PESAPAL_NOTIFICATION_ID = os.environ.get('PESAPAL_NOTIFICATION_ID', '')  # Optional: Get from PesaPal IPN settings
 DEFAULT_CURRENCY = 'USD'
 
 
