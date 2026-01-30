@@ -1,8 +1,8 @@
 from pathlib import Path
 import os
 
-# import pymysql     # This should be installed dependency on namecheap's ssh terminal
-# pymysql.install_as_MySQLdb()   
+import pymysql     # This should be installed dependency on namecheap's ssh terminal
+pymysql.install_as_MySQLdb()   
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -235,12 +235,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 
-PESAPAL_CONSUMER_KEY = '0IvCo5VfHebocBulSLEeLlQlU13f1Y+0'
-PESAPAL_CONSUMER_SECRET = '+EDtZ0OSUa56evNPYaQKFoOFtdI='
-
-# PESAPAL_CONSUMER_KEY = 'TDpigBOOhs+zAl8cwH2Fl82jJGyD8xev'
-# PESAPAL_CONSUMER_SECRET = '1KpqkfsMaihIcOlhnBo/gBZ5smw='
-PESAPAL_ENVIRONMENT = 'sandbox'  # Change to 'live' for production and 'sandbox' for test
+PESAPAL_CONSUMER_KEY = os.environ.get('PESAPAL_CONSUMER_KEY', '0IvCo5VfHebocBulSLEeLlQlU13f1Y+0')
+PESAPAL_CONSUMER_SECRET = os.environ.get('PESAPAL_CONSUMER_SECRET', '+EDtZ0OSUa56evNPYaQKFoOFtdI=')
+PESAPAL_ENVIRONMENT = os.environ.get('PESAPAL_ENVIRONMENT', 'live')  # 'live' or 'sandbox'
 PESAPAL_NOTIFICATION_ID = ''  # Optional: Get from PesaPal IPN settings
 DEFAULT_CURRENCY = 'USD'
 

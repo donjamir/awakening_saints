@@ -18,9 +18,38 @@ import requests
 from itertools import islice
 from django.core.mail import send_mass_mail
 
+# --- Pesapal Integration (API v3, OAuth2) ---
+# See: https://developer.pesapal.com/how-to-integrate/api-v3/overview
+# This implementation uses the correct OAuth2 token flow and official endpoints.
 
+import base64
+import os  # For environment variables
+import uuid  # For unique transaction references
+import logging  # For logging payment attempts and errors
 
+# Helper: Get OAuth2 access token from Pesapal
 
+def get_pesapal_access_token():
+    """
+    Obtain OAuth2 access token from Pesapal using client credentials grant.
+    """
+    consumer_key = os.environ.get('PESAPAL_CONSUMER_KEY', getattr(settings, 'PESAPAL_CONSUMER_KEY', ''))
+    consumer_secret = os.environ.get('PESAPAL_CONSUMER_SECRET', getattr(settings, 'PESAPAL_CONSUMER_SECRET', ''))
+    environment = getattr(settings, 'PESAPAL_ENVIRONMENT', 'sandbox')
+    if not consumer_key or not consumer_secret:
+        raise Exception('Pesapal credentials are required. Set PESAPAL_CONSUMER_KEY and PESAPAL_CONSUMER_SECRET.')
+    if environment == 'live':
+        token_url = 'https://pay.pesapal.com/v3/api/Auth/RequestToken'
+    else:
+        token_url = 'https://sandbox.pesapal.com/v3/api/Auth/RequestToken'
+    auth_header = base64.b64encode(f"{consumer_key}:{consumer_secret}".encode()).decode()
+    headers = {
+        'Authorization': f'Basic {auth_header}',
+        'Content-Type': 'application/json',
+    }
+    resp = requests.get(token_url, headers=headers, timeout=20)
+    resp.raise_for_status()
+    return resp.json().get('token')
 
 def indexone(request):
     return render(request, 'site/index.html')
@@ -264,6 +293,149 @@ def blog(request):
 
 def single_blog(request):
     return render(request, 'main/ecomapp/single-blog.html')
+
+
+# --- Pesapal Payment Request View (API v3) ---
+def pesapal_payment_request(request):
+    """
+    Initiates a Pesapal payment request and redirects user to Pesapal hosted payment page.
+    Uses OAuth2 token and v3 endpoint.
+    """
+    if request.method == 'POST':
+        amount = request.POST.get('amount')
+        currency = getattr(settings, 'DEFAULT_CURRENCY', 'USD')
+        description = request.POST.get('description', 'Order Payment')
+        full_name = request.POST.get('full_name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        tx_ref = str(uuid.uuid4())
+        order = BookOrder.objects.create(
+            full_name=full_name,
+            email=email,
+            phone=phone,
+            tx_ref=tx_ref,
+            total=amount,
+            currency=currency,
+            payment_status=BookOrder.PAYMENT_PENDING,
+            status=BookOrder.STATUS_PENDING,
+        )
+        callback_url = request.build_absolute_uri(reverse('sales:pesapal_callback'))
+        ipn_url = request.build_absolute_uri(reverse('sales:pesapal_ipn'))
+        environment = getattr(settings, 'PESAPAL_ENVIRONMENT', 'sandbox')
+        if environment == 'live':
+            pesapal_api_url = 'https://pay.pesapal.com/v3/api/Transactions/SubmitOrderRequest'
+        else:
+            pesapal_api_url = 'https://sandbox.pesapal.com/v3/api/Transactions/SubmitOrderRequest'
+        # Get OAuth2 token
+        try:
+            access_token = get_pesapal_access_token()
+        except Exception as e:
+            return render(request, 'main/ecomapp/payment_error.html', {'error': f'Pesapal Auth Error: {e}'})
+        headers = {
+            'Authorization': f'Bearer {access_token}',
+            'Content-Type': 'application/json',
+        }
+        data = {
+            "id": tx_ref,
+            "currency": currency,
+            "amount": amount,
+            "description": description,
+            "callback_url": callback_url,
+            "notification_id": getattr(settings, 'PESAPAL_NOTIFICATION_ID', ''),
+            "customer": {
+                "email_address": email,
+                "phone_number": phone,
+                "first_name": full_name,
+                "last_name": "",
+            },
+        }
+        try:
+            response = requests.post(pesapal_api_url, headers=headers, json=data, timeout=30)
+            response.raise_for_status()
+            resp_json = response.json()
+            order_tracking_id = resp_json.get('order_tracking_id')
+            redirect_url = resp_json.get('redirect_url')
+            order.pesapal_tracking_id = order_tracking_id
+            order.pesapal_redirect_url = redirect_url
+            order.save()
+            PaymentLog.objects.create(
+                order=order,
+                pesapal_tracking_id=order_tracking_id,
+                status_code='INIT',
+                status_description='Payment initiated',
+                ipn_data=resp_json,
+            )
+            return redirect(redirect_url)
+        except Exception as e:
+            logging.exception('Pesapal payment request failed')
+            return render(request, 'main/ecomapp/payment_error.html', {'error': str(e)})
+    else:
+        # Render a payment form (example only)
+        return render(request, 'main/ecomapp/payment_form.html')
+
+# --- Pesapal Callback View (unchanged) ---
+def pesapal_callback(request):
+    """
+    Handles Pesapal redirect after payment (user-facing). Does NOT mark payment as successful.
+    """
+    order_tracking_id = request.GET.get('OrderTrackingId')
+    merchant_reference = request.GET.get('merchant_reference')
+    # Optionally, show a thank you or processing page
+    return render(request, 'main/ecomapp/payment_callback.html', {
+        'order_tracking_id': order_tracking_id,
+        'merchant_reference': merchant_reference,
+    })
+
+# --- Pesapal IPN Endpoint (API v3, OAuth2) ---
+@csrf_exempt
+@require_POST
+def pesapal_ipn(request):
+    """
+    Receives IPN from Pesapal, verifies payment, and updates order if COMPLETED.
+    Uses OAuth2 token and v3 endpoint.
+    """
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        order_tracking_id = data.get('OrderTrackingId')
+        merchant_reference = data.get('merchant_reference')
+        order = BookOrder.objects.get(pesapal_tracking_id=order_tracking_id, tx_ref=merchant_reference)
+        environment = getattr(settings, 'PESAPAL_ENVIRONMENT', 'sandbox')
+        if environment == 'live':
+            status_url = f'https://pay.pesapal.com/v3/api/Transactions/GetTransactionStatus?orderTrackingId={order_tracking_id}'
+        else:
+            status_url = f'https://sandbox.pesapal.com/v3/api/Transactions/GetTransactionStatus?orderTrackingId={order_tracking_id}'
+        try:
+            access_token = get_pesapal_access_token()
+        except Exception as e:
+            logging.exception('Pesapal Auth Error')
+            return HttpResponse('ERROR', status=200)
+        headers = {
+            'Authorization': f'Bearer {access_token}',
+            'Content-Type': 'application/json',
+        }
+        status_resp = requests.get(status_url, headers=headers, timeout=30)
+        status_resp.raise_for_status()
+        status_json = status_resp.json()
+        payment_status = status_json.get('status')
+        PaymentLog.objects.create(
+            order=order,
+            pesapal_tracking_id=order_tracking_id,
+            status_code=payment_status,
+            status_description='IPN received',
+            ipn_data=status_json,
+        )
+        if payment_status and payment_status.lower() == 'completed':
+            order.payment_status = BookOrder.PAYMENT_COMPLETED
+            order.save()
+        elif payment_status and payment_status.lower() == 'failed':
+            order.payment_status = BookOrder.PAYMENT_FAILED
+            order.save()
+        return HttpResponse('OK', status=200)
+    except Exception as e:
+        logging.exception('Pesapal IPN processing failed')
+        return HttpResponse('ERROR', status=200)
+# --- END Pesapal Integration ---
+# NOTE: Use your real Pesapal credentials in environment variables for production.
 
 
 
