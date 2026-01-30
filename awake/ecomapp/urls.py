@@ -29,7 +29,7 @@ urlpatterns = [
     path("subscribe/", views.subscribe_email, name="subscribe_email"),
     path("send-message/<int:message_id>/", views.send_message_to_subscribers, name="send_message_to_subscribers"),
     
-    path('pesapal/payment/', views.pesapal_payment_request, name='pesapal_payment'),
-    path('pesapal/callback/', views.pesapal_callback, name='pesapal_callback'),
-    path('pesapal/ipn/', views.pesapal_ipn, name='pesapal_ipn'),
+    # path('pesapal/payment/', views.pesapal_payment_request, name='pesapal_payment'),
+    # path('pesapal/callback/', views.pesapal_callback, name='pesapal_callback'),
+    # path('pesapal/ipn/', views.pesapal_ipn, name='pesapal_ipn'),
 ]
