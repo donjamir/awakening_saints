@@ -125,7 +125,7 @@ class BookOrder(models.Model):
     
     # Timestamps
     
-    created = models.DateTimeField(auto_now_add=True, default=timezone.now)
+    created = models.DateTimeField(auto_now_add=True, null=True)
     updated = models.DateTimeField(auto_now=True, null=True, blank=True)
     paid_at = models.DateTimeField(blank=True, null=True)
 
@@ -173,7 +173,7 @@ class BookOrderItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(max_digits=30, decimal_places=2, default=0)
     downloaded = models.BooleanField(default=False)
-    created = models.DateTimeField(auto_now_add=True, default=timezone.now)
+    created = models.DateTimeField(auto_now_add=True, null=True)
 
     def get_total(self):
         if self.price is None or self.quantity is None:
