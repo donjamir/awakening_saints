@@ -24,7 +24,7 @@ urlpatterns = [
     path('save-order/', views.save_order, name='save_order'),
     path('initiate-pesapal-payment/', views.initiate_pesapal_payment, name='initiate_pesapal_payment'),
     path('pesapal-callback/', views.pesapal_callback, name='pesapal_callback'),
-    path('pesapal-ipn/', views.pesapal_ipn, name='pesapal_ipn'),
+    # path('pesapal-ipn/', views.pesapal_ipn, name='pesapal_ipn'),
     path('order-status/<int:order_id>/', views.order_status, name='order_status'),
     
     # Download URLs

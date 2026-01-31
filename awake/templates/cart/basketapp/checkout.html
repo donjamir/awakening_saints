@@ -160,7 +160,11 @@
 
 <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
+
 <script>
+const PESAPAL_CALLBACK_URL = "{% url 'cart:pesapal_callback' %}";
+const PESAPAL_CANCEL_URL = "{% url 'cart:checkout' %}";
+
 function checkoutForm(cartFromServer = []) {
     return {
         form: {
@@ -169,7 +173,7 @@ function checkoutForm(cartFromServer = []) {
             phone: '',
             address: '',
             city: 'Kampala',
-            country: 'UGANDA',
+            country: 'UG',
             postalCode: '256'
         },
         errors: {},
@@ -187,7 +191,7 @@ function checkoutForm(cartFromServer = []) {
         },
 
         init() {
-            console.log("Checkout form initialized for LIVE mode");
+            console.log("Checkout form initialized");
         },
 
         validateField(field) {
@@ -200,14 +204,11 @@ function checkoutForm(cartFromServer = []) {
                     this.errors.email = emailRegex.test(this.form.email) ? null : 'Valid email is required';
                     break;
                 case 'phone':
-                    // Validate Ugandan phone number (256XXXXXXXXX)
                     const phoneRegex = /^256[0-9]{9}$/;
                     const cleanPhone = this.form.phone.replace(/\D/g, '');
-                    if (!phoneRegex.test(cleanPhone)) {
-                        this.errors.phone = 'Please enter a valid Ugandan number (e.g., 2567XXXXXXXX)';
-                    } else {
-                        this.errors.phone = null;
-                    }
+                    this.errors.phone = phoneRegex.test(cleanPhone) 
+                        ? null 
+                        : 'Please enter a valid Ugandan number (e.g., 2567XXXXXXXX)';
                     break;
             }
         },
@@ -220,19 +221,22 @@ function checkoutForm(cartFromServer = []) {
 
         async initiatePesaPalPayment() {
             if (this.loading) return;
-            
+
             if (!this.validateForm()) {
                 alert("Please fix the errors before proceeding.");
                 return;
             }
-            
+
             this.loading = true;
-            
+
             try {
-                // Generate unique reference for LIVE
-                const reference = `PESAPAL-LIVE-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-                
-                // Prepare order data for PesaPal LIVE
+                // Determine domain dynamically
+                const domain = window.location.origin; // works for ngrok/localhost/live
+
+                // Generate unique reference
+                const reference = `PESAPAL-${window.location.hostname.includes("ngrok") ? "SANDBOX" : "LIVE"}-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+                // Prepare order data
                 const orderData = {
                     reference: reference,
                     full_name: this.form.fullName,
@@ -240,20 +244,20 @@ function checkoutForm(cartFromServer = []) {
                     phone: this.form.phone,
                     address: this.form.address || 'Not specified',
                     city: this.form.city || 'Kampala',
-                    country: 'UGANDA',
+                    country: 'UG',
                     postal_code: '256',
                     cart: this.cart,
                     amount: this.grandTotal,
                     currency: 'USD',
                     description: 'Book Purchase - Awakening Saints',
-                    callback_url: "https://awakeningsaints.org{% url 'cart:pesapal_callback' %}",
-                    cancellation_url: "https://awakeningsaints.org{% url 'cart:checkout' %}",
+                    callback_url: `${domain}${PESAPAL_CALLBACK_URL}`,
+                    cancellation_url: `${domain}${PESAPAL_CANCEL_URL}`,
                     csrfmiddlewaretoken: '{{ csrf_token }}'
                 };
-                
+
                 console.log("Saving order:", orderData);
-                
-                // First, save the order to your database
+
+                // Save order to database
                 const saveResponse = await fetch("{% url 'cart:save_order' %}", {
                     method: "POST",
                     headers: {
@@ -262,12 +266,12 @@ function checkoutForm(cartFromServer = []) {
                     },
                     body: JSON.stringify(orderData),
                 });
-                
+
                 const saveResult = await saveResponse.json();
                 console.log("Save result:", saveResult);
-                
+
                 if (saveResult.status === "success") {
-                    // Now initiate PesaPal payment
+                    // Initiate PesaPal payment
                     const paymentResponse = await fetch("{% url 'cart:initiate_pesapal_payment' %}", {
                         method: "POST",
                         headers: {
@@ -279,12 +283,12 @@ function checkoutForm(cartFromServer = []) {
                             reference: saveResult.reference
                         }),
                     });
-                    
+
                     const paymentResult = await paymentResponse.json();
                     console.log("Payment result:", paymentResult);
-                    
+
                     if (paymentResult.status === "success" && paymentResult.redirect_url) {
-                        // Redirect to PesaPal LIVE payment page
+                        // Redirect to PesaPal
                         window.location.href = paymentResult.redirect_url;
                     } else {
                         alert("Failed to initiate PesaPal payment: " + (paymentResult.message || "Unknown error"));
@@ -294,7 +298,7 @@ function checkoutForm(cartFromServer = []) {
                     alert("Failed to save order: " + (saveResult.message || "Unknown error"));
                     this.loading = false;
                 }
-                
+
             } catch (error) {
                 console.error("Payment initiation failed:", error);
                 alert("An error occurred while initiating payment. Please try again.");
@@ -304,6 +308,8 @@ function checkoutForm(cartFromServer = []) {
     };
 }
 </script>
+
+
 {% endblock %}
 
 

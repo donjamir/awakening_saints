@@ -1,4 +1,3 @@
-
 from django.shortcuts import *
 from .basket import cartbasket
 from django.http import JsonResponse
@@ -308,54 +307,70 @@ def save_order(request):
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
+
 @csrf_exempt
 @require_POST
 def initiate_pesapal_payment(request):
-    """Initiate PesaPal payment (sandbox or live based on settings)"""
+    """
+    Initiate PesaPal payment for sandbox or live.
+    - Uses environment variables for credentials.
+    - Automatically handles sandbox/live URLs and IPN inclusion.
+    """
     try:
         data = json.loads(request.body)
-
-        # Get order ID and reference
         order_id = data.get("order_id")
         reference = data.get("reference")
 
         if not order_id or not reference:
             return JsonResponse({"status": "error", "message": "Order ID and reference are required"}, status=400)
 
-        # Get order
         order = BookOrder.objects.get(id=order_id, tx_ref=reference)
 
-        # Get PesaPal token
+        # Get PesaPal auth token
         token = get_pesapal_token()
         if not token:
-            return JsonResponse({"status": "error", "message": "Failed to authenticate with PesaPal. Check your credentials and ensure your account is fully activated."}, status=500)
-
+            return JsonResponse({
+                "status": "error",
+                "message": "Failed to authenticate with PesaPal. Check your credentials and account status."
+            }, status=500)
 
         env = getattr(settings, 'PESAPAL_ENVIRONMENT', 'sandbox').lower()
+
+        # Determine base URL for live or sandbox
         if env == 'live':
             base_url = 'https://pay.pesapal.com/v3'
             scheme = 'https'
-            host = 'awakeningsaints.org'
+            host = 'www.awakeningsaints.org'  # live domain
         else:
             base_url = 'https://cybqa.pesapal.com/pesapalv3'
             scheme = request.scheme
-            host = request.get_host()
+            host = request.get_host()  # ngrok or localhost
+
         url = f'{base_url}/api/Transactions/SubmitOrderRequest'
+
+        # Callback & cancellation URLs
         callback_url = f"{scheme}://{host}{reverse('cart:pesapal_callback')}"
         cancellation_url = f"{scheme}://{host}{reverse('cart:checkout')}"
 
+        # Split names for billing address
         names = order.full_name.split(' ', 1)
         first_name = names[0] if names else ""
         last_name = names[1] if len(names) > 1 else ""
 
+        # Only include IPN for live
+        ipn_id = settings.PESAPAL_NOTIFICATION_ID if env == 'live' else None
+
+        names = order.full_name.split(' ', 1)
+        first_name = names[0] if names else ""
+        last_name = names[1] if len(names) > 1 else ""
         order_data = {
-            "id": order.tx_ref,
+            "id": order.tx_ref,  # maps to your frontend reference
             "currency": order.currency or "USD",
             "amount": float(order.total),
             "description": f"Book Purchase - Awakening Saints - Order #{order.id}",
             "callback_url": callback_url,
             "cancellation_url": cancellation_url,
-            "notification_id": settings.PESAPAL_NOTIFICATION_ID,
+            **({"ipn_id": settings.PESAPAL_NOTIFICATION_ID} if env == 'live' else {}),
             "billing_address": {
                 "email_address": order.email,
                 "phone_number": order.phone,
@@ -370,6 +385,8 @@ def initiate_pesapal_payment(request):
                 "zip_code": "256"
             }
         }
+
+
 
         print(f"PesaPal {env.upper()} order data: {order_data}")
         print(f"Sending to PesaPal {env.upper()} URL: {url}")
@@ -388,24 +405,23 @@ def initiate_pesapal_payment(request):
         if response.status_code == 200:
             result = response.json()
             if result.get('redirect_url'):
+                # Save PesaPal tracking and redirect info
                 order.pesapal_tracking_id = result.get('order_tracking_id')
                 order.pesapal_redirect_url = result.get('redirect_url')
                 order.save(update_fields=['pesapal_tracking_id', 'pesapal_redirect_url'])
-                print(f"PesaPal {env.upper()} payment initiated successfully")
-                print(f"Redirect URL: {result.get('redirect_url')}")
+
                 return JsonResponse({
                     'status': 'success',
                     'redirect_url': result.get('redirect_url'),
                     'order_tracking_id': result.get('order_tracking_id')
                 })
             else:
-                print(f"No redirect URL from PesaPal {env.upper()}: {result}")
                 return JsonResponse({
                     'status': 'error',
-                    'message': 'No redirect URL received from PesaPal'
+                    'message': 'No redirect URL received from PesaPal',
+                    'pesapal_response': result
                 })
         else:
-            print(f"PesaPal {env.upper()} error: {response.status_code} - {response.text}")
             return JsonResponse({
                 'status': 'error',
                 'message': f'PesaPal error: {response.status_code} - {response.text}'
@@ -414,27 +430,26 @@ def initiate_pesapal_payment(request):
     except BookOrder.DoesNotExist:
         return JsonResponse({"status": "error", "message": "Order not found"}, status=404)
     except Exception as e:
-        print(f"Error initiating PesaPal payment: {e}")
         import traceback
         traceback.print_exc()
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
 def pesapal_callback(request):
-    """Handle PesaPal LIVE callback"""
+    """
+    Handle Pesapal redirect after payment.
+    - Receives OrderTrackingId and OrderMerchantReference from Pesapal.
+    - Queries Pesapal for payment status and updates the order accordingly.
+    - Redirects user to download page if payment is successful.
+    - Handles errors and pending/failed payments.
+    """
     order_tracking_id = request.GET.get('OrderTrackingId')
     order_merchant_reference = request.GET.get('OrderMerchantReference')
-    
     if not order_tracking_id or not order_merchant_reference:
         messages.error(request, "Missing payment information")
         return redirect('cart:checkout')
-    
     try:
-        # Get the order
         order = BookOrder.objects.get(tx_ref=order_merchant_reference)
-        
-
-        # Verify payment status with PesaPal (sandbox or live)
         token = get_pesapal_token()
         if token:
             env = getattr(settings, 'PESAPAL_ENVIRONMENT', 'sandbox').lower()
@@ -479,7 +494,6 @@ def pesapal_callback(request):
         # Default: show pending status
         messages.info(request, "We're verifying your payment. Please check back shortly.")
         return redirect('cart:order_status', order_id=order.id)
-        
     except BookOrder.DoesNotExist:
         messages.error(request, "Order not found")
         return redirect('cart:checkout')
@@ -488,64 +502,6 @@ def pesapal_callback(request):
         messages.error(request, "Error processing payment. Please contact support.")
         return redirect('cart:checkout')
 
-
-@csrf_exempt
-def pesapal_ipn(request):
-    """Handle PesaPal IPN notifications for LIVE"""
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            order_merchant_reference = data.get('OrderMerchantReference')
-            order_tracking_id = data.get('OrderTrackingId')
-            if order_merchant_reference and order_tracking_id:
-                try:
-                    order = BookOrder.objects.get(tx_ref=order_merchant_reference)
-                    # Always verify status with Pesapal
-                    token = get_pesapal_token()
-                    env = getattr(settings, 'PESAPAL_ENVIRONMENT', 'sandbox').lower()
-                    if env == 'live':
-                        base_url = 'https://pay.pesapal.com/v3'
-                    else:
-                        base_url = 'https://cybqa.pesapal.com/pesapalv3'
-                    url = f'{base_url}/api/Transactions/GetTransactionStatus?orderTrackingId={order_tracking_id}'
-                    headers = {
-                        'Authorization': f'Bearer {token}',
-                        'Accept': 'application/json'
-                    }
-                    print(f"IPN: Checking payment status at: {url}")
-                    response = requests.get(url, headers=headers, timeout=30)
-                    if response.status_code == 200:
-                        payment_status = response.json()
-                        status_code = payment_status.get('status_code', '')
-                        if status_code == '1':
-                            order.status = 'collected'
-                            order.payment_status = 'completed'
-                            order.payment_date = timezone.now()
-                        elif status_code == '0':
-                            order.status = 'pending'
-                            order.payment_status = 'pending'
-                        else:
-                            order.status = 'failed'
-                            order.payment_status = 'failed'
-                        order.save()
-                        PaymentLog.objects.create(
-                            order=order,
-                            tracking_id=order_tracking_id,
-                            status_code=status_code,
-                            status_description=payment_status.get('status_description', ''),
-                            ipn_data=data
-                        )
-                        return JsonResponse({'status': 'ok'})
-                    else:
-                        print(f"IPN: Failed to verify payment status: {response.text}")
-                        return JsonResponse({'status': 'error', 'message': 'Failed to verify payment status'}, status=500)
-                except BookOrder.DoesNotExist:
-                    return JsonResponse({'status': 'error', 'message': 'Order not found'}, status=404)
-            return JsonResponse({'status': 'ok'})
-        except Exception as e:
-            print(f"Error in IPN handler: {e}")
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 # Check order status
 @login_required

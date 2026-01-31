@@ -12,7 +12,12 @@ SECRET_KEY = 'django-insecure-ev28k=ir#vah2v)!-*t65t!+b#j(xnk24fv88!nkoemy)#0ag1
 
 # DEBUG = True
 
-# ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = [
+#     'localhost',
+#     '127.0.0.1',
+#     '[::1]',
+#     'unmossed-brody-nonaromatically.ngrok-free.dev',  # ngrok domain for testing
+# ]  # For local development only
 
 DEBUG = False
 
@@ -233,15 +238,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # consumer_key: TDpigBOOhs+zAl8cwH2Fl82jJGyD8xev
 # consumer_secret: 1KpqkfsMaihIcOlhnBo/gBZ5smw=
 
-
+# live account ipn = 95f36b1e-6162-4f29-a768-dac934934112
+# test account ipn = 32a5d1a6-a36e-4394-9d57-dac94bd92a51
 
 PESAPAL_CONSUMER_KEY = '0IvCo5VfHebocBulSLEeLlQlU13f1Y+0'
 PESAPAL_CONSUMER_SECRET = '+EDtZ0OSUa56evNPYaQKFoOFtdI='
 
 # PESAPAL_CONSUMER_KEY = 'TDpigBOOhs+zAl8cwH2Fl82jJGyD8xev'
 # PESAPAL_CONSUMER_SECRET = '1KpqkfsMaihIcOlhnBo/gBZ5smw='
-PESAPAL_ENVIRONMENT = 'live'  # Change to 'live' for production and 'sandbox' for test
-PESAPAL_NOTIFICATION_ID = ''  # Optional: Get from PesaPal IPN settings
+PESAPAL_ENVIRONMENT = 'live'  # Use sandbox for local testing
+PESAPAL_NOTIFICATION_ID = '95f36b1e-6162-4f29-a768-dac934934112'  # Optional: Get from PesaPal IPN settings
 DEFAULT_CURRENCY = 'USD'
 
 
@@ -252,6 +258,11 @@ EMAIL_USE_SSL = True                            # ✅ because port 465 = SSL
 EMAIL_HOST_USER = 'info@awakeningsaints.org'    # ✅ or use 'noreply@...' if created
 EMAIL_HOST_PASSWORD = 'Christjesus1@!'    # 🔑 this is the password for the mailbox
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://unmossed-brody-nonaromatically.ngrok-free.dev',
+]
 
 
 
